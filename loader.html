@@ -460,38 +460,64 @@
 
     .library-item {
       position: relative;
-      padding: 8px 12px;
-      border-radius: 8px;
-      transition: background-color 0.3s;
-      width: 80%;
-      margin: 5px auto;
+      padding: 4px 12px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      width: 90%;
+      margin: 4px auto;
       background-color: var(--card-bg);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 40px;
+      height: 30px;
+      min-height: 30px;
+      box-sizing: border-box;
+      overflow: hidden;
     }
-
+    
     .library-item-content {
       flex: 1;
       text-align: center;
-      padding: 0 30px;
+      padding: 0 25px;
       cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 0 5px;
+      font-size: 0.9rem;
+      border-radius: 4px; /* Added for the hover effect */
+      transition: all 0.2s ease;
     }
-
-    .library-item:hover {
+    
+    /* Hover effect - now more contained */
+    .library-item:hover .library-item-content {
       background-color: var(--accent);
       color: black;
+      padding: 2px 25px; /* Slight vertical padding to contain the highlight */
+      margin: -2px 5px; /* Compensate for padding change */
     }
-
-    .library-item .remove-icon {
+    
+    .remove-icon {
       position: absolute;
-      left: 8px;
+      left: 6px;
       color: var(--text-muted);
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+      z-index: 2; /* Ensure it stays above hover effect */
     }
-
+    
     .library-item:hover .remove-icon {
-      color: black;
+      color: black; /* Better visibility on accent background */
+    }
+    
+    /* Add this to ensure consistent button sizing */
+    .remove-icon i {
+      font-size: 12px;
     }
 
     .favorite-transition {
@@ -527,6 +553,27 @@
 
     .action-card p {
       margin: 0;
+    }
+
+    /* New styles for library columns */
+    .library-columns {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .library-column {
+      flex: 1;
+      max-width: 45%;
+      min-width: 300px; /* Ensure minimum width */
+    }
+    
+    .library-column h3 {
+      text-align: center;
+      margin-bottom: 1rem;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--accent);
     }
   </style>
 </head>
@@ -567,7 +614,7 @@
       <div class="panel">
         <h2>Status</h2>
         <p>Hidden from extensions: <span style="color: green;">True</span></p>
-        <p>Version: <span style="color: orangered;">v1.0.0</span></p>
+        <p>Version: <span style="color: orangered;" id="home-version">v1.0.0</span></p>
         <a class="link" href="https://sites.google.com/view/undergr0und/changelog" target="_blank">Changelog</a>
       </div>
       <div class="panel">
@@ -576,10 +623,10 @@
         <button onclick="loadViewer()">Go</button>
         <button onclick="addToLibrary()">Add to Library</button>
       </div>
-      <div class="panel">
+      <div class="panel" id="updater-panel">
         <h2>Updater</h2>
-        <p>Latest version available: v1.0.0</p>
-        <p>Version installed: v1.0.0</p>
+        <p>Latest version available: <span id="latest-version">Checking...</span></p>
+        <p>Version installed: <span id="installed-version">v1.0.0</span></p>
       </div>
     </div>
   </div>
@@ -599,7 +646,7 @@
     let currentTheme = 'default';
     let favoriteGames = [];
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       const savedGames = localStorage.getItem('games');
       if (savedGames) {
         games = JSON.parse(savedGames);
@@ -629,6 +676,19 @@
 
       updateGamesPage();
       setupDragAndDrop();
+
+      // Automatically check version on Home page load
+      const versionURL = "https://deluxe-obtainable-trigonometry.glitch.me/version.txt";
+
+      try {
+        const versionResponse = await fetch(versionURL);
+        const currentVersion = (await versionResponse.text()).trim();
+        document.getElementById("latest-version").textContent = currentVersion;
+        document.getElementById("home-version").textContent = `v${currentVersion}`;
+      } catch (err) {
+        document.getElementById("latest-version").textContent = "Error checking version.";
+        console.error(err);
+      }
     });
 
     function saveGames() {
@@ -1035,7 +1095,7 @@
         <div class="panel">
           <h2>Status</h2>
           <p>Hidden from extensions: <span style="color: green;">True</span></p>
-          <p>Version: <span style="color: orangered;">v1.0.0</span></p>
+          <p>Version: <span style="color: orangered;" id="home-version">v1.0.0</span></p>
           <a class="link" href="https://sites.google.com/view/undergr0und/changelog" target="_blank">Changelog</a>
         </div>
         <div class="panel">
@@ -1044,23 +1104,35 @@
           <button onclick="loadViewer()">Go</button>
           <button onclick="addToLibrary()">Add to Library</button>
         </div>
-        <div class="panel">
+        <div class="panel" id="updater-panel">
           <h2>Updater</h2>
-          <p>Latest version available: v1.0.0</p>
-          <p>Version installed: v1.0.0</p>
+          <p>Latest version available: <span id="latest-version">Checking...</span></p>
+          <p>Version installed: <span id="installed-version">v1.0.0</span></p>
         </div>`,
       Library: `
-        <div class="panel" style="max-width: 500px; width: 100%;">
+        <div class="panel" style="max-width: 100%; width: 100%;">
           <h2>Library</h2>
           <input type="text" id="librarySearch" placeholder="Search Library" oninput="filterLibrary()">
-          <h3>Favorited Websites</h3>
-          <div id="favoritedWebsites"></div>
-          <h3>Recently Viewed</h3>
-          <div id="recentlyViewed"></div>
+          <div class="library-columns">
+            <div class="library-column">
+              <h3>Favorites</h3>
+              <div id="favoritedWebsites"></div>
+            </div>
+            <div class="library-column">
+              <h3>Recents</h3>
+              <div id="recentlyViewed"></div>
+            </div>
+          </div>
         </div>`,
       Viewer: `<div class="panel"><h2>Viewer</h2><input type="text" id="viewerUrl" placeholder="URL (not proxied)"><button onclick="loadViewer()">Go</button><button onclick="addToLibrary()">Add to Library</button></div>`,
       Games: generateGamesHTML(),
-      Updater: `<div class="panel"><h2>Updater</h2><p>Check and install updates here.</p></div>`,
+      Updater: `
+        <div class="panel">
+          <h2>Updater</h2>
+          <p>Click this button to look for new versions.</p>
+          <button onclick="checkForVersion()">Check for Updates</button>
+          <p id="version-status">Click the button to check for updates.</p>
+        </div>`,
       Settings: `
         <div class="panel" style="max-width: 500px;">
           <h2>Settings</h2>
@@ -1076,6 +1148,48 @@
         </div>`,
       About: `<div class="panel"><h2>About</h2><p>Underground v1.0.0<br>Created by Zerone.</p></div>`
     };
+
+    async function checkForVersion() {
+      const versionURL = "https://deluxe-obtainable-trigonometry.glitch.me/version.txt";
+      const indexURL = "https://deluxe-obtainable-trigonometry.glitch.me/index.txt";
+
+      try {
+        // Fetch current version
+        const versionResponse = await fetch(versionURL);
+        const currentVersion = (await versionResponse.text()).trim();
+
+        // Get stored version from localStorage
+        const savedVersion = localStorage.getItem("lastCheckedVersion");
+
+        // Update status
+        document.getElementById("version-status").textContent = `Current version: ${currentVersion}`;
+
+        // If version changed, update and trigger download
+        if (currentVersion !== savedVersion) {
+          localStorage.setItem("lastCheckedVersion", currentVersion);
+
+          // Get the download URL from index.txt
+          const indexResponse = await fetch(indexURL);
+          const driveURL = (await indexResponse.text()).trim();
+
+          // Auto-download the file
+          autoDownload(driveURL);
+        }
+
+      } catch (err) {
+        document.getElementById("version-status").textContent = "Error checking version.";
+        console.error(err);
+      }
+    }
+
+    function autoDownload(url) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = ""; // Let the browser choose the filename
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
 
     function switchPage(page) {
       pageContent.classList.add('fade-out');
