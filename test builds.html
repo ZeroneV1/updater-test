@@ -581,6 +581,14 @@
       </div>
     </div>
   </div>
+   
+<div class="modal" id="changelogModal">
+  <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+    <button class="modal-close" onclick="closeChangelogModal()">&times;</button>
+    <h2>Changelog</h2>
+    <pre id="changelogContent" style="white-space: pre-wrap; font-family: inherit;"></pre>
+  </div>
+</div>
 
   <div class="sidebar">
     <div class="icon active" data-page="Home" title="Home"><i class="fas fa-home"></i></div>
@@ -643,21 +651,85 @@
       updateGamesPage();
       setupDragAndDrop();
       checkVersion();
+      switchPage('Home');
     });
 
+    function fetchNews() {
+      fetch('https://hostfilez.glitch.me/news.txt')
+        .then(response => response.text())
+        .then(text => {
+          const newsBox = document.getElementById('news-content');
+          if (newsBox) {
+            newsBox.textContent = text;
+          }
+        })
+        .catch(err => {
+          console.error("Failed to load news:", err);
+          const newsBox = document.getElementById('news-content');
+          if (newsBox) {
+            newsBox.textContent = "Failed to load news.";
+          }
+        });
+    }
+      
+    function openChangelogModal() {
+      const modal = document.getElementById("changelogModal");
+      const content = document.getElementById("changelogContent");
+      if (modal && content) {
+        modal.style.display = "flex";
+        content.textContent = "Loading...";
+    
+        fetch('https://hostfilez.glitch.me/changelog.txt')
+          .then(response => response.text())
+          .then(text => {
+            content.textContent = text;
+          })
+          .catch(err => {
+            console.error("Failed to load changelog:", err);
+            content.textContent = "Failed to load changelog.";
+          });
+      }
+    }
+    
+    function closeChangelogModal() {
+      const modal = document.getElementById("changelogModal");
+      if (modal) {
+        modal.style.display = "none";
+      }
+    }
+
+      
     function loadData() {
   const defaultGames = [{
     name: "Agar.io",
     url: "https://fluxaga.glitch.me",
-    icon: "https://static.wikia.nocookie.net/yogscast/images/1/19/Agar.io_appstore_logo.png"
+    icon: "https://static.wikia.nocookie.net/yogscast/images/1/19/Agar.io_appstore_logo.png",
+    proxiedUrl: "https://flux.englishd.workers.dev/",
+    proxied: false
   }, {
     name: "Slither.io",
     url: "https://slither.io",
-    icon: "https://pbs.twimg.com/profile_images/1854966120509267968/gUTLTAMd_400x400.jpg"
+    icon: "https://pbs.twimg.com/profile_images/1854966120509267968/gUTLTAMd_400x400.jpg",
+    proxiedUrl: "place",
+    proxied: false
   }, {
-    name: "testing",
-    url: "https://example.com",
-    icon: "https://example.com/example.png"
+    name: "n-gon",
+    url: "https://landgreen.github.io/n-gon/",
+    icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIiXBQof9-UTot6CA0A-X9Ntyq0pNALernmg&s",
+    proxiedUrl: "https://infinite-caverns-19836-4e3f72bd3055.herokuapp.com/uv/service/hvtrs8%2F-lcnfgpegn%2Cgktju%60.ko-n%2Fgmn-",
+    proxied: false
+  }, {
+    name: "FreeRiderHD",
+    url: "https://freeriderhd.com",
+    icon: "https://cdn.freeriderhd.com/free_rider_hd/sprites/youtube_poster_art.png",
+    proxiedUrl: "https://infinite-caverns-19836-4e3f72bd3055.herokuapp.com/uv/service/hvtrs8%2F-wuw%2Cfpegrkdgrjd%2Ccmm-",
+    proxied: false
+  }, {
+    name: "Shell Shockers",
+    url: "https://shellshock.io/",
+    icon: "https://rocketgames.imgix.net/uploads/games/s/shell-shockers/shell-shockers.jpg",
+    proxiedUrl: "none",
+    proxied: false
   }];
 
   const savedGames = localStorage.getItem('games');
@@ -682,17 +754,24 @@
         icon.addEventListener('mousemove', handleTooltipShow);
         icon.addEventListener('mouseleave', handleTooltipHide);
       });
-
+    
       addGameModal.addEventListener('click', (e) => {
         if (e.target === addGameModal) closeModal();
       });
-
+    
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && addGameModal.style.display === 'flex') closeModal();
+        if (e.key === 'Escape' && changelogModal.style.display === 'flex') closeChangelogModal();
       });
-
+    
+      const changelogModal = document.getElementById("changelogModal");
+      changelogModal.addEventListener('click', (e) => {
+        if (e.target === changelogModal) closeChangelogModal();
+      });
+    
       document.addEventListener('mousemove', handleSidebarHover);
     }
+
 
     async function checkVersion() {
       const versionURL = "https://deluxe-obtainable-trigonometry.glitch.me/version.txt";
@@ -715,10 +794,10 @@
       const gamesToDisplay = isShowingFavoriteGames() ? 
         games.filter(game => favoriteGames.some(fav => fav.name === game.name)) : 
         games;
-
+    
       return `
         <div class="games-container" id="gamesContainer">
-          <input type="text" id="gameSearch" placeholder="Search Games" oninput="filterGames()" style="width: 100%; margin-bottom: 1rem;">
+          <input type="text" id="gameSearch" placeholder="Search Games" oninput="filterGames()" style="width: 300px; margin-bottom: 1rem;">
           <div class="games-header">
             <div class="action-card" onclick="showAddGameModal()">
               <i class="fas fa-plus"></i>
@@ -738,13 +817,26 @@
                    onerror="this.src='https://via.placeholder.com/150?text=No+Image'" 
                    onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">
               <p onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">${escapeHtml(game.name)}</p>
-              <button class="favorite-button" onclick="event.stopPropagation(); toggleFavoriteGame(${index})">
-                <i class="fas ${isFavoriteGame(game) ? 'fa-star' : 'fa-star'}"></i>
-                <span>${isFavoriteGame(game) ? 'Favorited' : 'Favorite'}</span>
-              </button>
+              <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
+                <button class="favorite-button" onclick="event.stopPropagation(); toggleFavoriteGame(${index})">
+                  <i class="fas ${isFavoriteGame(game) ? 'fa-star' : 'fa-star'}"></i>
+                  <span>${isFavoriteGame(game) ? 'Favorited' : 'Favorite'}</span>
+                </button>
+                <button class="favorite-button" onclick="event.stopPropagation(); toggleProxied(${index})">
+                  <i class="fas fa-shield-alt"></i>
+                  <span>Proxied: ${game.proxied ? 'True' : 'False'}</span>
+                </button>
+              </div>
             </div>
           `).join('')}
         </div>`;
+    }
+
+
+    function toggleProxied(index) {
+      games[index].proxied = !games[index].proxied;
+      saveGames();
+      updateGamesPage();
     }
 
     function escapeHtml(unsafe) {
@@ -997,14 +1089,17 @@
     }
 
     function loadGame(name, url) {
+      const game = games.find(g => g.name === name);
+      const iframeUrl = (game && game.proxied && game.proxiedUrl) ? game.proxiedUrl : url;
+    
       pageTitle.textContent = name;
       pageContent.innerHTML = `
         <div class="panel" style="width: 90%; max-width: 800px; text-align: center; margin: auto;">
           <h2>${name}</h2>
           <div class="iframe-wrapper">
-            <iframe src="${url}"></iframe>
+            <iframe src="${iframeUrl}"></iframe>
           </div>
-          <button onclick="openFullscreen('${url}')">Fullscreen</button>
+          <button onclick="openFullscreen('${iframeUrl}')">Fullscreen</button>
           <button class="remove-game" onclick="goBackToGames()">Back to Games</button>
         </div>`;
     }
@@ -1056,24 +1151,30 @@
     }
 
     const pages = {
-      Home: `
-        <div class="panel">
-          <h2>Status</h2>
-          <p>Hidden from extensions: <span style="color: green;">True</span></p>
-          <p>Version: <span style="color: orangered;" id="home-version">v1.0.0</span></p>
-          <a class="link" href="https://sites.google.com/view/undergr0und/changelog" target="_blank">Changelog</a>
-        </div>
-        <div class="panel">
-          <h2>Viewer</h2>
-          <input type="text" id="viewerUrl" placeholder="URL (not proxied)">
-          <button onclick="loadViewer()">Go</button>
-          <button onclick="addToLibrary()">Add to Library</button>
-        </div>
-        <div class="panel" id="updater-panel">
-          <h2>Updater</h2>
-          <p>Latest version available: <span id="latest-version">Checking...</span></p>
-          <p>Version installed: <span id="installed-version">v1.0.0</span></p>
-        </div>`,
+    Home: `
+      <div class="panel" style="flex: 1; max-width: 300px;">
+        <h2>Status</h2>
+        <p>Hidden from extensions: <span style="color: green;">True</span></p>
+        <p>Version: <span style="color: orangered;" id="home-version">v1.0.0</span></p>
+        <button onclick="openChangelogModal()">View Changelog</button>
+      </div>
+      <div class="panel" style="flex: 1; max-width: 300px;">
+        <h2>Viewer</h2>
+        <input type="text" id="viewerUrl" placeholder="URL (not proxied)">
+        <button onclick="loadViewer()">Go</button>
+        <button onclick="addToLibrary()">Add to Library</button>
+      </div>
+      <div class="panel" style="flex: 1; max-width: 300px;" id="updater-panel">
+        <h2>Updater</h2>
+        <p>Latest version available: <span id="latest-version">Checking...</span></p>
+        <p>Version installed: <span id="installed-version">v1.0.0</span></p>
+      </div>
+      <div class="panel" style="flex: 1 1 100%; max-width: 800px;" id="news-panel">
+        <h2>News</h2>
+        <pre id="news-content" style="white-space: pre-wrap; font-family: inherit;"></pre>
+      </div>
+    `,
+
       Library: `
         <div class="panel" style="max-width: 100%; width: 100%;">
           <h2>Library</h2>
@@ -1154,29 +1255,34 @@
         pageTitle.textContent = page;
         pageContent.innerHTML = pages[page] || '';
         pageContent.classList.remove('fade-out');
-
+    
         if (page === 'Games') {
           updateGamesPage();
           setupDragAndDrop();
         }
-
+    
         if (page === 'Viewer') {
           const viewerUrlInput = document.querySelector("#viewerUrl");
           if (viewerUrlInput && viewerUrlInput.value) {
             viewerUrlInput.value = viewerUrlInput.value;
           }
         }
-
+    
         if (page === 'Library') {
           updateLibraryPage();
         }
-
+    
+        if (page === 'Home') {
+          fetchNews(); 
+        }
+    
         if (page !== 'Viewer' && page !== 'Games') {
           const existingIframe = document.querySelector('iframe');
           if (existingIframe) existingIframe.remove();
         }
       }, 300);
     }
+
 
     function handleIconClick() {
       icons.forEach(i => i.classList.remove('active'));
