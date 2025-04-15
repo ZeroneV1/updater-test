@@ -704,7 +704,7 @@
     name: "Agar.io",
     url: "https://fluxaga.glitch.me",
     icon: "https://static.wikia.nocookie.net/yogscast/images/1/19/Agar.io_appstore_logo.png",
-    proxiedUrl: "place",
+    proxiedUrl: "https://flux.englishd.workers.dev/",
     proxied: false
   }, {
     name: "Slither.io",
@@ -717,6 +717,18 @@
     url: "https://landgreen.github.io/n-gon/",
     icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIiXBQof9-UTot6CA0A-X9Ntyq0pNALernmg&s",
     proxiedUrl: "https://infinite-caverns-19836-4e3f72bd3055.herokuapp.com/uv/service/hvtrs8%2F-lcnfgpegn%2Cgktju%60.ko-n%2Fgmn-",
+    proxied: false
+  }, {
+    name: "FreeRiderHD",
+    url: "https://freeriderhd.com",
+    icon: "https://cdn.freeriderhd.com/free_rider_hd/sprites/youtube_poster_art.png",
+    proxiedUrl: "https://infinite-caverns-19836-4e3f72bd3055.herokuapp.com/uv/service/hvtrs8%2F-wuw%2Cfpegrkdgrjd%2Ccmm-",
+    proxied: false
+  }, {
+    name: "Shell Shockers",
+    url: "https://shellshock.io/",
+    icon: "https://rocketgames.imgix.net/uploads/games/s/shell-shockers/shell-shockers.jpg",
+    proxiedUrl: "none",
     proxied: false
   }];
 
@@ -785,7 +797,7 @@
     
       return `
         <div class="games-container" id="gamesContainer">
-          <input type="text" id="gameSearch" placeholder="Search Games" oninput="filterGames()" style="width: 100%; margin-bottom: 1rem;">
+          <input type="text" id="gameSearch" placeholder="Search Games" oninput="filterGames()" style="width: 300px; margin-bottom: 1rem;">
           <div class="games-header">
             <div class="action-card" onclick="showAddGameModal()">
               <i class="fas fa-plus"></i>
