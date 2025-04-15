@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Underground</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root, .theme-default {
+      --bg-dark: #1c1c1e;
+      --sidebar-dark: #2c2c2e;
+      --text-light: #fff;
+      --text-muted: #aaa;
+      --card-bg: #1a1a1a;
+      --accent: #00ff84;
+      --transition-speed: 0.3s;
+      --border-radius: 8px;
+      --icon-size: 1.2rem;
+    }
+      
+    .reset-button {
+      background-color: #ff4444;
+      color: white;
+      margin-top: 1rem;
+      width: 100%;
+    }
+    
+    .reset-button:hover {
+      background-color: #cc0000;
+    }
+      
+    .theme-ocean {
+      --bg-dark: #0f172a;
+      --sidebar-dark: #1e293b;
+      --text-light: #f8fafc;
+      --text-muted: #94a3b8;
+      --card-bg: #1e293b;
+      --accent: #0ea5e9;
+    }
+
+    .theme-forest {
+      --bg-dark: #1a2e05;
+      --sidebar-dark: #2b3e0f;
+      --text-light: #f0fdf4;
+      --text-muted: #86efac;
+      --card-bg: #2b3e0f;
+      --accent: #22c55e;
+    }
+
+    .theme-purple {
+      --bg-dark: #1e1b4b;
+      --sidebar-dark: #312e81;
+      --text-light: #f5f3ff;
+      --text-muted: #c4b5fd;
+      --card-bg: #312e81;
+      --accent: #a855f7;
+    }
+
+    .theme-red {
+      --bg-dark: #450a0a;
+      --sidebar-dark: #7f1d1d;
+      --text-light: #fef2f2;
+      --text-muted: #fca5a5;
+      --card-bg: #7f1d1d;
+      --accent: #ef4444;
+    }
+
+    .theme-cyberpunk {
+      --bg-dark: #0f0f1a;
+      --sidebar-dark: #1a1a2e;
+      --text-light: #e6e6ff;
+      --text-muted: #b3b3ff;
+      --card-bg: #1a1a2e;
+      --accent: #ff00ff;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 60px;
+      position: absolute;
+      top: 0;
+      left: -60px;
+      height: 100%;
+      background-color: var(--sidebar-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 0;
+      gap: 1.5rem;
+      transition: left var(--transition-speed) ease;
+      z-index: 10;
+    }
+
+    .sidebar.open {
+      left: 0;
+    }
+
+    .icon {
+      color: var(--text-muted);
+      font-size: var(--icon-size);
+      padding: 10px;
+      border-radius: var(--border-radius);
+      transition: background 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .icon:hover, .icon.active {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    .tooltip {
+      position: fixed;
+      background-color: var(--accent);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      pointer-events: none;
+      z-index: 9999;
+      display: none;
+    }
+
+    .content {
+      flex: 1;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+    }
+
+    h1 {
+      margin-bottom: 2rem;
+    }
+
+    .panel {
+      background-color: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: var(--border-radius);
+      min-width: 250px;
+      max-width: 300px;
+      margin: 1rem;
+      text-align: center;
+    }
+
+    .panel-container {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      opacity: 1;
+      transition: opacity var(--transition-speed) ease;
+    }
+
+    .panel-container.fade-out {
+      opacity: 0;
+    }
+
+    input[type="text"] {
+      background: var(--card-bg);
+      border: 1px solid var(--accent);
+      padding: 0.5rem;
+      width: 100%;
+      margin-bottom: 0.5rem;
+      color: var(--text-light);
+      border-radius: 5px;
+      transition: border var(--transition-speed) ease;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--text-light);
+    }
+
+    button {
+      background-color: var(--accent);
+      color: black;
+      border: 1px solid #444;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all var(--transition-speed) ease;
+    }
+
+    button:hover {
+      background-color: #333;
+      color: white;
+    }
+
+    .game-card, .action-card {
+      background-color: var(--card-bg);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+      width: 150px;
+      position: relative;
+    }
+
+    .game-card:hover, .action-card:hover {
+      transform: scale(1.05);
+    }
+
+    .game-card img {
+      width: 100%;
+      border-radius: var(--border-radius);
+      margin-bottom: 0.5rem;
+    }
+
+    .iframe-container {
+      position: absolute;
+      top: 0;
+      left: 60px;
+      right: 0;
+      bottom: 60px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .iframe-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .bottom-controls {
+      position: fixed;
+      bottom: 0;
+      left: 60px;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 10px;
+      background-color: var(--bg-dark);
+      border-top: 1px solid #444;
+    }
+
+    .bottom-controls input[type="text"] {
+      flex: 1;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      margin-right: 10px;
+      background-color: var(--card-bg);
+      color: var(--text-light);
+    }
+
+    .bottom-controls button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      background-color: var(--accent);
+      color: white;
+    }
+
+    .fullscreen-button i {
+      margin-right: 5px;
+    }
+
+    .bottom-icons {
+      margin-top: auto;
+      border-top: 1px solid #444;
+      padding-top: 1rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .bottom-icons .icon {
+      margin-top: 1rem;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      padding: 2rem;
+      border-radius: var(--border-radius);
+      width: 300px;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: var(--icon-size);
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: white;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+
+    .games-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .games-header {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .remove-game {
+      margin-top: 1rem;
+      background-color: #ff4444;
+      color: white;
+      font-weight: bold;
+      width: 100%;
+    }
+
+    .remove-icon {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      color: #ff4444;
+      background: rgba(0,0,0,0.7);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .remove-icon:hover {
+      background: rgba(255,0,0,0.7);
+      color: white;
+    }
+
+    .game-card.dragging {
+      opacity: 0.5;
+      transform: scale(0.95);
+    }
+
+    .game-card-placeholder {
+      border: 2px dashed #444;
+      background-color: transparent;
+    }
+
+    .theme-option {
+      width: 50px;
+      height: 50px;
+      border-radius: var(--border-radius);
+      margin: 5px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.2s;
+    }
+
+    .theme-option:hover {
+      transform: scale(1.1);
+    }
+
+    .theme-option.selected {
+      border-color: var(--accent);
+      transform: scale(1.1);
+    }
+
+    .theme-selector {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    .theme-default-preview {
+      background: linear-gradient(135deg, #1c1c1e 50%, #2c2c2e 50%);
+    }
+
+    .theme-ocean-preview {
+      background: linear-gradient(135deg, #0f172a 50%, #1e293b 50%);
+    }
+
+    .theme-forest-preview {
+      background: linear-gradient(135deg, #1a2e05 50%, #2b3e0f 50%);
+    }
+
+    .theme-purple-preview {
+      background: linear-gradient(135deg, #1e1b4b 50%, #312e81 50%);
+    }
+
+    .theme-red-preview {
+      background: linear-gradient(135deg, #450a0a 50%, #7f1d1d 50%);
+    }
+
+    .theme-cyberpunk-preview {
+      background: linear-gradient(135deg, #0f0f1a 50%, #1a1a2e 50%);
+    }
+
+    .favorite-button {
+      background-color: transparent;
+      color: var(--text-light);
+      border: none;
+      padding: 5px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .favorite-button:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+
+    .favorite-button i {
+      font-size: 1rem;
+    }
+
+    #librarySearch {
+      margin: 0 auto;
+      display: block;
+      width: 80%;
+    }
+
+    .library-item {
+      position: relative;
+      padding: 4px 12px;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      width: 90%;
+      margin: 4px auto;
+      background-color: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 30px;
+      min-height: 30px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    
+    .library-item-content {
+      flex: 1;
+      text-align: center;
+      padding: 0 25px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 0 5px;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+    
+    .library-item:hover .library-item-content {
+      background-color: var(--accent);
+      color: black;
+      padding: 2px 25px;
+      margin: -2px 5px;
+    }
+    
+    .library-item .remove-icon {
+      position: absolute;
+      left: 6px;
+      color: var(--text-muted);
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+      z-index: 2;
+    }
+    
+    .library-item:hover .remove-icon {
+      color: black;
+    }
+    
+    .remove-icon i {
+      font-size: 12px;
+    }
+
+    .favorite-transition {
+      opacity: 0;
+      transition: opacity var(--transition-speed) ease;
+    }
+
+    .favorite-transition.show {
+      opacity: 1;
+    }
+
+    .action-card i {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+
+    .action-card p {
+      margin: 0;
+    }
+
+    .library-columns {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .library-column {
+      flex: 1;
+      max-width: 45%;
+      min-width: 300px;
+    }
+    
+    .library-column h3 {
+      text-align: center;
+      margin-bottom: 1rem;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--accent);
+    }
+  </style>
+</head>
+<body class="theme-default">
+
+  <div class="tooltip" id="tooltip"></div>
+
+  <div class="modal" id="addGameModal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2>Add New Game</h2>
+      <input type="text" id="gameName" placeholder="Game Name" required>
+      <input type="text" id="gameUrl" placeholder="Game URL" required>
+      <input type="text" id="gameIcon" placeholder="Icon URL (optional)">
+      <div class="modal-buttons">
+        <button onclick="closeModal()">Cancel</button>
+        <button onclick="addGame()">Add Game</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="icon active" data-page="Home" title="Home"><i class="fas fa-home"></i></div>
+    <div class="icon" data-page="Library" title="Library"><i class="fas fa-book"></i></div>
+    <div class="icon" data-page="Viewer" title="Viewer"><i class="fas fa-globe"></i></div>
+    <div class="icon" data-page="Games" title="Games"><i class="fas fa-gamepad"></i></div>
+    <div class="icon" data-page="Updater" title="Updater"><i class="fas fa-sync-alt"></i></div>
+
+    <div class="bottom-icons">
+      <div class="icon" data-page="Settings" title="Settings"><i class="fas fa-cog"></i></div>
+      <div class="icon" data-page="About" title="About"><i class="fas fa-info-circle"></i></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <h1 id="page-title">UnderGr0und</h1>
+    <div id="page-content" class="panel-container">
+      <div class="panel">
+        <h2>Status</h2>
+        <p>Hidden from extensions: <span style="color: green;">True</span></p>
+        <p>Version: <span style="color: orangered;" id="home-version">v1.0.0</span></p>
+        <a class="link" href="https://sites.google.com/view/undergr0und/changelog" target="_blank">Changelog</a>
+      </div>
+      <div class="panel">
+        <h2>Viewer</h2>
+        <input type="text" id="viewerUrl" placeholder="URL (not proxied)">
+        <button onclick="loadViewer()">Go</button>
+        <button onclick="addToLibrary()">Add to Library</button>
+      </div>
+      <div class="panel" id="updater-panel">
+        <h2>Updater</h2>
+        <p>Latest version available: <span id="latest-version">Checking...</span></p>
+        <p>Version installed: <span id="installed-version">v1.0.0</span></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const icons = document.querySelectorAll('.sidebar .icon');
+    const pageTitle = document.getElementById('page-title');
+    const pageContent = document.getElementById('page-content');
+    const tooltip = document.getElementById('tooltip');
+    const addGameModal = document.getElementById('addGameModal');
+    const viewerUrlInput = document.getElementById('viewerUrl');
+
+    // App State
+    let games = [];
+    let library = [];
+    let draggedItem = null;
+    let draggedIndex = null;
+    let currentTheme = 'default';
+    let favoriteGames = [];
+    let isSidebarOpen = false;
+
+    // Initialize the app
+    window.addEventListener('DOMContentLoaded', async () => {
+      loadData();
+      setupEventListeners();
+      updateGamesPage();
+      setupDragAndDrop();
+      checkVersion();
+    });
+
+    function loadData() {
+  const defaultGames = [{
+    name: "Agar.io",
+    url: "https://fluxaga.glitch.me",
+    icon: "https://static.wikia.nocookie.net/yogscast/images/1/19/Agar.io_appstore_logo.png"
+  }, {
+    name: "Slither.io",
+    url: "https://slither.io",
+    icon: "https://pbs.twimg.com/profile_images/1854966120509267968/gUTLTAMd_400x400.jpg"
+  }, {
+    name: "testing",
+    url: "https://example.com",
+    icon: "https://example.com/example.png"
+  }];
+
+  const savedGames = localStorage.getItem('games');
+  const userGames = savedGames ? JSON.parse(savedGames) : [];
+
+  // Merge default and user games without duplicates (based on name)
+  games = [...defaultGames, ...userGames.filter(g => !defaultGames.some(d => d.name === g.name))];
+
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) setTheme(savedTheme);
+
+  const savedLibrary = localStorage.getItem('library');
+  library = savedLibrary ? JSON.parse(savedLibrary) : [];
+
+  const savedFavoriteGames = localStorage.getItem('favoriteGames');
+  favoriteGames = savedFavoriteGames ? JSON.parse(savedFavoriteGames) : [];
+}
+
+    function setupEventListeners() {
+      icons.forEach(icon => {
+        icon.addEventListener('click', handleIconClick);
+        icon.addEventListener('mousemove', handleTooltipShow);
+        icon.addEventListener('mouseleave', handleTooltipHide);
+      });
+
+      addGameModal.addEventListener('click', (e) => {
+        if (e.target === addGameModal) closeModal();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && addGameModal.style.display === 'flex') closeModal();
+      });
+
+      document.addEventListener('mousemove', handleSidebarHover);
+    }
+
+    async function checkVersion() {
+      const versionURL = "https://deluxe-obtainable-trigonometry.glitch.me/version.txt";
+      try {
+        const versionResponse = await fetch(versionURL);
+        const currentVersion = (await versionResponse.text()).trim();
+        document.getElementById("latest-version").textContent = currentVersion;
+        document.getElementById("home-version").textContent = `v${currentVersion}`;
+      } catch (err) {
+        document.getElementById("latest-version").textContent = "Error checking version.";
+        console.error(err);
+      }
+    }
+
+    function saveGames() {
+      localStorage.setItem('games', JSON.stringify(games));
+    }
+
+    function generateGamesHTML() {
+      const gamesToDisplay = isShowingFavoriteGames() ? 
+        games.filter(game => favoriteGames.some(fav => fav.name === game.name)) : 
+        games;
+
+      return `
+        <div class="games-container" id="gamesContainer">
+          <input type="text" id="gameSearch" placeholder="Search Games" oninput="filterGames()" style="width: 100%; margin-bottom: 1rem;">
+          <div class="games-header">
+            <div class="action-card" onclick="showAddGameModal()">
+              <i class="fas fa-plus"></i>
+              <p>Add Game</p>
+            </div>
+            <div class="action-card" onclick="toggleFavoriteGames()">
+              <i class="fas ${isShowingFavoriteGames() ? 'fa-star' : 'fa-star'}"></i>
+              <p>${isShowingFavoriteGames() ? 'All Games' : 'Favorites'}</p>
+            </div>
+          </div>
+          ${gamesToDisplay.map((game, index) => `
+            <div class="game-card" draggable="true" data-index="${index}">
+              <div class="remove-icon" onclick="removeGame(event, ${index})" title="Remove Game">
+                <i class="fas fa-times"></i>
+              </div>
+              <img src="${escapeHtml(game.icon)}" alt="${escapeHtml(game.name)}" 
+                   onerror="this.src='https://via.placeholder.com/150?text=No+Image'" 
+                   onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">
+              <p onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">${escapeHtml(game.name)}</p>
+              <button class="favorite-button" onclick="event.stopPropagation(); toggleFavoriteGame(${index})">
+                <i class="fas ${isFavoriteGame(game) ? 'fa-star' : 'fa-star'}"></i>
+                <span>${isFavoriteGame(game) ? 'Favorited' : 'Favorite'}</span>
+              </button>
+            </div>
+          `).join('')}
+        </div>`;
+    }
+
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function loadViewerFromLibrary(url) {
+      if (!url) return;
+      
+      try {
+        new URL(url);
+      } catch (e) {
+        alert('Invalid URL format');
+        return;
+      }
+
+      pageTitle.textContent = 'Viewing URL';
+      pageContent.innerHTML = `
+        <div class="iframe-container">
+          <iframe src="${url}" frameborder="0"></iframe>
+        </div>
+        <div class="bottom-controls">
+          <input type="text" id="urlSearch" placeholder="Enter URL" value="${url}" onkeydown="if(event.key==='Enter') goToUrl()">
+          <button class="go-button" onclick="goToUrl()">Go!</button>
+          <button class="fullscreen-button" onclick="openFullscreen('${url}')"><i class="fas fa-expand"></i></button>
+        </div>`;
+
+      updateRecentlyViewed(url);
+    }
+
+    function loadViewer() {
+      const url = pageTitle.textContent === 'Viewer' ? 
+        document.querySelector("#viewerUrl").value : 
+        viewerUrlInput.value;
+
+      if (!url) {
+        alert('Please enter a URL');
+        return;
+      }
+
+      loadViewerFromLibrary(url);
+    }
+
+    function updateRecentlyViewed(url) {
+      const recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed')) || [];
+      if (!recentlyViewed.includes(url)) {
+        recentlyViewed.push(url);
+        localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed.slice(-10)));
+      }
+      updateLibraryPage();
+    }
+
+    function goToUrl() {
+      const urlInput = document.getElementById('urlSearch')?.value;
+      if (urlInput) {
+        loadViewerFromLibrary(urlInput);
+      } else {
+        alert('Please enter a URL');
+      }
+    }
+
+    function openFullscreen(url) {
+      const newWin = window.open("about:blank", "_blank");
+      newWin.document.write(`
+        <body style="margin:0;background:black;">
+          <iframe src="${url}" style="width:100vw;height:100vh;border:none;"></iframe>
+        </body>`);
+    }
+
+    function showAddGameModal() {
+      addGameModal.style.display = 'flex';
+      document.getElementById('gameName').focus();
+    }
+
+    function closeModal() {
+      addGameModal.style.display = 'none';
+    }
+
+    function addGame() {
+      const name = document.getElementById('gameName').value.trim();
+      const url = document.getElementById('gameUrl').value.trim();
+      const icon = document.getElementById('gameIcon').value.trim();
+
+      if (!name || !url) {
+        alert('Please provide both a name and URL for the game');
+        return;
+      }
+
+      try {
+        new URL(url);
+      } catch (e) {
+        alert('Please enter a valid URL (include http:// or https://)');
+        return;
+      }
+
+      games.push({
+        name: name,
+        url: url,
+        icon: icon || 'https://via.placeholder.com/150?text=No+Image'
+      });
+
+      document.getElementById('gameName').value = '';
+      document.getElementById('gameUrl').value = '';
+      document.getElementById('gameIcon').value = '';
+
+      closeModal();
+      updateGamesPage();
+    }
+
+    function removeGame(event, index) {
+      event.stopPropagation();
+      if (confirm(`Are you sure you want to remove ${games[index].name}?`)) {
+        games.splice(index, 1);
+        saveGames();
+        updateGamesPage();
+      }
+    }
+
+    function setupDragAndDrop() {
+      const container = document.getElementById('gamesContainer');
+      if (!container) return;
+
+      const cards = container.querySelectorAll('.game-card[draggable="true"]');
+      cards.forEach(card => {
+        card.addEventListener('dragstart', handleDragStart);
+        card.addEventListener('dragover', handleDragOver);
+        card.addEventListener('dragenter', handleDragEnter);
+        card.addEventListener('dragleave', handleDragLeave);
+        card.addEventListener('drop', handleDrop);
+        card.addEventListener('dragend', handleDragEnd);
+      });
+    }
+
+    function handleDragStart(e) {
+      draggedItem = this;
+      draggedIndex = parseInt(this.getAttribute('data-index'));
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', this.innerHTML);
+    }
+
+    function handleDragOver(e) {
+      if (e.preventDefault) e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      return false;
+    }
+
+    function handleDragEnter(e) {
+      this.classList.add('game-card-placeholder');
+    }
+
+    function handleDragLeave(e) {
+      this.classList.remove('game-card-placeholder');
+    }
+
+    function handleDrop(e) {
+      if (e.stopPropagation) e.stopPropagation();
+
+      if (draggedItem !== this) {
+        const dropIndex = parseInt(this.getAttribute('data-index'));
+        [games[draggedIndex], games[dropIndex]] = [games[dropIndex], games[draggedIndex]];
+        saveGames();
+        updateGamesPage();
+      }
+      return false;
+    }
+
+    function handleDragEnd() {
+      document.querySelectorAll('.game-card').forEach(card => {
+        card.classList.remove('dragging', 'game-card-placeholder');
+      });
+    }
+
+    function setTheme(theme) {
+      document.body.className = `theme-${theme}`;
+      currentTheme = theme;
+      localStorage.setItem('theme', theme);
+
+      document.querySelectorAll('.theme-option').forEach(option => {
+        option.classList.remove('selected');
+      });
+      document.querySelector(`.theme-${theme}-preview`)?.classList.add('selected');
+    }
+
+    function filterGames() {
+      const query = document.getElementById('gameSearch').value.toLowerCase();
+      const gamesToSearch = isShowingFavoriteGames() ? 
+        games.filter(game => favoriteGames.some(fav => fav.name === game.name)) : 
+        games;
+      const filteredGames = gamesToSearch.filter(game => game.name.toLowerCase().includes(query));
+
+      document.getElementById('gamesContainer').innerHTML = `
+        <input type="text" id="gameSearch" placeholder="Search Games" oninput="filterGames()" style="width: 100%; margin-bottom: 1rem;">
+        <div class="games-header">
+          <div class="action-card" onclick="showAddGameModal()">
+            <i class="fas fa-plus"></i>
+            <p>Add Game</p>
+          </div>
+          <div class="action-card" onclick="toggleFavoriteGames()">
+            <i class="fas ${isShowingFavoriteGames() ? 'fa-star' : 'fa-star'}"></i>
+            <p>${isShowingFavoriteGames() ? 'All Games' : 'Favorites'}</p>
+          </div>
+        </div>
+        ${filteredGames.map((game, index) => `
+          <div class="game-card" draggable="true" data-index="${index}">
+            <div class="remove-icon" onclick="removeGame(event, ${index})" title="Remove Game">
+              <i class="fas fa-times"></i>
+            </div>
+            <img src="${escapeHtml(game.icon)}" alt="${escapeHtml(game.name)}" 
+                 onerror="this.src='https://via.placeholder.com/150?text=No+Image'" 
+                 onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">
+            <p onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">${escapeHtml(game.name)}</p>
+            <button class="favorite-button" onclick="event.stopPropagation(); toggleFavoriteGame(${index})">
+              <i class="fas ${isFavoriteGame(game) ? 'fa-star' : 'fa-star'}"></i>
+              <span>${isFavoriteGame(game) ? 'Favorited' : 'Favorite'}</span>
+            </button>
+          </div>
+        `).join('')}`;
+    }
+
+    function updateLibraryPage() {
+      const favoritedWebsites = library;
+      const recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed')) || [];
+
+      document.getElementById('favoritedWebsites').innerHTML = favoritedWebsites.map(item => `
+        <div class="library-item">
+          <div class="remove-icon" onclick="removeLibraryItem(event, '${item}')" title="Remove Website">
+            <i class="fas fa-times"></i>
+          </div>
+          <div class="library-item-content" onclick="loadViewerFromLibrary('${item}')">
+            ${item}
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('recentlyViewed').innerHTML = recentlyViewed.slice(-5).reverse().map(item => `
+        <div class="library-item">
+          <div class="library-item-content" onclick="loadViewerFromLibrary('${item}')">
+            ${item}
+          </div>
+        </div>
+      `).join('');
+
+      setupLibraryDragAndDrop();
+    }
+
+    function loadGame(name, url) {
+      pageTitle.textContent = name;
+      pageContent.innerHTML = `
+        <div class="panel" style="width: 90%; max-width: 800px; text-align: center; margin: auto;">
+          <h2>${name}</h2>
+          <div class="iframe-wrapper">
+            <iframe src="${url}"></iframe>
+          </div>
+          <button onclick="openFullscreen('${url}')">Fullscreen</button>
+          <button class="remove-game" onclick="goBackToGames()">Back to Games</button>
+        </div>`;
+    }
+
+    function goBackToGames() {
+      switchPage('Games');
+    }
+
+    function updateGamesPage() {
+      pages.Games = generateGamesHTML();
+      if (pageTitle.textContent === 'Games' || pageTitle.textContent === 'Favorite Games') {
+        pageContent.innerHTML = pages.Games;
+        setupDragAndDrop();
+      }
+      saveGames();
+    }
+
+    function toggleFavoriteGame(index) {
+      const game = games[index];
+      if (isFavoriteGame(game)) {
+        favoriteGames = favoriteGames.filter(favGame => favGame.name !== game.name);
+      } else {
+        favoriteGames.push(game);
+      }
+      localStorage.setItem('favoriteGames', JSON.stringify(favoriteGames));
+      updateGamesPage();
+    }
+
+    function isFavoriteGame(game) {
+      return favoriteGames.some(favGame => favGame.name === game.name);
+    }
+
+    function isShowingFavoriteGames() {
+      return pageTitle.textContent === 'Favorite Games';
+    }
+
+    function toggleFavoriteGames() {
+      if (isShowingFavoriteGames()) {
+        switchPage('Games');
+      } else {
+        pageTitle.textContent = 'Favorite Games';
+        pageContent.innerHTML = generateGamesHTML();
+        pageContent.classList.add('favorite-transition');
+        setTimeout(() => {
+          pageContent.classList.add('show');
+        }, 10);
+        setupDragAndDrop();
+      }
+    }
+
+    const pages = {
+      Home: `
+        <div class="panel">
+          <h2>Status</h2>
+          <p>Hidden from extensions: <span style="color: green;">True</span></p>
+          <p>Version: <span style="color: orangered;" id="home-version">v1.0.0</span></p>
+          <a class="link" href="https://sites.google.com/view/undergr0und/changelog" target="_blank">Changelog</a>
+        </div>
+        <div class="panel">
+          <h2>Viewer</h2>
+          <input type="text" id="viewerUrl" placeholder="URL (not proxied)">
+          <button onclick="loadViewer()">Go</button>
+          <button onclick="addToLibrary()">Add to Library</button>
+        </div>
+        <div class="panel" id="updater-panel">
+          <h2>Updater</h2>
+          <p>Latest version available: <span id="latest-version">Checking...</span></p>
+          <p>Version installed: <span id="installed-version">v1.0.0</span></p>
+        </div>`,
+      Library: `
+        <div class="panel" style="max-width: 100%; width: 100%;">
+          <h2>Library</h2>
+          <input type="text" id="librarySearch" placeholder="Search Library" oninput="filterLibrary()">
+          <div class="library-columns">
+            <div class="library-column">
+              <h3>Favorites</h3>
+              <div id="favoritedWebsites"></div>
+            </div>
+            <div class="library-column">
+              <h3>Recents</h3>
+              <div id="recentlyViewed"></div>
+            </div>
+          </div>
+        </div>`,
+      Viewer: `<div class="panel"><h2>Viewer</h2><input type="text" id="viewerUrl" placeholder="URL (not proxied)"><button onclick="loadViewer()">Go</button><button onclick="addToLibrary()">Add to Library</button></div>`,
+      Games: generateGamesHTML(),
+      Updater: `
+        <div class="panel">
+          <h2>Updater</h2>
+          <p>Click this button to look for new versions.</p>
+          <button onclick="checkForVersion()">Check for Updates</button>
+          <p id="version-status">Click the button to check for updates.</p>
+        </div>`,
+      Settings: `
+        <div class="panel" style="max-width: 500px;">
+          <h2>Settings</h2>
+          <h3>Theme</h3>
+          <div class="theme-selector">
+            <div class="theme-option theme-default-preview selected" onclick="setTheme('default')" title="Default"></div>
+            <div class="theme-option theme-ocean-preview" onclick="setTheme('ocean')" title="Ocean"></div>
+            <div class="theme-option theme-forest-preview" onclick="setTheme('forest')" title="Forest"></div>
+            <div class="theme-option theme-purple-preview" onclick="setTheme('purple')" title="Purple"></div>
+            <div class="theme-option theme-red-preview" onclick="setTheme('red')" title="Red"></div>
+            <div class="theme-option theme-cyberpunk-preview" onclick="setTheme('cyberpunk')" title="Cyberpunk"></div>
+          </div>
+          <button class="reset-button" onclick="resetApp()">
+            <i class="fas fa-trash-alt"></i> Reset App to Default
+          </button>
+        </div>`,
+      About: `<div class="panel"><h2>About</h2><p>Underground v1.0.0<br>Created by Zerone.</p></div>`
+    };
+
+    async function checkForVersion() {
+      const versionURL = "https://deluxe-obtainable-trigonometry.glitch.me/version.txt";
+      const indexURL = "https://deluxe-obtainable-trigonometry.glitch.me/index.txt";
+
+      try {
+        const versionResponse = await fetch(versionURL);
+        const currentVersion = (await versionResponse.text()).trim();
+        document.getElementById("version-status").textContent = `Current version: ${currentVersion}`;
+
+        const savedVersion = localStorage.getItem("lastCheckedVersion");
+        if (currentVersion !== savedVersion) {
+          localStorage.setItem("lastCheckedVersion", currentVersion);
+          const indexResponse = await fetch(indexURL);
+          const driveURL = (await indexResponse.text()).trim();
+          autoDownload(driveURL);
+        }
+      } catch (err) {
+        document.getElementById("version-status").textContent = "Error checking version.";
+        console.error(err);
+      }
+    }
+
+    function autoDownload(url) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function switchPage(page) {
+      pageContent.classList.add('fade-out');
+      setTimeout(() => {
+        pageTitle.textContent = page;
+        pageContent.innerHTML = pages[page] || '';
+        pageContent.classList.remove('fade-out');
+
+        if (page === 'Games') {
+          updateGamesPage();
+          setupDragAndDrop();
+        }
+
+        if (page === 'Viewer') {
+          const viewerUrlInput = document.querySelector("#viewerUrl");
+          if (viewerUrlInput && viewerUrlInput.value) {
+            viewerUrlInput.value = viewerUrlInput.value;
+          }
+        }
+
+        if (page === 'Library') {
+          updateLibraryPage();
+        }
+
+        if (page !== 'Viewer' && page !== 'Games') {
+          const existingIframe = document.querySelector('iframe');
+          if (existingIframe) existingIframe.remove();
+        }
+      }, 300);
+    }
+
+    function handleIconClick() {
+      icons.forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+      const page = this.getAttribute('data-page');
+      switchPage(page);
+    }
+
+    function handleTooltipShow(e) {
+      tooltip.style.left = `${e.pageX + 15}px`;
+      tooltip.style.top = `${e.pageY}px`;
+      tooltip.textContent = this.getAttribute('title');
+      tooltip.style.display = 'block';
+    }
+
+    function handleTooltipHide() {
+      tooltip.style.display = 'none';
+    }
+
+    function handleSidebarHover(e) {
+      if (e.clientX <= 10 && !isSidebarOpen) {
+        document.querySelector('.sidebar').classList.add('open');
+        isSidebarOpen = true;
+      } else if (e.clientX > 60 && isSidebarOpen) {
+        document.querySelector('.sidebar').classList.remove('open');
+        isSidebarOpen = false;
+      }
+    }
+
+    function addToLibrary() {
+      const url = document.getElementById('viewerUrl').value;
+      if (url) {
+        library.push(url);
+        localStorage.setItem('library', JSON.stringify(library));
+        alert('Website added to library');
+      } else {
+        alert('Please enter a URL');
+      }
+    }
+
+    function removeLibraryItem(event, item) {
+      event.stopPropagation();
+      library = library.filter(libItem => libItem !== item);
+      localStorage.setItem('library', JSON.stringify(library));
+      updateLibraryPage();
+    }
+      
+    function resetApp() {
+      if (confirm("Are you sure you want to reset the app? This will delete all saved games, favorites, and settings.")) {
+        // Clear all localStorage data
+        localStorage.clear();
+        
+        // Reset the app state
+        games = [{
+          name: "Agar.io",
+          url: "https://fluxaga.glitch.me",
+          icon: "https://static.wikia.nocookie.net/yogscast/images/1/19/Agar.io_appstore_logo.png/revision/latest?cb=20160626223327"
+        }];
+        
+        library = [];
+        favoriteGames = [];
+        currentTheme = 'default';
+        
+        // Reset the UI
+        setTheme('default');
+        switchPage('Home');
+        updateGamesPage();
+        
+        alert("App has been reset to default settings.");
+      }
+    }
+
+    function filterLibrary() {
+      const query = document.getElementById('librarySearch').value.toLowerCase();
+      const filteredLibrary = library.filter(item => item.toLowerCase().includes(query));
+      document.getElementById('favoritedWebsites').innerHTML = filteredLibrary.map(item => `
+        <div class="library-item">
+          <div class="remove-icon" onclick="removeLibraryItem(event, '${item}')" title="Remove Website">
+            <i class="fas fa-times"></i>
+          </div>
+          <div class="library-item-content" onclick="loadViewerFromLibrary('${item}')">
+            ${item}
+          </div>
+        </div>
+      `).join('');
+    }
+  </script>
+</body>
+</html>
