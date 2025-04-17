@@ -854,7 +854,7 @@
         .replace(/'/g, "&#039;");
     }
 
-  function loadViewerFromLibrary(url, customTitle = 'Viewing URL', displayUrl = url) {
+  function loadViewerFromLibrary(url, customTitle = 'Viewing URL', displayUrl = url, updateRecents = true) {
     if (!url) return;
   
     try {
@@ -876,7 +876,7 @@
         <button onclick="switchPage('Games')" style="margin-left: 10px;">Back to Games</button>
       </div>`;
   
-    updateRecentlyViewed(url);
+    if (updateRecents) updateRecentlyViewed(url);
   }
 
 
@@ -1101,7 +1101,8 @@
     const isProxied = game && game.proxied && game.proxiedUrl;
     const iframeUrl = isProxied ? game.proxiedUrl : url;
     const displayUrl = isProxied ? "hidden url for performance" : url;
-    loadViewerFromLibrary(iframeUrl, name, displayUrl);
+  
+    loadViewerFromLibrary(iframeUrl, name, displayUrl, !isProxied);
   }
 
 
