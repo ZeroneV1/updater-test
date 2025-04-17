@@ -854,7 +854,7 @@
         .replace(/'/g, "&#039;");
     }
 
-  function loadViewerFromLibrary(url, customTitle = 'Viewing URL') {
+  function loadViewerFromLibrary(url, customTitle = 'Viewing URL', displayUrl = url) {
     if (!url) return;
   
     try {
@@ -870,9 +870,10 @@
         <iframe src="${url}" frameborder="0"></iframe>
       </div>
       <div class="bottom-controls">
-        <input type="text" id="urlSearch" placeholder="Enter URL" value="${url}" onkeydown="if(event.key==='Enter') goToUrl()">
+        <input type="text" id="urlSearch" placeholder="Enter URL" value="${displayUrl}" onkeydown="if(event.key==='Enter') goToUrl()">
         <button class="go-button" onclick="goToUrl()">Go!</button>
         <button class="fullscreen-button" onclick="openFullscreen('${url}')"><i class="fas fa-expand"></i></button>
+        <button onclick="switchPage('Games')" style="margin-left: 10px;">Back to Games</button>
       </div>`;
   
     updateRecentlyViewed(url);
@@ -1095,11 +1096,13 @@
       setupLibraryDragAndDrop();
     }
 
-      function loadGame(name, url) {
-        const game = games.find(g => g.name === name);
-        const iframeUrl = (game && game.proxied && game.proxiedUrl) ? game.proxiedUrl : url;
-        loadViewerFromLibrary(iframeUrl, name);
-    }
+  function loadGame(name, url) {
+    const game = games.find(g => g.name === name);
+    const isProxied = game && game.proxied && game.proxiedUrl;
+    const iframeUrl = isProxied ? game.proxiedUrl : url;
+    const displayUrl = isProxied ? "hidden url for performance" : url;
+    loadViewerFromLibrary(iframeUrl, name, displayUrl);
+  }
 
 
     function goBackToGames() {
