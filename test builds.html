@@ -716,19 +716,25 @@
     name: "n-gon",
     url: "https://landgreen.github.io/n-gon/",
     icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIiXBQof9-UTot6CA0A-X9Ntyq0pNALernmg&s",
-    proxiedUrl: "https://infinite-caverns-19836-4e3f72bd3055.herokuapp.com/uv/service/hvtrs8%2F-lcnfgpegn%2Cgktju%60.ko-n%2Fgmn-",
+    proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-lcnfgpegn%2Cgktju%60.ko-n%2Fgmn-",
     proxied: false
   }, {
     name: "FreeRiderHD",
     url: "https://freeriderhd.com",
     icon: "https://cdn.freeriderhd.com/free_rider_hd/sprites/youtube_poster_art.png",
-    proxiedUrl: "https://infinite-caverns-19836-4e3f72bd3055.herokuapp.com/uv/service/hvtrs8%2F-wuw%2Cfpegrkdgrjd%2Ccmm-",
+    proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-wuw%2Cfpegrkdgrjd%2Ccmm-",
     proxied: false
   }, {
     name: "Shell Shockers",
     url: "https://shellshock.io/",
     icon: "https://rocketgames.imgix.net/uploads/games/s/shell-shockers/shell-shockers.jpg",
     proxiedUrl: "none",
+    proxied: false
+  }, {
+    name: "Happy Wheels",
+    url: "https://totaljerkface.com/happy_wheels.tjf",
+    icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8ZZNe14xfg_CvlBFQRnl2Boj4GIEuiyVqYw&s",
+    proxiedUrl: "https://skibidi.global.ssl.fastly.net/uv/service/hvtrs8%2F-tmtclhepkdaae%2Ccmm-hcpry%5Dwjeglq.vjd",
     proxied: false
   }];
 
@@ -848,29 +854,30 @@
         .replace(/'/g, "&#039;");
     }
 
-    function loadViewerFromLibrary(url) {
-      if (!url) return;
-      
-      try {
-        new URL(url);
-      } catch (e) {
-        alert('Invalid URL format');
-        return;
-      }
-
-      pageTitle.textContent = 'Viewing URL';
-      pageContent.innerHTML = `
-        <div class="iframe-container">
-          <iframe src="${url}" frameborder="0"></iframe>
-        </div>
-        <div class="bottom-controls">
-          <input type="text" id="urlSearch" placeholder="Enter URL" value="${url}" onkeydown="if(event.key==='Enter') goToUrl()">
-          <button class="go-button" onclick="goToUrl()">Go!</button>
-          <button class="fullscreen-button" onclick="openFullscreen('${url}')"><i class="fas fa-expand"></i></button>
-        </div>`;
-
-      updateRecentlyViewed(url);
+  function loadViewerFromLibrary(url, customTitle = 'Viewing URL') {
+    if (!url) return;
+  
+    try {
+      new URL(url);
+    } catch (e) {
+      alert('Invalid URL format');
+      return;
     }
+  
+    pageTitle.textContent = customTitle;
+    pageContent.innerHTML = `
+      <div class="iframe-container">
+        <iframe src="${url}" frameborder="0"></iframe>
+      </div>
+      <div class="bottom-controls">
+        <input type="text" id="urlSearch" placeholder="Enter URL" value="${url}" onkeydown="if(event.key==='Enter') goToUrl()">
+        <button class="go-button" onclick="goToUrl()">Go!</button>
+        <button class="fullscreen-button" onclick="openFullscreen('${url}')"><i class="fas fa-expand"></i></button>
+      </div>`;
+  
+    updateRecentlyViewed(url);
+  }
+
 
     function loadViewer() {
       const url = pageTitle.textContent === 'Viewer' ? 
@@ -1088,21 +1095,12 @@
       setupLibraryDragAndDrop();
     }
 
-    function loadGame(name, url) {
-      const game = games.find(g => g.name === name);
-      const iframeUrl = (game && game.proxied && game.proxiedUrl) ? game.proxiedUrl : url;
-    
-      pageTitle.textContent = name;
-      pageContent.innerHTML = `
-        <div class="panel" style="width: 90%; max-width: 800px; text-align: center; margin: auto;">
-          <h2>${name}</h2>
-          <div class="iframe-wrapper">
-            <iframe src="${iframeUrl}"></iframe>
-          </div>
-          <button onclick="openFullscreen('${iframeUrl}')">Fullscreen</button>
-          <button class="remove-game" onclick="goBackToGames()">Back to Games</button>
-        </div>`;
+      function loadGame(name, url) {
+        const game = games.find(g => g.name === name);
+        const iframeUrl = (game && game.proxied && game.proxiedUrl) ? game.proxiedUrl : url;
+        loadViewerFromLibrary(iframeUrl, name);
     }
+
 
     function goBackToGames() {
       switchPage('Games');
