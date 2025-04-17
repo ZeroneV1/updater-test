@@ -854,29 +854,31 @@
         .replace(/'/g, "&#039;");
     }
 
-    function loadViewerFromLibrary(url) {
-      if (!url) return;
-      
-      try {
-        new URL(url);
-      } catch (e) {
-        alert('Invalid URL format');
-        return;
-      }
-
-      pageTitle.textContent = 'Viewing URL';
-      pageContent.innerHTML = `
-        <div class="iframe-container">
-          <iframe src="${url}" frameborder="0"></iframe>
-        </div>
-        <div class="bottom-controls">
-          <input type="text" id="urlSearch" placeholder="Enter URL" value="${url}" onkeydown="if(event.key==='Enter') goToUrl()">
-          <button class="go-button" onclick="goToUrl()">Go!</button>
-          <button class="fullscreen-button" onclick="openFullscreen('${url}')"><i class="fas fa-expand"></i></button>
-        </div>`;
-
-      updateRecentlyViewed(url);
+  function loadViewerFromLibrary(url, customTitle = 'Viewing URL', displayUrl = url, updateRecents = true) {
+    if (!url) return;
+  
+    try {
+      new URL(url);
+    } catch (e) {
+      alert('Invalid URL format');
+      return;
     }
+  
+    pageTitle.textContent = customTitle;
+    pageContent.innerHTML = `
+      <div class="iframe-container">
+        <iframe src="${url}" frameborder="0"></iframe>
+      </div>
+      <div class="bottom-controls">
+        <input type="text" id="urlSearch" placeholder="Enter URL" value="${displayUrl}" onkeydown="if(event.key==='Enter') goToUrl()">
+        <button class="go-button" onclick="goToUrl()">Go!</button>
+        <button class="fullscreen-button" onclick="openFullscreen('${url}')"><i class="fas fa-expand"></i></button>
+        <button onclick="switchPage('Games')" style="margin-left: 10px;">Back to Games</button>
+      </div>`;
+  
+    if (updateRecents) updateRecentlyViewed(url);
+  }
+
 
     function loadViewer() {
       const url = pageTitle.textContent === 'Viewer' ? 
@@ -1094,21 +1096,15 @@
       setupLibraryDragAndDrop();
     }
 
-    function loadGame(name, url) {
-      const game = games.find(g => g.name === name);
-      const iframeUrl = (game && game.proxied && game.proxiedUrl) ? game.proxiedUrl : url;
-    
-      pageTitle.textContent = name;
-      pageContent.innerHTML = `
-        <div class="panel" style="width: 90%; max-width: 800px; text-align: center; margin: auto;">
-          <h2>${name}</h2>
-          <div class="iframe-wrapper">
-            <iframe src="${iframeUrl}"></iframe>
-          </div>
-          <button onclick="openFullscreen('${iframeUrl}')">Fullscreen</button>
-          <button class="remove-game" onclick="goBackToGames()">Back to Games</button>
-        </div>`;
-    }
+  function loadGame(name, url) {
+    const game = games.find(g => g.name === name);
+    const isProxied = game && game.proxied && game.proxiedUrl;
+    const iframeUrl = isProxied ? game.proxiedUrl : url;
+    const displayUrl = isProxied ? "hidden url for performance" : url;
+  
+    loadViewerFromLibrary(iframeUrl, name, displayUrl, !isProxied);
+  }
+
 
     function goBackToGames() {
       switchPage('Games');
