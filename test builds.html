@@ -15,19 +15,20 @@
       --transition-speed: 0.3s;
       --border-radius: 8px;
       --icon-size: 1.2rem;
+      --search-height: 40px; /* Added for consistent search bar height */
     }
-      
+
     .reset-button {
       background-color: #ff4444;
       color: white;
       margin-top: 1rem;
       width: 100%;
     }
-    
+
     .reset-button:hover {
       background-color: #cc0000;
     }
-      
+
     .theme-ocean {
       --bg-dark: #0f172a;
       --sidebar-dark: #1e293b;
@@ -70,22 +71,35 @@
       --text-light: #e6e6ff;
       --text-muted: #b3b3ff;
       --card-bg: #1a1a2e;
-      --accent: #ff00ff;
+      --accent: #ff00ff; /* Example accent for cyberpunk */
     }
 
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
       display: flex;
-      background-color: var(--bg-dark);
+      /* Background color is now primarily handled by Vanta.js */
+      /* background-color: var(--bg-dark); */
       color: var(--text-light);
       height: 100vh;
       overflow: hidden;
+      position: relative; /* Needed for z-index stacking */
     }
+
+    /* Ensure Vanta canvas is behind everything else */
+    .vanta-canvas {
+       z-index: -1 !important; /* Important might be needed depending on Vanta's internal styles */
+       position: absolute !important;
+       top: 0;
+       left: 0;
+       width: 100% !important;
+       height: 100% !important;
+    }
+
 
     .sidebar {
       width: 60px;
-      position: absolute;
+      position: fixed; /* Use fixed for positioning relative to viewport */
       top: 0;
       left: -60px;
       height: 100%;
@@ -96,7 +110,7 @@
       padding: 1rem 0;
       gap: 1.5rem;
       transition: left var(--transition-speed) ease;
-      z-index: 10;
+      z-index: 10; /* Sidebar needs to be above Vanta */
     }
 
     .sidebar.open {
@@ -135,46 +149,84 @@
       padding: 2rem;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      /* Removed align-items: center; to allow flexible layout */
       overflow-y: auto;
+      margin-left: 0; /* Adjust margin since sidebar is fixed */
+      transition: margin-left var(--transition-speed) ease;
+      z-index: 5; /* Content above Vanta */
+      position: relative; /* Needed for z-index */
+      background-color: transparent; /* Let Vanta show through */
+      width: 100%; /* Ensure content takes full width */
+      box-sizing: border-box;
     }
+
+    .sidebar.open ~ .content {
+        margin-left: 60px; /* Push content when sidebar is open */
+    }
+
 
     h1 {
       margin-bottom: 2rem;
     }
 
     .panel {
-      background-color: var(--card-bg);
-      padding: 1.5rem;
-      border-radius: var(--border-radius);
-      min-width: 250px;
-      max-width: 300px;
-      margin: 1rem;
-      text-align: center;
+        /* Existing styles */
+        padding: 1.5rem; /* This is a good starting point, maybe increase slightly if content feels cramped */
+        margin: 1rem auto; /* Use auto for left/right margin to center the block if it has a max-width */
+        max-width: 800px; /* Example: Give panels a max-width to prevent them from stretching too wide on large screens */
+        width: 95%; /* Ensure responsiveness */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Existing shadow */
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius);
+        box-sizing: border-box;
+        color: var(--text-light); /* Ensure text color is set for the panel */
     }
 
     .panel-container {
       display: flex;
-      gap: 2rem;
+      flex-direction: column; /* Stack panels vertically */
+      gap: 1rem; /* Adjust gap between panels */
       flex-wrap: wrap;
-      justify-content: center;
+      justify-content: flex-start; /* Align panels to the start */
       opacity: 1;
       transition: opacity var(--transition-speed) ease;
+      width: 100%; /* Ensure container takes width */
+       align-items: center; /* Center panels horizontally */
     }
 
     .panel-container.fade-out {
       opacity: 0;
+    }
+      
+    .panel h2 {
+        margin-top: 0; /* Remove top margin from the first element */
+        margin-bottom: 1rem; /* Space below the heading */
+        color: var(--accent); /* Use accent for headings */
+    }
+    
+    .panel h3 {
+         margin-top: 1.5rem; /* Space above subheadings */
+         margin-bottom: 0.8rem; /* Space below subheadings */
+         color: var(--text-light); /* Or var(--accent) */
+    }
+    
+    .panel p {
+        margin-bottom: 1em; /* Space below paragraphs */
     }
 
     input[type="text"] {
       background: var(--card-bg);
       border: 1px solid var(--accent);
       padding: 0.5rem;
-      width: 100%;
+      width: 100%; /* Take full width of parent */
       margin-bottom: 0.5rem;
       color: var(--text-light);
       border-radius: 5px;
       transition: border var(--transition-speed) ease;
+      box-sizing: border-box; /* Include padding and border in element's total width */
+       height: var(--search-height); /* Use defined height */
+       font-size: 1rem; /* Adjust font size */
+       padding-left: calc(0.5rem + 24px); /* Space for search icon */
     }
 
     input[type="text"]:focus {
@@ -184,8 +236,8 @@
 
     button {
       background-color: var(--accent);
-      color: black;
-      border: 1px solid #444;
+      color: black; /* Changed for better contrast on accent */
+      border: none; /* Removed border */
       padding: 0.5rem 1rem;
       border-radius: 5px;
       cursor: pointer;
@@ -194,9 +246,10 @@
     }
 
     button:hover {
-      background-color: #333;
-      color: white;
+      filter: brightness(1.2); /* Brighter accent on hover */
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Slight shadow on hover */
     }
+
 
     .game-card, .action-card {
       background-color: var(--card-bg);
@@ -207,6 +260,7 @@
       transition: transform 0.2s;
       width: 150px;
       position: relative;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* Add shadow */
     }
 
     .game-card:hover, .action-card:hover {
@@ -222,12 +276,16 @@
     .iframe-container {
       position: absolute;
       top: 0;
-      left: 60px;
+      left: 0; /* Starts from the very left */
       right: 0;
-      bottom: 60px;
+      bottom: 60px; /* Space for bottom controls */
       display: flex;
       justify-content: center;
       align-items: center;
+       width: 100%; /* Take full width */
+       height: calc(100% - 60px); /* Adjust height */
+       z-index: 20; /* Above sidebar and content when viewing */
+       background: var(--bg-dark); /* Background for iframe view */
     }
 
     .iframe-container iframe {
@@ -237,9 +295,9 @@
     }
 
     .bottom-controls {
-      position: fixed;
+      position: fixed; /* Fixed to bottom */
       bottom: 0;
-      left: 60px;
+      left: 0; /* Starts from the very left */
       right: 0;
       display: flex;
       align-items: center;
@@ -248,7 +306,10 @@
       padding: 10px;
       background-color: var(--bg-dark);
       border-top: 1px solid #444;
+      z-index: 25; /* Above iframe */
+      box-sizing: border-box;
     }
+
 
     .bottom-controls input[type="text"] {
       flex: 1;
@@ -268,8 +329,12 @@
       display: flex;
       align-items: center;
       background-color: var(--accent);
-      color: white;
+      color: black; /* Changed color */
     }
+    .bottom-controls button:hover {
+       filter: brightness(1.2);
+    }
+
 
     .fullscreen-button i {
       margin-right: 5px;
@@ -308,6 +373,7 @@
       border-radius: var(--border-radius);
       width: 300px;
       position: relative;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
     }
 
     .modal-close {
@@ -332,10 +398,12 @@
     }
 
     .games-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      justify-content: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem; /* Increased gap */
+        justify-content: center;
+        padding: 1rem; /* Add padding */
+        width: 100%; /* Take full width */
     }
 
     .games-header {
@@ -369,12 +437,14 @@
       font-size: 12px;
       cursor: pointer;
       z-index: 2;
+      transition: background 0.2s, color 0.2s;
     }
 
     .remove-icon:hover {
-      background: rgba(255,0,0,0.7);
+      background: #ff4444;
       color: white;
     }
+
 
     .game-card.dragging {
       opacity: 0.5;
@@ -393,11 +463,12 @@
       margin: 5px;
       cursor: pointer;
       border: 2px solid transparent;
-      transition: transform 0.2s;
+      transition: transform 0.2s, border-color 0.2s; /* Smooth transition */
     }
 
     .theme-option:hover {
       transform: scale(1.1);
+       border-color: rgba(255, 255, 255, 0.5); /* Subtle border on hover */
     }
 
     .theme-option.selected {
@@ -412,33 +483,18 @@
       margin-top: 1rem;
     }
 
-    .theme-default-preview {
-      background: linear-gradient(135deg, #1c1c1e 50%, #2c2c2e 50%);
-    }
+     /* Added theme previews */
+    .theme-default-preview { background: linear-gradient(135deg, #1c1c1e 50%, #2c2c2e 50%); }
+    .theme-ocean-preview { background: linear-gradient(135deg, #0f172a 50%, #1e293b 50%); }
+    .theme-forest-preview { background: linear-gradient(135deg, #1a2e05 50%, #2b3e0f 50%); }
+    .theme-purple-preview { background: linear-gradient(135deg, #1e1b4b 50%, #312e81 50%); }
+    .theme-red-preview { background: linear-gradient(135deg, #450a0a 50%, #7f1d1d 50%); }
+    .theme-cyberpunk-preview { background: linear-gradient(135deg, #0f0f1a 50%, #1a1a2e 50%); }
 
-    .theme-ocean-preview {
-      background: linear-gradient(135deg, #0f172a 50%, #1e293b 50%);
-    }
-
-    .theme-forest-preview {
-      background: linear-gradient(135deg, #1a2e05 50%, #2b3e0f 50%);
-    }
-
-    .theme-purple-preview {
-      background: linear-gradient(135deg, #1e1b4b 50%, #312e81 50%);
-    }
-
-    .theme-red-preview {
-      background: linear-gradient(135deg, #450a0a 50%, #7f1d1d 50%);
-    }
-
-    .theme-cyberpunk-preview {
-      background: linear-gradient(135deg, #0f0f1a 50%, #1a1a2e 50%);
-    }
 
     .favorite-button {
       background-color: transparent;
-      color: var(--text-light);
+      color: var(--text-muted); /* Use muted text color */
       border: none;
       padding: 5px 8px;
       border-radius: 5px;
@@ -452,16 +508,18 @@
 
     .favorite-button:hover {
       background-color: rgba(255,255,255,0.1);
+      color: var(--text-light); /* Lighten on hover */
     }
+     .favorite-button i.fa-star { /* Style filled star */
+        color: var(--accent);
+     }
 
-    .favorite-button i {
-      font-size: 1rem;
-    }
 
     #librarySearch {
-      margin: 0 auto;
-      display: block;
-      width: 80%;
+        margin: 1rem auto; /* Add margin */
+        display: block;
+        width: 80%;
+        max-width: 400px; /* Max width */
     }
 
     .library-item {
@@ -480,31 +538,36 @@
       box-sizing: border-box;
       overflow: hidden;
     }
-    
+
     .library-item-content {
       flex: 1;
-      text-align: center;
-      padding: 0 25px;
+      text-align: left; /* Align left */
+      padding: 0 35px 0 25px; /* Adjust padding for icons */
       cursor: pointer;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      margin: 0 5px;
       font-size: 0.9rem;
       border-radius: 4px;
       transition: all 0.2s ease;
+      color: var(--text-light); /* Ensure text is visible */
     }
-    
+
+    .library-item:hover {
+       background-color: var(--sidebar-dark); /* Darker background on hover */
+    }
+
     .library-item:hover .library-item-content {
-      background-color: var(--accent);
-      color: black;
-      padding: 2px 25px;
-      margin: -2px 5px;
-    }
-    
+       color: var(--accent); /* Accent color for text on hover */
+       background-color: transparent; /* Remove background change */
+     }
+
+
     .library-item .remove-icon {
       position: absolute;
       left: 6px;
+      top: 50%; /* Center vertically */
+      transform: translateY(-50%); /* Center vertically */
       color: var(--text-muted);
       width: 18px;
       height: 18px;
@@ -515,14 +578,12 @@
       transition: all 0.2s;
       z-index: 2;
     }
-    
+
     .library-item:hover .remove-icon {
-      color: black;
+       color: #ff4444; /* Red remove icon on hover */
+       background: rgba(255, 68, 68, 0.2); /* Slight red background */
     }
-    
-    .remove-icon i {
-      font-size: 12px;
-    }
+
 
     .favorite-transition {
       opacity: 0;
@@ -541,10 +602,15 @@
 
     .action-card p {
       margin: 0;
+       color: var(--text-muted); /* Muted text for actions */
     }
+     .action-card:hover p {
+        color: var(--text-light); /* Lighten text on hover */
+     }
 
     .library-columns {
       display: flex;
+      flex-wrap: wrap; /* Allow wrapping on smaller screens */
       gap: 2rem;
       justify-content: center;
       width: 100%;
@@ -552,21 +618,126 @@
 
     .library-column {
       flex: 1;
+      min-width: 250px; /* Min width before wrapping */
       max-width: 45%;
-      min-width: 300px;
     }
-    
+
     .library-column h3 {
       text-align: center;
       margin-bottom: 1rem;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--accent);
+      color: var(--accent); /* Accent color for headings */
     }
+    /* Add specific styling for changelog modal content */
+    #changelogContent {
+        background-color: var(--bg-dark); /* Match theme background */
+        color: var(--text-light); /* Match theme text color */
+        padding: 1rem;
+        border-radius: var(--border-radius);
+        max-height: 60vh; /* Limit height */
+        overflow-y: auto; /* Allow scrolling */
+        border: 1px solid var(--sidebar-dark); /* Subtle border */
+    }
+
+    /* --- Home Page Specific Styles --- */
+    .home-layout {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%; /* Take full height of content container */
+        position: relative; /* Needed for absolute positioning of middle section */
+        align-items: center; /* Center items horizontally by default */
+        overflow-y: auto; /* Allow scrolling if content exceeds height */
+        padding-top: 20px; /* Add some space at the top */
+    }
+    
+    .home-header {
+        width: 100%;
+        text-align: center; /* Center the logo */
+        margin-bottom: 20px; /* Space below the logo */
+    }
+    
+    .home-logo {
+        font-size: 3rem; /* Large font size for the name */
+        font-weight: bold;
+        color: var(--text-light); /* Ensure name is bright */
+        text-shadow: 0 0 10px var(--accent); /* Optional: glow effect */
+    }
+    
+    .home-main-section {
+        display: flex;
+        align-items: center;
+        justify-content: center; /* Center the items horizontally */
+        gap: 20px; /* Space between items */
+        margin-bottom: 30px; /* Space below this section */
+        flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    }
+    
+    .home-search-container {
+        display: flex;
+        align-items: center;
+        position: relative; /* For search icon */
+        flex-grow: 1; /* Allow search to take available space */
+        max-width: 400px; /* Limit max width */
+    }
+    
+    .home-search-container input[type="text"] {
+        flex-grow: 1; /* Allow input to fill space */
+        padding-left: calc(1rem + 24px); /* Adjust padding for icon */
+    }
+    
+    .home-search-container .search-icon {
+        position: absolute;
+        left: 10px;
+        color: var(--text-muted);
+        font-size: 1.2rem;
+        height: var(--search-height); /* Match search height */
+        display: flex;
+        align-items: center; /* Vertically center icon */
+    }
+    
+    .home-status {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        display: flex; /* Use flexbox for status items */
+        gap: 15px; /* Space between status items */
+    }
+    
+    .home-status p {
+        margin: 0; /* Remove default paragraph margin */
+    }
+    
+    
+    .home-news-panel {
+        width: 95%; /* Adjust width as needed */
+        max-width: 800px; /* Limit max width */
+        margin: 0 auto; /* Center the news panel */
+        flex-shrink: 0; /* Prevent shrinking */
+    }
+      
+    .changelog-button {
+        background-color: var(--accent); /* Use the theme's accent color */
+        color: black; /* Set text color to black for contrast on the accent color */
+        border: none; /* Remove the border */
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all var(--transition-speed) ease;
+        display: flex; /* Use flexbox to align the icon and text */
+        align-items: center; /* Vertically center the icon and text */
+        gap: 5px; /* Add a small gap between the icon and the text */
+    }
+    
+    .changelog-button:hover {
+        filter: brightness(1.2); /* Make the button slightly brighter on hover */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Add a subtle shadow on hover */
+    }
+
   </style>
 </head>
-<body class="theme-default">
-
-  <div class="tooltip" id="tooltip"></div>
+<body class="theme-default"> <div class="tooltip" id="tooltip"></div>
 
   <div class="modal" id="addGameModal">
     <div class="modal-content">
@@ -581,14 +752,14 @@
       </div>
     </div>
   </div>
-   
-<div class="modal" id="changelogModal">
-  <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
-    <button class="modal-close" onclick="closeChangelogModal()">&times;</button>
-    <h2>Changelog</h2>
-    <pre id="changelogContent" style="white-space: pre-wrap; font-family: inherit;"></pre>
+
+  <div class="modal" id="changelogModal">
+    <div class="modal-content" style="max-width: 600px; max-height: 80vh;">
+      <button class="modal-close" onclick="closeChangelogModal()">&times;</button>
+      <h2>Changelog</h2>
+      <pre id="changelogContent" style="white-space: pre-wrap; font-family: inherit;"></pre>
+    </div>
   </div>
-</div>
 
   <div class="sidebar">
     <div class="icon active" data-page="Home" title="Home"><i class="fas fa-home"></i></div>
@@ -604,27 +775,13 @@
   </div>
 
   <div class="content">
-    <h1 id="page-title">UnderGr0und</h1>
+    <h1 id="page-title" style="display: none;">UnderGr0und</h1>
     <div id="page-content" class="panel-container">
-      <div class="panel">
-        <h2>Status</h2>
-        <p>Hidden from extensions: <span style="color: green;">True</span></p>
-        <p>Version: <span style="color: orangered;" id="home-version">v1.0.0</span></p>
-        <a class="link" href="https://sites.google.com/view/undergr0und/changelog" target="_blank">Changelog</a>
       </div>
-      <div class="panel">
-        <h2>Viewer</h2>
-        <input type="text" id="viewerUrl" placeholder="URL (not proxied)">
-        <button onclick="loadViewer()">Go</button>
-        <button onclick="addToLibrary()">Add to Library</button>
-      </div>
-      <div class="panel" id="updater-panel">
-        <h2>Updater</h2>
-        <p>Latest version available: <span id="latest-version">Checking...</span></p>
-        <p>Version installed: <span id="installed-version">v1.0.0</span></p>
-      </div>
-    </div>
   </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.fog.min.js"></script>
 
   <script>
     // DOM Elements
@@ -633,7 +790,7 @@
     const pageContent = document.getElementById('page-content');
     const tooltip = document.getElementById('tooltip');
     const addGameModal = document.getElementById('addGameModal');
-    const viewerUrlInput = document.getElementById('viewerUrl');
+    const changelogModal = document.getElementById('changelogModal'); // Get changelog modal
 
     // App State
     let games = [];
@@ -643,116 +800,253 @@
     let currentTheme = 'default';
     let favoriteGames = [];
     let isSidebarOpen = false;
+    let vantaEffect = null; // Variable to hold the Vanta instance
+    let showingFavorites = false; // New state variable for favorite games view
 
-    // Initialize the app
+    // --- VANTA.JS HELPER ---
+    // Function to convert CSS hex/rgb color to Vanta's number format
+    function colorToVantaFormat(colorString) {
+        if (!colorString) {
+            console.warn("colorToVantaFormat received empty color string. Defaulting to black.");
+            return 0x000000; // Default to black if color is missing
+        }
+
+        // Check if it's hex (e.g., #ff0000 or #f00)
+        if (colorString.startsWith('#')) {
+            let hex = colorString.substring(1);
+            if (hex.length === 3) {
+                hex = hex.split('').map(char => char + char).join('');
+            }
+            try {
+                 return parseInt(`0x${hex}`);
+            } catch (e) {
+                 console.error(`Failed to parse hex color "${colorString}":`, e);
+                 return 0x000000;
+            }
+
+        }
+
+        // Check if it's rgb (e.g., rgb(255, 0, 0))
+        const rgbMatch = colorString.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        if (rgbMatch) {
+            const r = parseInt(rgbMatch[1]);
+            const g = parseInt(rgbMatch[2]);
+            const b = parseInt(rgbMatch[3]);
+            return (r << 16) + (g << 8) + b;
+        }
+
+        // Fallback for named colors or other formats (this is basic, might need improvement)
+        try {
+            // Use a temporary element to resolve named colors etc.
+            const tempDiv = document.createElement('div');
+            tempDiv.style.color = colorString;
+            document.body.appendChild(tempDiv);
+            const computedColor = getComputedStyle(tempDiv).color;
+            document.body.removeChild(tempDiv);
+            console.log(`Resolved named color "${colorString}" to "${computedColor}".`);
+            return colorToVantaFormat(computedColor); // Recursively call with the resolved rgb/hex
+        } catch (e) {
+             console.warn(`Could not parse color: ${colorString}. Defaulting to black.`);
+             return 0x000000;
+        }
+    }
+
+    // --- INITIALIZATION ---
     window.addEventListener('DOMContentLoaded', async () => {
-      loadData();
+      console.log('DOMContentLoaded fired.');
+      loadData(); // Load theme preference first
+      console.log('Theme data loaded. Initial theme:', currentTheme);
+
+      // Add a small delay before initializing Vanta
+      setTimeout(() => {
+          console.log('Attempting to initialize Vanta.js...');
+          initializeVanta(); // Initialize Vanta with the loaded theme
+          console.log('initializeVanta() called. Vanta effect:', vantaEffect);
+
+          // Explicitly call setTheme with the current theme after initialization
+          // This might help trigger the initial rendering/option update
+          if (vantaEffect) {
+              console.log('Calling setTheme with currentTheme after Vanta initialization.');
+              setTheme(currentTheme);
+          } else {
+              console.warn('Vanta effect is null after initialization, cannot call setTheme to update options.');
+          }
+
+
+      }, 50); // 50ms delay
+
       setupEventListeners();
-      updateGamesPage();
+      console.log('Event listeners set up.');
+      updateGamesPage(); // Now safe to call as it relies on DOM elements potentially defined in 'pages'
       setupDragAndDrop();
-      checkVersion();
-      switchPage('Home');
+      console.log('Games page updated and drag/drop setup.');
+      // checkVersion(); // Moved checkVersion call to the Home page content load
+      switchPage('Home'); // Initial page load
+      console.log('Switched to Home page.');
     });
 
-    function fetchNews() {
-      fetch('https://hostfilez.glitch.me/news.txt')
-        .then(response => response.text())
-        .then(text => {
-          const newsBox = document.getElementById('news-content');
-          if (newsBox) {
-            newsBox.textContent = text;
-          }
-        })
-        .catch(err => {
-          console.error("Failed to load news:", err);
-          const newsBox = document.getElementById('news-content');
-          if (newsBox) {
-            newsBox.textContent = "Failed to load news.";
-          }
-        });
+    function initializeVanta() {
+        console.log('Entering initializeVanta() function.');
+        try {
+            // Get initial baseColor based on the current theme's --bg-dark color
+            const computedStyle = getComputedStyle(document.body);
+            const themeBgDark = computedStyle.getPropertyValue('--bg-dark').trim();
+            console.log('Computed --bg-dark for initial theme:', themeBgDark);
+            const themeBaseColor = colorToVantaFormat(themeBgDark);
+            console.log('Converted Vanta.js baseColor:', '0x' + themeBaseColor.toString(16)); // Log as hex
+
+            if (vantaEffect) {
+                console.log('Destroying existing Vanta effect.');
+                vantaEffect.destroy(); // Clean up previous instance if exists
+            }
+
+            console.log('Creating new VANTA.FOG instance...');
+            vantaEffect = VANTA.FOG({
+              el: "body", // Target the body element
+              mouseControls: true,
+              touchControls: true,
+              gyroControls: false,
+              minHeight: 200.00,
+              minWidth: 200.00,
+              highlightColor: 0x0,    // Set highlightColor to static 0x0 (black)
+              midtoneColor: 0x0,      // Set midtoneColor to static 0x0 (black)
+              lowlightColor: 0x0,     // Set lowlightColor to static 0x0 (black)
+              baseColor: themeBaseColor, // baseColor will change with the theme
+              blurFactor: 0.56, // Set blurFactor to 0.56
+              speed: 1.10,      // Set speed to 1.10
+              zoom: 1.20        // Set zoom to 1.20
+            });
+             console.log('VANTA.FOG instance creation attempted.');
+
+        } catch (error) {
+            console.error("Error initializing Vanta.js:", error);
+            vantaEffect = null; // Ensure vantaEffect is null if creation failed
+        }
     }
-      
+
+
+function processLinkedText(text) {
+        let processedText = text;
+
+        const linkRegex = /;(\w+);/g;
+        processedText = processedText.replace(linkRegex, (match, pageName) => {
+            const formattedPageName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
+            return `<a href="#" onclick="switchPage('${escapeHtml(formattedPageName)}'); return false;" style="color: var(--accent); text-decoration: underline; cursor: pointer;">${escapeHtml(pageName)}</a>`;
+        });
+
+        const sizeRegex = /\[\[size:(.*?)\]\](.*?)\[\[\/size\]\]/g;
+         processedText = processedText.replace(sizeRegex, '<span style="font-size: $1;">$2</span>');
+
+        const boldRegex = /\*\*(.*?)\*\*/g;
+        processedText = processedText.replace(boldRegex, '<strong>$1</strong>');
+
+        const italicRegex = /\*(.*?)\*/g;
+        processedText = processedText.replace(italicRegex, '<em>$1</em>');
+
+        return processedText;
+    }
+
+
+    function fetchNews() {
+       const newsBox = document.getElementById('news-content');
+       if (!newsBox) return;
+       newsBox.textContent = "Loading news...";
+       fetch('https://hostfilez.glitch.me/news.txt')
+         .then(response => response.text())
+         .then(text => {
+           const processedText = processLinkedText(text);
+           newsBox.innerHTML = processedText;
+         })
+         .catch(err => {
+           console.error("Failed to load news:", err);
+           newsBox.textContent = "Failed to load news.";
+         });
+     }
+
+
     function openChangelogModal() {
       const modal = document.getElementById("changelogModal");
       const content = document.getElementById("changelogContent");
-      if (modal && content) {
-        modal.style.display = "flex";
-        content.textContent = "Loading...";
-    
-        fetch('https://hostfilez.glitch.me/changelog.txt')
-          .then(response => response.text())
-          .then(text => {
-            content.textContent = text;
-          })
-          .catch(err => {
-            console.error("Failed to load changelog:", err);
-            content.textContent = "Failed to load changelog.";
-          });
-      }
+      if (!modal || !content) return;
+      modal.style.display = "flex";
+      content.textContent = "Loading...";
+      fetch('https://hostfilez.glitch.me/changelog.txt')
+        .then(response => response.text())
+        .then(text => {
+          const processedText = processLinkedText(text);
+          content.innerHTML = processedText;
+        })
+        .catch(err => {
+          console.error("Failed to load changelog:", err);
+          content.textContent = "Failed to load changelog.";
+        });
     }
-    
+
     function closeChangelogModal() {
+      console.log('Closing changelog modal.');
       const modal = document.getElementById("changelogModal");
       if (modal) {
         modal.style.display = "none";
       }
     }
 
-      
+
     function loadData() {
-  const defaultGames = [{
-    name: "Agar.io",
-    url: "https://fluxaga.glitch.me",
-    icon: "https://static.wikia.nocookie.net/yogscast/images/1/19/Agar.io_appstore_logo.png",
-    proxiedUrl: "https://flux.englishd.workers.dev/",
-    proxied: false
-  }, {
-    name: "Slither.io",
-    url: "https://slither.io",
-    icon: "https://pbs.twimg.com/profile_images/1854966120509267968/gUTLTAMd_400x400.jpg",
-    proxiedUrl: "place",
-    proxied: false
-  }, {
-    name: "n-gon",
-    url: "https://landgreen.github.io/n-gon/",
-    icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIiXBQof9-UTot6CA0A-X9Ntyq0pNALernmg&s",
-    proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-lcnfgpegn%2Cgktju%60.ko-n%2Fgmn-",
-    proxied: false
-  }, {
-    name: "FreeRiderHD",
-    url: "https://freeriderhd.com",
-    icon: "https://cdn.freeriderhd.com/free_rider_hd/sprites/youtube_poster_art.png",
-    proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-wuw%2Cfpegrkdgrjd%2Ccmm-",
-    proxied: false
-  }, {
-    name: "Shell Shockers",
-    url: "https://shellshock.io/",
-    icon: "https://rocketgames.imgix.net/uploads/games/s/shell-shockers/shell-shockers.jpg",
-    proxiedUrl: "none",
-    proxied: false
-  }, {
-    name: "Happy Wheels",
-    url: "https://totaljerkface.com/happy_wheels.tjf",
-    icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8ZZNe14xfg_CvlBFQRnl2Boj4GIEuiyVqYw&s",
-    proxiedUrl: "https://nyx-2b7o.onrender.com/active/go/hvtrs8%2F-tmtclhepkdaae%2Ccmm-hcpry%5Dwjeglq.vjd",
-    proxied: false
-  }];
+       console.log('Loading data from localStorage...');
+       // Load theme FIRST so Vanta can initialize with it
+       const savedTheme = localStorage.getItem('theme');
+       if (savedTheme) {
+         // Apply class immediately before Vanta init needs it
+         document.body.className = `theme-${savedTheme}`;
+         currentTheme = savedTheme;
+         console.log('Loaded saved theme:', savedTheme);
+       } else {
+         document.body.className = 'theme-default'; // Ensure default is set
+         currentTheme = 'default';
+         console.log('No saved theme found, setting default.');
+       }
 
-  const savedGames = localStorage.getItem('games');
-  const userGames = savedGames ? JSON.parse(savedGames) : [];
+      const defaultGames = [
+        { name: "Agar.io", url: "https://fluxaga.glitch.me", icon: "https://static.wikia.nocookie.net/yogscast/images/1/19/Agar.io_appstore_logo.png", proxiedUrl: "https://flux.englishd.workers.dev/", proxied: false },
+        { name: "Slither.io", url: "https://slither.io", icon: "https://pbs.twimg.com/profile_images/1854966120509267968/gUTLTAMd_400x400.jpg", proxiedUrl: "place", proxied: false }, // Placeholder for proxiedUrl
+        { name: "n-gon", url: "https://landgreen.github.io/n-gon/", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIiXBQof9-UTot6CA0A-X9Ntyp0pNALernmg&s", proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-lcnfgpegn%2Cgktju%60.ko-n%2Fgmn-", proxied: false },
+        { name: "FreeRiderHD", url: "https://freeriderhd.com", icon: "https://cdn.freeriderhd.com/free_rider_hd/sprites/youtube_poster_art.png", proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-wuw%2Cfpegrkdgrjd%2Ccmm-", proxied: false },
+        { name: "Shell Shockers", url: "https://shellshock.io/", icon: "https://rocketgames.imgix.net/uploads/games/s/shell-shockers/shell-shockers.jpg", proxiedUrl: "none", proxied: false },
+        { name: "Happy Wheels", url: "https://totaljerkface.com/happy_wheels.tjf", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8ZZNe14xfg_CvlBFQRnl2Boj4GIEuiyVqYw&s", proxiedUrl: "https://nyx-2b7o.onrender.com/active/go/hvtrs8%2F-tmtclhepkdaae%2Ccmm-hcpry%5Dwjeglq.vjd", proxied: false }
+      ];
 
-  // Merge default and user games without duplicates (based on name)
-  games = [...defaultGames, ...userGames.filter(g => !defaultGames.some(d => d.name === g.name))];
+      const savedGames = localStorage.getItem('games');
+      const userGames = savedGames ? JSON.parse(savedGames) : [];
 
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme) setTheme(savedTheme);
+      games = [...defaultGames];
+      const gameNames = new Set(defaultGames.map(g => g.name));
+      userGames.forEach(g => {
+          if (!gameNames.has(g.name)) {
+              games.push(g);
+              gameNames.add(g.name);
+          }
+      });
+      console.log('Games loaded:', games.length);
 
-  const savedLibrary = localStorage.getItem('library');
-  library = savedLibrary ? JSON.parse(savedLibrary) : [];
+      const savedLibrary = localStorage.getItem('library');
+      library = savedLibrary ? JSON.parse(savedLibrary) : [];
+      console.log('Library loaded:', library.length);
 
-  const savedFavoriteGames = localStorage.getItem('favoriteGames');
-  favoriteGames = savedFavoriteGames ? JSON.parse(savedFavoriteGames) : [];
-}
+
+      const savedFavoriteGames = localStorage.getItem('favoriteGames');
+      favoriteGames = savedFavoriteGames ? JSON.parse(savedFavoriteGames) : [];
+      console.log('Favorite games loaded:', favoriteGames.length);
+
+
+       // Update theme selector UI based on loaded theme
+       document.querySelectorAll('.theme-option').forEach(option => {
+            option.classList.remove('selected');
+            if (option.classList.contains(`theme-${currentTheme}-preview`)) {
+                option.classList.add('selected');
+            }
+        });
+       console.log('Theme selector UI updated.');
+    }
 
     function setupEventListeners() {
       icons.forEach(icon => {
@@ -760,617 +1054,1288 @@
         icon.addEventListener('mousemove', handleTooltipShow);
         icon.addEventListener('mouseleave', handleTooltipHide);
       });
-    
+
       addGameModal.addEventListener('click', (e) => {
         if (e.target === addGameModal) closeModal();
       });
-    
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && addGameModal.style.display === 'flex') closeModal();
-        if (e.key === 'Escape' && changelogModal.style.display === 'flex') closeChangelogModal();
-      });
-    
-      const changelogModal = document.getElementById("changelogModal");
+
+      // Use existing changelogModal variable
       changelogModal.addEventListener('click', (e) => {
-        if (e.target === changelogModal) closeChangelogModal();
+          if (e.target === changelogModal) closeChangelogModal();
       });
-    
-      document.addEventListener('mousemove', handleSidebarHover);
+
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (addGameModal.style.display === 'flex') closeModal();
+            if (changelogModal.style.display === 'flex') closeChangelogModal();
+        }
+      });
+
+      // Sidebar hover - simplified
+       const sidebar = document.querySelector('.sidebar');
+       document.addEventListener('mousemove', (e) => {
+           if (e.clientX < 10 && !sidebar.classList.contains('open')) {
+               sidebar.classList.add('open');
+           } else if (e.clientX > 70 && sidebar.classList.contains('open')) { // Give more leeway
+               sidebar.classList.remove('open');
+           }
+       });
+       // Ensure sidebar closes if mouse leaves window from the left
+       document.documentElement.addEventListener('mouseleave', (e) => {
+          if (sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+          }
+       });
+      console.log('Core event listeners set up.');
+
     }
 
 
     async function checkVersion() {
-      const versionURL = "https://deluxe-obtainable-trigonometry.glitch.me/version.txt";
-      try {
-        const versionResponse = await fetch(versionURL);
-        const currentVersion = (await versionResponse.text()).trim();
-        document.getElementById("latest-version").textContent = currentVersion;
-        document.getElementById("home-version").textContent = `v${currentVersion}`;
-      } catch (err) {
-        document.getElementById("latest-version").textContent = "Error checking version.";
-        console.error(err);
-      }
-    }
+       // Target the new status elements on the Home page
+       const homeVersionEl = document.getElementById("home-installed-version");
+       const latestVersionEl = document.getElementById("home-latest-version");
+
+       if (!latestVersionEl || !homeVersionEl) {
+         console.log("Version elements not found on Home page.");
+         return; // Exit if elements aren't found
+       }
+
+       latestVersionEl.textContent = "Checking...";
+       homeVersionEl.textContent = "v1.0.0"; // Assume installed version is v1.0.0 for now
+
+       const versionURL = "https://deluxe-obtainable-trigonometry.glitch.me/version.txt"; // Ensure CORS
+       console.log("Checking for latest version...");
+       try {
+         const versionResponse = await fetch(versionURL, { cache: "no-store" }); // Avoid cache
+         if (!versionResponse.ok) throw new Error(`HTTP error! status: ${versionResponse.status}`);
+         const latestVersionText = (await versionResponse.text()).trim();
+         latestVersionEl.textContent = latestVersionText;
+         console.log("Latest version fetched:", latestVersionText);
+
+       } catch (err) {
+         latestVersionEl.textContent = "Error";
+         console.error("Failed to check version:", err);
+       }
+     }
 
     function saveGames() {
       localStorage.setItem('games', JSON.stringify(games));
+       console.log('Games data saved.');
     }
 
     function generateGamesHTML() {
-      const gamesToDisplay = isShowingFavoriteGames() ? 
-        games.filter(game => favoriteGames.some(fav => fav.name === game.name)) : 
-        games;
-    
-      return `
-        <div class="games-container" id="gamesContainer">
-          <input type="text" id="gameSearch" placeholder="Search Games" oninput="filterGames()" style="width: 300px; margin-bottom: 1rem;">
-          <div class="games-header">
-            <div class="action-card" onclick="showAddGameModal()">
-              <i class="fas fa-plus"></i>
-              <p>Add Game</p>
-            </div>
-            <div class="action-card" onclick="toggleFavoriteGames()">
-              <i class="fas ${isShowingFavoriteGames() ? 'fa-star' : 'fa-star'}"></i>
-              <p>${isShowingFavoriteGames() ? 'All Games' : 'Favorites'}</p>
-            </div>
-          </div>
-          ${gamesToDisplay.map((game, index) => `
-            <div class="game-card" draggable="true" data-index="${index}">
-              <div class="remove-icon" onclick="removeGame(event, ${index})" title="Remove Game">
-                <i class="fas fa-times"></i>
-              </div>
-              <img src="${escapeHtml(game.icon)}" alt="${escapeHtml(game.name)}" 
-                   onerror="this.src='https://via.placeholder.com/150?text=No+Image'" 
-                   onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">
-              <p onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">${escapeHtml(game.name)}</p>
-              <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
-                <button class="favorite-button" onclick="event.stopPropagation(); toggleFavoriteGame(${index})">
-                  <i class="fas ${isFavoriteGame(game) ? 'fa-star' : 'fa-star'}"></i>
-                  <span>${isFavoriteGame(game) ? 'Favorited' : 'Favorite'}</span>
-                </button>
-                <button class="favorite-button" onclick="event.stopPropagation(); toggleProxied(${index})">
-                  <i class="fas fa-shield-alt"></i>
-                  <span>Proxied: ${game.proxied ? 'True' : 'False'}</span>
-                </button>
-              </div>
-            </div>
-          `).join('')}
-        </div>`;
-    }
+       console.log('Generating Games HTML. Showing favorites:', isShowingFavoriteGames());
+       const gamesToDisplay = isShowingFavoriteGames() ?
+         games.filter(game => favoriteGames.some(fav => fav.name === game.name)) :
+         games;
+
+       // Generate the cards first
+       const gameCardsHTML = gamesToDisplay.map((game, index) => {
+         // Find original index to use for actions (like remove/favorite/proxy)
+         const originalIndex = games.findIndex(g => g.name === game.name);
+         // Ensure the index is valid before generating the card
+         if (originalIndex === -1) return ''; // Skip if game not found in main list
+
+         return `
+           <div class="game-card" draggable="true" data-index="${originalIndex}">
+             <div class="remove-icon" onclick="removeGame(event, ${originalIndex})" title="Remove Game">
+               <i class="fas fa-times"></i>
+             </div>
+             <img src="${escapeHtml(game.icon)}" alt="${escapeHtml(game.name)}"
+                  onerror="this.src='https://via.placeholder.com/150?text=No+Image'"
+                  onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">
+             <p onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">${escapeHtml(game.name)}</p>
+             <div style="display: flex; flex-direction: column; gap: 5px; align-items: center; margin-top: 5px;">
+               <button class="favorite-button" onclick="event.stopPropagation(); toggleFavoriteGame(${originalIndex})">
+                 <i class="fas ${isFavoriteGame(game) ? 'fa-solid' : 'fa-regular'} fa-star" style="${isFavoriteGame(game) ? 'color: var(--accent);' : ''}"></i>
+                 <span>${isFavoriteGame(game) ? 'Favorited' : 'Favorite'}</span>
+               </button>
+               ${game.proxiedUrl && game.proxiedUrl !== 'none' ? // Only show proxy toggle if proxy URL exists
+                 `<button class="favorite-button" onclick="event.stopPropagation(); toggleProxied(${originalIndex})">
+                   <i class="fas fa-shield-alt"></i>
+                   <span>Proxy: ${game.proxied ? 'On' : 'Off'}</span>
+                 </button>`
+                 : ''
+               }
+             </div>
+           </div>`;
+         }).join('');
+
+
+       // Return the full container HTML
+       return `
+         <input type="text" id="gameSearch" placeholder="Search Games..." oninput="filterGames()" style="width: 90%; max-width: 400px; margin: 0 auto 1.5rem auto; display: block;">
+         <div class="games-header">
+           <div class="action-card" onclick="showAddGameModal()">
+             <i class="fas fa-plus"></i>
+             <p>Add Game</p>
+           </div>
+           <div class="action-card" onclick="toggleFavoriteGamesView()">
+             <i class="fas fa-star" style="${isShowingFavoriteGames() ? 'color: var(--accent);' : ''}"></i>
+             <p>${isShowingFavoriteGames() ? 'All Games' : 'Favorites'}</p>
+           </div>
+         </div>
+         <div class="games-container" id="gamesContainerInner">
+             ${gameCardsHTML || '<p class="no-games-message" style="color: var(--text-muted); width: 100%; text-align: center;">No games found.</p>'}
+         </div>`;
+     }
 
 
     function toggleProxied(index) {
-      games[index].proxied = !games[index].proxied;
-      saveGames();
-      updateGamesPage();
+      console.log('Toggling proxy for game index:', index);
+      if (games[index] && games[index].proxiedUrl && games[index].proxiedUrl !== 'none') {
+         games[index].proxied = !games[index].proxied;
+         saveGames();
+         updateGamesPage(); // Refresh the games view
+         console.log('Proxy toggled.');
+      } else {
+         alert("This game does not have a proxy URL configured.");
+         console.warn('Attempted to toggle proxy for game without proxiedUrl.');
+      }
     }
 
     function escapeHtml(unsafe) {
-      return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+        if (typeof unsafe !== 'string') return '';
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
-  function loadViewerFromLibrary(url, customTitle = 'Viewing URL', displayUrl = url, updateRecents = true) {
-    if (!url) return;
-  
-    try {
-      new URL(url);
-    } catch (e) {
-      alert('Invalid URL format');
-      return;
-    }
-  
-    pageTitle.textContent = customTitle;
-    pageContent.innerHTML = `
-      <div class="iframe-container">
-        <iframe src="${url}" frameborder="0"></iframe>
-      </div>
-      <div class="bottom-controls">
-        <input type="text" id="urlSearch" placeholder="Enter URL" value="${displayUrl}" onkeydown="if(event.key==='Enter') goToUrl()">
-        <button class="go-button" onclick="goToUrl()">Go!</button>
-        <button class="fullscreen-button" onclick="openFullscreen('${url}')"><i class="fas fa-expand"></i></button>
-        <button onclick="switchPage('Games')" style="margin-left: 10px;">Back to Games</button>
-      </div>`;
-  
-    if (updateRecents) updateRecentlyViewed(url);
-  }
+    function loadViewerFromLibrary(url = '', customTitle = 'Viewer', displayUrl = url, updateRecents = true) {
+      console.log('Loading viewer with URL:', url, 'Custom title:', customTitle);
+      // Allow launching with no URL to show the input box immediately
+      // if (!url) return; // Removed this check
 
+      // Basic URL validation (only if a URL is provided)
+      if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('about:')) {
+          url = 'https://' + url; // Attempt to prepend https
+          displayUrl = url; // Update display URL as well
+          console.log('Prepended https to URL:', url);
+      }
+       // If no URL is provided initially, the iframe src will be empty or about:blank
 
-    function loadViewer() {
-      const url = pageTitle.textContent === 'Viewer' ? 
-        document.querySelector("#viewerUrl").value : 
-        viewerUrlInput.value;
-
-      if (!url) {
-        alert('Please enter a URL');
-        return;
+      try {
+        if (url && !url.startsWith('about:')) { // Only validate if it's not about:blank
+           new URL(url); // Validate if it's a proper URL now
+        }
+      } catch (e) {
+        // If still invalid, try searching it
+        console.warn("Invalid URL, attempting search:", url, e);
+        url = `https://www.google.com/search?q=${encodeURIComponent(url)}`;
+        displayUrl = url;
+        customTitle = `Search Results for "${customTitle}"`;
+        // Don't add search results to recents/library typically
+        updateRecents = false;
       }
 
-      loadViewerFromLibrary(url);
+      // Hide sidebar and main content container for iframe view
+       document.querySelector('.sidebar').style.display = 'none';
+       pageContent.style.display = 'none';
+       pageTitle.style.display = 'none'; // Hide main title
+
+      // Create or get iframe container
+      let iframeContainer = document.getElementById('iframe-viewer-container');
+      if (!iframeContainer) {
+         iframeContainer = document.createElement('div');
+         iframeContainer.id = 'iframe-viewer-container';
+         iframeContainer.className = 'iframe-container'; // Use existing class for styling
+         document.body.appendChild(iframeContainer); // Append directly to body
+         console.log('Created iframe container.');
+      }
+
+      iframeContainer.style.display = 'flex'; // Ensure it's visible
+      iframeContainer.innerHTML = `
+        <iframe src="${escapeHtml(url)}" frameborder="0" allowfullscreen></iframe>
+        <div class="bottom-controls" id="iframe-bottom-controls">
+          <button onclick="goBackToAppView()" title="Back to App"><i class="fas fa-arrow-left"></i></button>
+          <input type="text" id="urlSearch" placeholder="Enter URL or Search" value="${escapeHtml(displayUrl)}" onkeydown="if(event.key==='Enter') goToUrl()">
+          <button class="go-button" onclick="goToUrl()" title="Go"><i class="fas fa-check"></i></button>
+          <button class="fullscreen-button" onclick="openFullscreen('${escapeHtml(url)}')" title="Open Fullscreen"><i class="fas fa-expand"></i></button>
+          ${updateRecents ? `<button onclick="addToLibraryFromViewer('${escapeHtml(url)}')" title="Add to Library"><i class="fas fa-bookmark"></i></button>` : ''}
+        </div>`;
+
+      console.log('Set iframe source to:', url);
+
+      if (updateRecents && url && url !== 'about:blank') {
+         updateRecentlyViewed(url); // Only update recents if a valid URL was loaded
+         console.log('Updated recently viewed.');
+      }
+    }
+
+    function goBackToAppView() {
+        console.log('Going back to app view.');
+        // Hide iframe container
+        const iframeContainer = document.getElementById('iframe-viewer-container');
+        if (iframeContainer) {
+            iframeContainer.style.display = 'none';
+            iframeContainer.innerHTML = ''; // Clear content
+            console.log('Hid and cleared iframe container.');
+        }
+
+        // Show sidebar and content again
+        document.querySelector('.sidebar').style.display = 'flex'; // Or original display value
+        pageContent.style.display = 'flex'; // Or original display value
+        console.log('Showed sidebar and content.');
+
+
+        // Restore the page title display based on the current page
+        const currentPageKey = localStorage.getItem('lastActivePage') || 'Home';
+         if (currentPageKey !== 'Home') {
+              pageTitle.style.display = 'block';
+              pageTitle.textContent = localStorage.getItem('lastActivePageTitle') || currentPageKey;
+              console.log('Restored page title:', pageTitle.textContent);
+         } else {
+              pageTitle.style.display = 'none'; // Ensure title is hidden on Home
+               console.log('Hid page title on Home page.');
+         }
+
+
+        // Optionally switch back to the last active page
+        // switchPage(localStorage.getItem('lastActivePage') || 'Home'); // Decided against automatic page switch for simplicity
+    }
+
+
+    // This function is now less relevant as Viewer launches overlay directly
+    // Leaving it in case it's called from other places, but updated to use the overlay logic
+    function loadViewer() {
+        console.log('loadViewer() called.');
+        const urlInput = document.getElementById('homeSearchInput'); // Get input from Home/Viewer page
+        const url = urlInput ? urlInput.value.trim() : ''; // Get value, default to empty
+        console.log('URL from home search input:', url);
+
+        loadViewerFromLibrary(url, url, url); // Load the URL in the overlay
     }
 
     function updateRecentlyViewed(url) {
-      const recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed')) || [];
-      if (!recentlyViewed.includes(url)) {
-        recentlyViewed.push(url);
-        localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed.slice(-10)));
-      }
-      updateLibraryPage();
+      console.log('Updating recently viewed with URL:', url);
+      let recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed')) || [];
+      // Remove existing entry if present to move it to the top
+      recentlyViewed = recentlyViewed.filter(item => item !== url);
+      recentlyViewed.unshift(url); // Add to the beginning
+      localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed.slice(0, 10))); // Keep latest 10
+       console.log('Recently viewed updated:', recentlyViewed.slice(0, 10));
+       // Don't update library page here, it happens when Library page is switched to
     }
 
     function goToUrl() {
-      const urlInput = document.getElementById('urlSearch')?.value;
-      if (urlInput) {
-        loadViewerFromLibrary(urlInput);
+      console.log('goToUrl() called.');
+      const urlInput = document.getElementById('urlSearch'); // In the iframe controls
+      const url = urlInput ? urlInput.value.trim() : ''; // Get value, default to empty
+      const iframe = document.querySelector('#iframe-viewer-container iframe');
+
+      if (url) {
+        let finalUrl = url;
+         // Simple validation and prepend https if missing
+         if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('about:')) {
+             finalUrl = 'https://' + finalUrl;
+             console.log('Prepended https to input URL:', finalUrl);
+         }
+
+        try {
+            if (!finalUrl.startsWith('about:')) {
+                new URL(finalUrl); // Validate
+            }
+             // If valid or about:blank, set the iframe src
+            if (iframe) {
+               iframe.src = escapeHtml(finalUrl);
+               updateRecentlyViewed(finalUrl); // Update recents for valid URLs
+                // Update the input box to show the cleaned URL
+               urlInput.value = escapeHtml(finalUrl);
+               console.log('Navigated iframe to:', finalUrl);
+            }
+        } catch (e) {
+             // If still invalid, attempt search
+             console.warn("Invalid URL, attempting search:", finalUrl, e);
+             const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(finalUrl)}`;
+             if (iframe) {
+                 iframe.src = escapeHtml(searchUrl);
+                 // Don't add search results to recents
+                 // Update input box to show the search query
+                 urlInput.value = `Search: ${escapeHtml(finalUrl)}`;
+                 console.log('Navigated iframe to search results for:', finalUrl);
+             }
+        }
+
+
       } else {
-        alert('Please enter a URL');
+        // If input is empty, load about:blank
+         if (iframe) {
+             iframe.src = 'about:blank';
+              // Clear input box value when blank
+             urlInput.value = '';
+             console.log('Navigated iframe to about:blank.');
+         }
       }
     }
 
     function openFullscreen(url) {
-      const newWin = window.open("about:blank", "_blank");
-      newWin.document.write(`
-        <body style="margin:0;background:black;">
-          <iframe src="${url}" style="width:100vw;height:100vh;border:none;"></iframe>
-        </body>`);
+        console.log('Attempting fullscreen for URL:', url);
+        const iframe = document.querySelector('#iframe-viewer-container iframe');
+        if (iframe && iframe.requestFullscreen) {
+            iframe.requestFullscreen().catch(err => {
+                console.error("Fullscreen failed:", err);
+                // Fallback: open in new tab if fullscreen API fails
+                if (iframe.src && iframe.src !== 'about:blank') {
+                    window.open(iframe.src, '_blank');
+                     console.log('Fullscreen failed, opening in new tab as fallback.');
+                }
+            });
+        } else {
+             // Fallback for browsers not supporting requestFullscreen on iframe directly
+             if (iframe && iframe.src && iframe.src !== 'about:blank') {
+                 window.open(iframe.src, '_blank');
+                 console.log('Browser does not support iframe fullscreen, opening in new tab.');
+             } else {
+                 console.warn('Cannot open fullscreen: iframe or iframe source is not available.');
+             }
+        }
     }
 
     function showAddGameModal() {
+      console.log('Showing add game modal.');
       addGameModal.style.display = 'flex';
       document.getElementById('gameName').focus();
     }
 
     function closeModal() {
+      console.log('Closing add game modal.');
       addGameModal.style.display = 'none';
+       // Clear fields
+       document.getElementById('gameName').value = '';
+       document.getElementById('gameUrl').value = '';
+       document.getElementById('gameIcon').value = '';
     }
 
     function addGame() {
-      const name = document.getElementById('gameName').value.trim();
-      const url = document.getElementById('gameUrl').value.trim();
-      const icon = document.getElementById('gameIcon').value.trim();
+      console.log('Attempting to add game.');
+      const nameInput = document.getElementById('gameName');
+      const urlInput = document.getElementById('gameUrl');
+      const iconInput = document.getElementById('gameIcon');
+
+      const name = nameInput.value.trim();
+      const url = urlInput.value.trim();
+      const icon = iconInput.value.trim();
 
       if (!name || !url) {
         alert('Please provide both a name and URL for the game');
+        console.warn('Add game failed: Name or URL missing.');
         return;
       }
 
-      try {
-        new URL(url);
-      } catch (e) {
-        alert('Please enter a valid URL (include http:// or https://)');
-        return;
+      // Simple URL validation
+      if (!url.includes('.') || url.includes(' ')) {
+         alert('Please enter a valid URL.');
+          console.warn('Add game failed: Invalid URL format.');
+         return;
       }
+      let finalUrl = url;
+       if (!url.startsWith('http://') && !url.startsWith('https://')) {
+         finalUrl = 'https://' + url;
+         console.log('Prepended https to game URL:', finalUrl);
+       }
+
 
       games.push({
         name: name,
-        url: url,
-        icon: icon || 'https://via.placeholder.com/150?text=No+Image'
+        url: finalUrl,
+        icon: icon || 'https://via.placeholder.com/150?text=No+Image',
+        proxied: false, // Default to not proxied
+        proxiedUrl: 'none' // Default proxy URL
       });
 
-      document.getElementById('gameName').value = '';
-      document.getElementById('gameUrl').value = '';
-      document.getElementById('gameIcon').value = '';
-
+      saveGames(); // Save immediately
+      updateGamesPage(); // Refresh the view
       closeModal();
-      updateGamesPage();
+      console.log('Game added successfully:', name);
     }
 
     function removeGame(event, index) {
-      event.stopPropagation();
-      if (confirm(`Are you sure you want to remove ${games[index].name}?`)) {
-        games.splice(index, 1);
-        saveGames();
-        updateGamesPage();
+      event.stopPropagation(); // Prevent card click
+      console.log('Attempting to remove game index:', index);
+      if (index >= 0 && index < games.length) {
+         const gameName = games[index].name;
+         if (confirm(`Are you sure you want to remove ${gameName}?`)) {
+           // Also remove from favorites if it's there
+           favoriteGames = favoriteGames.filter(fav => fav.name !== gameName);
+           localStorage.setItem('favoriteGames', JSON.stringify(favoriteGames));
+            console.log('Removed game from favorites if present.');
+
+           games.splice(index, 1);
+           saveGames();
+           updateGamesPage();
+           console.log('Game removed successfully:', gameName);
+         }
+      } else {
+         console.error("Invalid index for removeGame:", index);
       }
     }
 
-    function setupDragAndDrop() {
-      const container = document.getElementById('gamesContainer');
-      if (!container) return;
+    // --- Drag and Drop (Games) ---
+     function setupDragAndDrop() {
+         console.log('Setting up drag and drop.');
+         // Use event delegation on the container
+         const container = document.getElementById('gamesContainerInner'); // Target the inner container
+         if (!container) {
+            console.log('Games container not found, skipping drag and drop setup.');
+            return;
+         }
 
-      const cards = container.querySelectorAll('.game-card[draggable="true"]');
-      cards.forEach(card => {
-        card.addEventListener('dragstart', handleDragStart);
-        card.addEventListener('dragover', handleDragOver);
-        card.addEventListener('dragenter', handleDragEnter);
-        card.addEventListener('dragleave', handleDragLeave);
-        card.addEventListener('drop', handleDrop);
-        card.addEventListener('dragend', handleDragEnd);
-      });
-    }
+         // Remove previous listeners if re-setting up
+         container.removeEventListener('dragstart', handleDragStart);
+         container.removeEventListener('dragover', handleDragOver);
+         container.removeEventListener('dragenter', handleDragEnter);
+         container.removeEventListener('dragleave', handleDragLeave);
+         container.removeEventListener('drop', handleDrop);
+         container.removeEventListener('dragend', handleDragEnd);
 
-    function handleDragStart(e) {
-      draggedItem = this;
-      draggedIndex = parseInt(this.getAttribute('data-index'));
-      this.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/html', this.innerHTML);
-    }
+         // Add new listeners
+         container.addEventListener('dragstart', handleDragStart);
+         container.addEventListener('dragover', handleDragOver);
+         container.addEventListener('dragenter', handleDragEnter);
+         container.addEventListener('dragleave', handleDragLeave);
+         container.addEventListener('drop', handleDrop);
+         container.addEventListener('dragend', handleDragEnd);
+          console.log('Drag and drop event listeners added.');
+     }
 
-    function handleDragOver(e) {
-      if (e.preventDefault) e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      return false;
-    }
+     function handleDragStart(e) {
+         // Only allow dragging on .game-card elements
+         if (e.target.classList.contains('game-card')) {
+             draggedItem = e.target;
+             draggedIndex = parseInt(draggedItem.getAttribute('data-index'));
+             console.log('Drag started for index:', draggedIndex);
+             // Use setTimeout to allow the browser to render the drag image before hiding/styling
+             setTimeout(() => {
+                 if (draggedItem) draggedItem.classList.add('dragging');
+             }, 0);
+             e.dataTransfer.effectAllowed = 'move';
+             // Set dummy data for Firefox compatibility
+             e.dataTransfer.setData('text/plain', draggedIndex);
+         } else {
+             e.preventDefault(); // Prevent dragging other elements within the container
+         }
+     }
+
+     function handleDragOver(e) {
+         e.preventDefault(); // Necessary to allow dropping
+         e.dataTransfer.dropEffect = 'move';
+         // Optional: Visual feedback for where the drop will occur
+         const target = e.target.closest('.game-card');
+         if (target && target !== draggedItem) {
+             // Simple placeholder logic (can be improved)
+             document.querySelectorAll('.game-card-placeholder').forEach(p => p.classList.remove('game-card-placeholder'));
+             target.classList.add('game-card-placeholder');
+         }
+         return false;
+     }
+
 
     function handleDragEnter(e) {
-      this.classList.add('game-card-placeholder');
+       // Added check to ensure we're entering a game card and not the dragged item itself
+       const targetCard = e.target.closest('.game-card');
+       if (targetCard && targetCard !== draggedItem) {
+          targetCard.classList.add('game-card-placeholder');
+       }
     }
 
     function handleDragLeave(e) {
-      this.classList.remove('game-card-placeholder');
+       // Added check to ensure we're leaving a game card
+        const targetCard = e.target.closest('.game-card');
+        if (targetCard) {
+           targetCard.classList.remove('game-card-placeholder');
+        }
+        // Also remove if leaving the container entirely but over an empty space
+        if (!e.target.closest('.game-card') && e.relatedTarget && !e.relatedTarget.closest('.game-card')) {
+           document.querySelectorAll('.game-card-placeholder').forEach(p => p.classList.remove('game-card-placeholder'));
+        }
     }
+
 
     function handleDrop(e) {
-      if (e.stopPropagation) e.stopPropagation();
+       e.preventDefault(); // Prevent default drop behavior
+       e.stopPropagation(); // Prevent drop event from bubbling up
+       console.log('Drop handled.');
 
-      if (draggedItem !== this) {
-        const dropIndex = parseInt(this.getAttribute('data-index'));
-        [games[draggedIndex], games[dropIndex]] = [games[dropIndex], games[draggedIndex]];
-        saveGames();
-        updateGamesPage();
-      }
-      return false;
+       const dropTarget = e.target.closest('.game-card');
+       if (dropTarget && draggedItem && dropTarget !== draggedItem) {
+          const dropIndex = parseInt(dropTarget.getAttribute('data-index'));
+
+          // Reorder the 'games' array
+          if (draggedIndex !== null && dropIndex !== null && draggedIndex !== dropIndex) {
+             const itemToMove = games.splice(draggedIndex, 1)[0];
+             games.splice(dropIndex, 0, itemToMove);
+             saveGames(); // Save the new order
+             updateGamesPage(); // Refresh the display
+             console.log(`Dropped item from index ${draggedIndex} to ${dropIndex}. Games array reordered.`);
+          }
+       }
+       // Clean up placeholder classes even if drop wasn't on a valid target
+       document.querySelectorAll('.game-card-placeholder').forEach(p => p.classList.remove('game-card-placeholder'));
+        console.log('Drag and drop cleanup complete.');
+
+       return false;
     }
 
-    function handleDragEnd() {
-      document.querySelectorAll('.game-card').forEach(card => {
-        card.classList.remove('dragging', 'game-card-placeholder');
-      });
-    }
 
-    function setTheme(theme) {
-      document.body.className = `theme-${theme}`;
-      currentTheme = theme;
-      localStorage.setItem('theme', theme);
+     function handleDragEnd(e) {
+         console.log('Drag ended.');
+         // Use setTimeout to ensure cleanup happens after potential drop event processing
+         setTimeout(() => {
+             if (draggedItem) {
+                 draggedItem.classList.remove('dragging');
+             }
+             document.querySelectorAll('.game-card-placeholder').forEach(p => p.classList.remove('game-card-placeholder'));
+             draggedItem = null; // Reset dragged item
+             draggedIndex = null;
+             console.log('Drag end cleanup complete.');
+         }, 0);
+     }
 
-      document.querySelectorAll('.theme-option').forEach(option => {
-        option.classList.remove('selected');
-      });
-      document.querySelector(`.theme-${theme}-preview`)?.classList.add('selected');
-    }
 
+    // --- Theme Handling ---
+     function setTheme(theme) {
+       console.log('Attempting to set theme:', theme); // Log theme change
+       document.body.className = `theme-${theme}`;
+       currentTheme = theme;
+       localStorage.setItem('theme', theme);
+       console.log('Theme class applied to body and saved to localStorage.');
+
+       // Update theme selector UI
+       document.querySelectorAll('.theme-option').forEach(option => {
+         option.classList.remove('selected');
+         if (option.classList.contains(`theme-${theme}-preview`)) {
+           option.classList.add('selected');
+         }
+       });
+       console.log('Theme selector UI updated.');
+
+
+       // Update Vanta.js colors and parameters
+       if (vantaEffect) {
+           console.log('Vanta.js effect exists, updating options...');
+           // Allow CSS variables to apply first, then get computed values
+            setTimeout(() => {
+               const computedStyle = getComputedStyle(document.body);
+               // Get the new baseColor dynamically from the theme's --bg-dark
+               const themeBgDark = computedStyle.getPropertyValue('--bg-dark').trim();
+               console.log(`Computed --bg-dark for theme ${theme} during setOptions:`, themeBgDark); // Log computed CSS variable
+
+               const newThemeBaseColor = colorToVantaFormat(themeBgDark);
+               console.log(`Converted Vanta.js baseColor for theme ${theme} during setOptions:`, '0x' + newThemeBaseColor.toString(16)); // Log converted Vanta color
+
+               vantaEffect.setOptions({
+                 highlightColor: 0x0,    // Keep highlightColor static at 0x0
+                 midtoneColor: 0x0,      // Keep midtoneColor static at 0x0
+                 lowlightColor: 0x0,     // Keep lowlightColor static at 0x0
+                 baseColor: newThemeBaseColor, // Update baseColor dynamically
+                 blurFactor: 0.56, // Keep static blurFactor
+                 speed: 1.10,      // Keep static speed
+                 zoom: 1.20        // Keep static zoom
+               });
+               console.log('Vanta.js options updated.'); // Confirm setOptions was called
+
+           }, 50); // Small delay to ensure styles are computed
+       } else {
+           console.log('Vanta.js effect not initialized (null) when setTheme was called. Skipping setOptions.'); // Log if vantaEffect is null
+            // Optional: Attempt to re-initialize if it's null? Might cause issues.
+            // if (!vantaEffect) {
+            //    console.warn("Vanta effect was null in setTheme, attempting re-initialization.");
+            //    initializeVanta();
+            // }
+       }
+     }
+
+    // --- Game Filtering & Display ---
     function filterGames() {
-      const query = document.getElementById('gameSearch').value.toLowerCase();
-      const gamesToSearch = isShowingFavoriteGames() ? 
-        games.filter(game => favoriteGames.some(fav => fav.name === game.name)) : 
-        games;
-      const filteredGames = gamesToSearch.filter(game => game.name.toLowerCase().includes(query));
-
-      document.getElementById('gamesContainer').innerHTML = `
-        <input type="text" id="gameSearch" placeholder="Search Games" oninput="filterGames()" style="width: 100%; margin-bottom: 1rem;">
-        <div class="games-header">
-          <div class="action-card" onclick="showAddGameModal()">
-            <i class="fas fa-plus"></i>
-            <p>Add Game</p>
-          </div>
-          <div class="action-card" onclick="toggleFavoriteGames()">
-            <i class="fas ${isShowingFavoriteGames() ? 'fa-star' : 'fa-star'}"></i>
-            <p>${isShowingFavoriteGames() ? 'All Games' : 'Favorites'}</p>
-          </div>
-        </div>
-        ${filteredGames.map((game, index) => `
-          <div class="game-card" draggable="true" data-index="${index}">
-            <div class="remove-icon" onclick="removeGame(event, ${index})" title="Remove Game">
-              <i class="fas fa-times"></i>
-            </div>
-            <img src="${escapeHtml(game.icon)}" alt="${escapeHtml(game.name)}" 
-                 onerror="this.src='https://via.placeholder.com/150?text=No+Image'" 
-                 onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">
-            <p onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">${escapeHtml(game.name)}</p>
-            <button class="favorite-button" onclick="event.stopPropagation(); toggleFavoriteGame(${index})">
-              <i class="fas ${isFavoriteGame(game) ? 'fa-star' : 'fa-star'}"></i>
-              <span>${isFavoriteGame(game) ? 'Favorited' : 'Favorite'}</span>
-            </button>
-          </div>
-        `).join('')}`;
-    }
-
-    function updateLibraryPage() {
-      const favoritedWebsites = library;
-      const recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed')) || [];
-
-      document.getElementById('favoritedWebsites').innerHTML = favoritedWebsites.map(item => `
-        <div class="library-item">
-          <div class="remove-icon" onclick="removeLibraryItem(event, '${item}')" title="Remove Website">
-            <i class="fas fa-times"></i>
-          </div>
-          <div class="library-item-content" onclick="loadViewerFromLibrary('${item}')">
-            ${item}
-          </div>
-        </div>
-      `).join('');
-
-      document.getElementById('recentlyViewed').innerHTML = recentlyViewed.slice(-5).reverse().map(item => `
-        <div class="library-item">
-          <div class="library-item-content" onclick="loadViewerFromLibrary('${item}')">
-            ${item}
-          </div>
-        </div>
-      `).join('');
-
-      setupLibraryDragAndDrop();
-    }
-
-  function loadGame(name, url) {
-    const game = games.find(g => g.name === name);
-    const isProxied = game && game.proxied && game.proxiedUrl;
-    const iframeUrl = isProxied ? game.proxiedUrl : url;
-    const displayUrl = isProxied ? "hidden url for performance" : url;
-  
-    loadViewerFromLibrary(iframeUrl, name, displayUrl, !isProxied);
-  }
+       const query = document.getElementById('gameSearch').value.toLowerCase();
+       const container = document.getElementById('gamesContainerInner'); // Target inner container
+       if (!container) {
+         console.log('Games container not found for filtering.');
+         return;
+       }
+       console.log('Filtering games with query:', query);
 
 
-    function goBackToGames() {
-      switchPage('Games');
+       const allCards = container.querySelectorAll('.game-card');
+       let foundMatch = false;
+
+       allCards.forEach(card => {
+          const name = card.querySelector('p')?.textContent.toLowerCase();
+          const matches = name ? name.includes(query) : false;
+          card.style.display = matches ? '' : 'none';
+          if (matches) foundMatch = true;
+       });
+
+        // Show "No games found" message if needed
+        let noGamesMessage = container.querySelector('.no-games-message');
+        const gamesToConsider = isShowingFavoriteGames() ? games.filter(game => favoriteGames.some(fav => fav.name === game.name)) : games;
+
+        if (!foundMatch && gamesToConsider.length > 0 && !noGamesMessage && query) {
+            // Filter active, no matches, but games exist
+             noGamesMessage = document.createElement('p');
+             noGamesMessage.className = 'no-games-message';
+             noGamesMessage.style.color = 'var(--text-muted)';
+             noGamesMessage.style.width = '100%';
+             noGamesMessage.style.textAlign = 'center';
+             container.appendChild(noGamesMessage);
+        } else if ((foundMatch || !query) && noGamesMessage) {
+             // Filter not active or matches found, remove message
+             noGamesMessage.remove();
+             noGamesMessage = null; // Reset variable
+        }
+
+        // Update message text based on state
+        if (!foundMatch && noGamesMessage) {
+             noGamesMessage.textContent = isShowingFavoriteGames() ? 'No favorite games match your search.' : 'No games match your search.';
+        } else if (!foundMatch && !query && !noGamesMessage && gamesToConsider.length === 0) {
+             // No filter, no games, no message exists yet - create it
+              noGamesMessage = document.createElement('p');
+              noGamesMessage.className = 'no-games-message';
+              noGamesMessage.style.color = 'var(--text-muted)';
+              noGamesMessage.style.width = '100%';
+              noGamesMessage.style.textAlign = 'center';
+              container.appendChild(noGamesMessage);
+             noGamesMessage.textContent = isShowingFavoriteGames() ? 'No favorite games found.' : 'No games found.';
+        }
+        console.log('Game filtering complete. Found matches:', foundMatch);
+
     }
 
     function updateGamesPage() {
-      pages.Games = generateGamesHTML();
+      console.log('Updating Games page content.');
+      const gamesContent = generateGamesHTML(); // Get the HTML string based on showingFavorites
+
+      // Update the page content ONLY if we are currently displaying the Games or Favorite Games view
+       // Check the actual pageTitle text to know if we are *conceptually* on the games page view
       if (pageTitle.textContent === 'Games' || pageTitle.textContent === 'Favorite Games') {
-        pageContent.innerHTML = pages.Games;
-        setupDragAndDrop();
+         pageContent.innerHTML = gamesContent; // Set the innerHTML
+         console.log('Games page HTML updated.');
+         // Re-run setup for drag/drop as elements were replaced
+         setupDragAndDrop();
+         // Restore search term if it exists
+         const searchInput = document.getElementById('gameSearch');
+         if (searchInput && searchInput.value) {
+            filterGames(); // Re-apply filter
+         } else {
+             // If no search term, ensure initial "No games found" message is correct
+             const container = document.getElementById('gamesContainerInner');
+              const gamesToConsider = isShowingFavoriteGames() ? games.filter(game => favoriteGames.some(fav => fav.name === game.name)) : games;
+             if (container && gamesToConsider.length === 0 && !container.querySelector('.no-games-message')) {
+                 let noGamesMessage = document.createElement('p');
+                 noGamesMessage.className = 'no-games-message';
+                 noGamesMessage.style.color = 'var(--text-muted)';
+                 noGamesMessage.style.width = '100%';
+                 noGamesMessage.style.textAlign = 'center';
+                 noGamesMessage.textContent = isShowingFavoriteGames() ? 'No favorite games found.' : 'No games found.';
+                 container.appendChild(noGamesMessage);
+                  console.log('Displayed initial "No games found" message.');
+             } else if (container && gamesToConsider.length > 0 && container.querySelector('.no-games-message') && !searchInput.value) {
+                 // Games now exist, and no filter is active, remove the "No games found" message
+                 container.querySelector('.no-games-message').remove();
+                  console.log('Removed "No games found" message as games are present.');
+             }
+
+         }
+      } else {
+          console.log('Not on Games or Favorite Games page, skipping content update.');
       }
-      saveGames();
+      // Updating pages.Games might not be necessary if content is always generated
+      // pages.Games = gamesContent;
     }
 
-    function toggleFavoriteGame(index) {
-      const game = games[index];
-      if (isFavoriteGame(game)) {
-        favoriteGames = favoriteGames.filter(favGame => favGame.name !== game.name);
+
+    // --- Library Page ---
+     function updateLibraryPage() {
+       console.log('Updating Library page content.');
+       const favoritedWebsitesContainer = document.getElementById('favoritedWebsites');
+       const recentlyViewedContainer = document.getElementById('recentlyViewed');
+
+       if (!favoritedWebsitesContainer || !recentlyViewedContainer) {
+         console.log('Library containers not found, skipping update.');
+         return;
+       }
+
+       const favoritedWebsites = library; // Already loaded in loadData
+       const recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed')) || [];
+
+       favoritedWebsitesContainer.innerHTML = favoritedWebsites.length > 0 ? favoritedWebsites.map((item, index) => `
+         <div class="library-item" data-url="${escapeHtml(item)}">
+           <div class="remove-icon" onclick="removeLibraryItem(event, ${index})" title="Remove Favorite">
+             <i class="fas fa-times"></i>
+           </div>
+           <div class="library-item-content" onclick="loadViewerFromLibrary('${escapeHtml(item)}', '${escapeHtml(item)}')">
+             ${escapeHtml(item)}
+           </div>
+         </div>
+       `).join('') : '<p class="no-results-message" style="color: var(--text-muted); text-align: center;">No favorites added yet.</p>'; // Added class here
+
+       recentlyViewedContainer.innerHTML = recentlyViewed.length > 0 ? recentlyViewed.slice(0, 10).map(item => `
+         <div class="library-item">
+           <div class="library-item-content" onclick="loadViewerFromLibrary('${escapeHtml(item)}', '${escapeHtml(item)}')">
+             ${escapeHtml(item)}
+           </div>
+         </div>
+       `).join('') : '<p style="color: var(--text-muted); text-align: center;">No recently viewed sites.</p>';
+
+        console.log('Library HTML updated.');
+
+       // Re-apply filter if search box has value
+       const searchInput = document.getElementById('librarySearch');
+       if (searchInput && searchInput.value) {
+          filterLibrary();
+       }
+     }
+
+
+    function loadGame(name, url) {
+      console.log('loadGame() called for:', name, url);
+      const game = games.find(g => g.name === name);
+      const useProxy = game && game.proxied && game.proxiedUrl && game.proxiedUrl !== 'none';
+      const targetUrl = useProxy ? game.proxiedUrl : url;
+      const displayUrl = useProxy ? "Proxy Active" : url;
+    
+      if (useProxy) {
+        console.log('Proxy mode active. Initializing service worker first...');
+        const proxyOrigin = new URL(game.proxiedUrl).origin;
+        const popup = window.open(proxyOrigin, "_blank");
+    
+        const waitForServiceWorker = setInterval(() => {
+          if (navigator.serviceWorker.controller) {
+            clearInterval(waitForServiceWorker);
+            if (popup && !popup.closed) popup.close();
+            console.log('Service worker registered. Loading proxied game:', game.proxiedUrl);
+            loadViewerFromLibrary(game.proxiedUrl, name, displayUrl, null);
+          }
+        }, 300);
       } else {
-        favoriteGames.push(game);
+        console.log('Direct game load:', url);
+        loadViewerFromLibrary(url, name, displayUrl, url);
+      }
+    }
+
+
+
+    // --- Favorites ---
+    function toggleFavoriteGame(index) {
+      console.log('Toggling favorite for game index:', index);
+      if (index < 0 || index >= games.length) {
+        console.error("Invalid index for toggleFavoriteGame:", index);
+        return; // Index check
+      }
+
+      const game = games[index];
+      const gameName = game.name; // Use name for consistency
+      const isCurrentlyFavorite = favoriteGames.some(favGame => favGame.name === gameName);
+
+      if (isCurrentlyFavorite) {
+        favoriteGames = favoriteGames.filter(favGame => favGame.name !== gameName);
+        console.log('Removed game from favorites.');
+      } else {
+        // Add a minimal representation to favorites if not already there
+         if (!favoriteGames.some(fav => fav.name === gameName)) {
+           favoriteGames.push({ name: gameName }); // Store only name or minimal needed data
+           console.log('Added game to favorites.');
+         } else {
+            console.log('Game was already in favorites list (check logic).');
+         }
       }
       localStorage.setItem('favoriteGames', JSON.stringify(favoriteGames));
-      updateGamesPage();
+       console.log('Favorite games saved:', favoriteGames.length);
+
+
+      // Update UI immediately for the specific card
+      const button = document.querySelector(`.game-card[data-index="${index}"] .favorite-button`);
+      if (button) {
+        const icon = button.querySelector('i.fa-star');
+        const span = button.querySelector('span');
+        if (isCurrentlyFavorite) {
+           if(icon) {
+             icon.classList.remove('fa-solid');
+             icon.classList.add('fa-regular'); // Add regular class for outline
+             icon.style.color = ''; // Reset color
+           }
+           if(span) span.textContent = 'Favorite';
+        } else {
+           if(icon) {
+             icon.classList.remove('fa-regular');
+             icon.classList.add('fa-solid'); // Add solid class for filled
+             icon.style.color = 'var(--accent)'; // Accent color for filled star
+           }
+           if(span) span.textContent = 'Favorited';
+        }
+         console.log('Favorite button UI updated for index:', index);
+      } else {
+         console.warn('Favorite button not found for index:', index);
+      }
+
+
+      // If currently showing favorites view, re-render the page to remove/add the game
+       if (showingFavorites) { // Check the state variable
+          console.log('Currently showing favorites view, re-rendering games page.');
+          updateGamesPage(); // Re-render the list based on the updated favoriteGames array
+       } else {
+           console.log('Currently showing all games view, individual card UI updated.');
+       }
     }
 
+
     function isFavoriteGame(game) {
-      return favoriteGames.some(favGame => favGame.name === game.name);
+       // Check against the favoriteGames array (which might store just names or full objects)
+       return favoriteGames.some(fav => fav.name === game.name);
     }
 
     function isShowingFavoriteGames() {
-      return pageTitle.textContent === 'Favorite Games';
+      return showingFavorites; // Check the state variable
     }
 
-    function toggleFavoriteGames() {
-      if (isShowingFavoriteGames()) {
-        switchPage('Games');
+    function toggleFavoriteGamesView() {
+      showingFavorites = !showingFavorites; // Flip state
+      console.log('Toggling favorite games view. showingFavorites:', showingFavorites);
+
+      // Update the action card's appearance (Favorites/All Games button)
+      const favActionCard = document.querySelector('.games-header .action-card:nth-child(2)'); // Target the Favorites/All Games action card
+
+      if (favActionCard) {
+          const icon = favActionCard.querySelector('i.fa-star');
+          const textP = favActionCard.querySelector('p');
+
+          if (showingFavorites) {
+               if (icon) {
+                   icon.classList.remove('fa-regular');
+                   icon.classList.add('fa-solid'); // Use fa-solid for filled star
+                   icon.style.color = 'var(--accent)'; // Apply accent color
+               }
+               if (textP) textP.textContent = 'All Games';
+               console.log('Updated action card to show All Games.');
+          } else {
+               if (icon) {
+                   icon.classList.remove('fa-solid');
+                   icon.classList.add('fa-regular'); // Use fa-regular for outline star
+                    icon.style.color = ''; // Remove accent color
+               }
+               if (textP) textP.textContent = 'Favorites';
+                console.log('Updated action card to show Favorites.');
+          }
       } else {
-        pageTitle.textContent = 'Favorite Games';
-        pageContent.innerHTML = generateGamesHTML();
-        pageContent.classList.add('favorite-transition');
-        setTimeout(() => {
-          pageContent.classList.add('show');
-        }, 10);
-        setupDragAndDrop();
+         console.warn('Favorite games action card not found.');
       }
+
+
+      // Update the page title based on the new state - HIDE for Home page
+       if (pageTitle.textContent !== 'Home') {
+         pageTitle.textContent = showingFavorites ? 'Favorite Games' : 'Games';
+         pageTitle.style.display = 'block'; // Show title for Games/Favorites page
+         console.log('Updated page title:', pageTitle.textContent);
+       } else {
+          pageTitle.style.display = 'none';
+          console.log('Hid page title on Home.');
+       }
+
+
+      // Re-render the games list based on the new state
+      updateGamesPage();
     }
 
+    // --- Page Definitions & Switching ---
     const pages = {
-    Home: `
-      <div class="panel" style="flex: 1; max-width: 300px;">
-        <h2>Status</h2>
-        <p>Hidden from extensions: <span style="color: green;">True</span></p>
-        <p>Version: <span style="color: orangered;" id="home-version">v1.0.0</span></p>
-        <button onclick="openChangelogModal()">View Changelog</button>
-      </div>
-      <div class="panel" style="flex: 1; max-width: 300px;">
-        <h2>Viewer</h2>
-        <input type="text" id="viewerUrl" placeholder="URL (not proxied)">
-        <button onclick="loadViewer()">Go</button>
-        <button onclick="addToLibrary()">Add to Library</button>
-      </div>
-      <div class="panel" style="flex: 1; max-width: 300px;" id="updater-panel">
-        <h2>Updater</h2>
-        <p>Latest version available: <span id="latest-version">Checking...</span></p>
-        <p>Version installed: <span id="installed-version">v1.0.0</span></p>
-      </div>
-      <div class="panel" style="flex: 1 1 100%; max-width: 800px;" id="news-panel">
-        <h2>News</h2>
-        <pre id="news-content" style="white-space: pre-wrap; font-family: inherit;"></pre>
-      </div>
-    `,
-
-      Library: `
-        <div class="panel" style="max-width: 100%; width: 100%;">
-          <h2>Library</h2>
-          <input type="text" id="librarySearch" placeholder="Search Library" oninput="filterLibrary()">
-          <div class="library-columns">
-            <div class="library-column">
-              <h3>Favorites</h3>
-              <div id="favoritedWebsites"></div>
+        Home: `
+<div class="home-layout">
+                <div class="home-header">
+                    <div class="home-logo">undergr0und</div>
+                </div>
+                <div class="home-main-section">
+                     <button class="changelog-button" onclick="openChangelogModal()" title="View Changelog"><i class="fas fa-list-alt"></i> Changelog</button>
+                     <div class="home-search-container">
+                         <i class="fas fa-search search-icon"></i>
+                         <input type="text" id="homeSearchInput" placeholder="Search or type a URL" onkeydown="if(event.key==='Enter') loadViewer()">
+                     </div>
+                     <div class="home-status">
+                        <p>Hidden: <span style="color: green;">True</span></p>
+                        <p>Installed: <span id="home-installed-version">v1.0.0</span></p>
+                        <p>Latest: <span id="home-latest-version">Checking...</span></p>
+                    </div>
+                </div>
+                <div class="panel home-news-panel">
+                    <h2>News</h2>
+                    <pre id="news-content" style="white-space: pre-wrap; font-family: inherit; text-align: left; max-height: 200px; overflow-y: auto;"></pre>
+                </div>
             </div>
-            <div class="library-column">
-              <h3>Recents</h3>
-              <div id="recentlyViewed"></div>
+        `,
+        Library: `
+            <div class="panel" style="width: 95%; max-width: 900px;">
+              <h2>Library</h2>
+              <input type="text" id="librarySearch" placeholder="Search Favorites..." oninput="filterLibrary()">
+              <div class="library-columns">
+                <div class="library-column">
+                  <h3><i class="fas fa-star" style="color:var(--accent); margin-right: 5px;"></i>Favorites</h3>
+                  <div id="favoritedWebsites" style="max-height: 60vh; overflow-y: auto;"></div>
+                </div>
+                <div class="library-column">
+                  <h3><i class="fas fa-history" style="color:var(--accent); margin-right: 5px;"></i>Recents</h3>
+                  <div id="recentlyViewed" style="max-height: 60vh; overflow-y: auto;"></div>
+                </div>
+              </div>
+            </div>`,
+        Viewer: `<div class="panel"><h2>Viewer</h2><p>Click the globe icon or use the search bar on the Home page to launch the viewer.</p></div>`, // Simplified Viewer page, main viewing happens in iframe overlay
+        Games: ``, // Placeholder - content is dynamically generated
+        Updater: `
+            <div class="panel">
+              <h2>Updater</h2>
+              <p>This section is for future update functionality.</p>
+              <button onclick="checkForUpdatesManual()">Check Manually</button>
+              <p id="update-status-message" style="color: var(--text-muted); margin-top: 1rem;">Status: Idle</p>
+               <button onclick="openChangelogModal()" style="margin-top: 1rem;">View Changelog</button> </div>`,
+        Settings: `
+            <div class="panel" style="max-width: 500px;">
+              <h2>Settings</h2>
+              <h3>Theme</h3>
+              <div class="theme-selector">
+                <div class="theme-option theme-default-preview selected" onclick="setTheme('default')" title="Default"></div>
+                <div class="theme-option theme-ocean-preview" onclick="setTheme('ocean')" title="Ocean"></div>
+                <div class="theme-option theme-forest-preview" onclick="setTheme('forest')" title="Forest"></div>
+                <div class="theme-option theme-purple-preview" onclick="setTheme('purple')" title="Purple"></div>
+                <div class="theme-option theme-red-preview" onclick="setTheme('red')" title="Red"></div>
+                <div class="theme-option theme-cyberpunk-preview" onclick="setTheme('cyberpunk')" title="Cyberpunk"></div>
+              </div>
+              <h3 style="margin-top: 2rem;">Reset</h3>
+              <button class="reset-button" onclick="resetApp()">
+                <i class="fas fa-trash-alt"></i> Reset App Data
+              </button>
+              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">This deletes saved games, library, favorites, viewed history, and settings.</p>
+            </div>`,
+       About: `
+            <div class="panel" style="max-width: 500px; text-align: left;">
+              <h2>About Underground</h2>
+              <p>Underground is a fully custom game launcher and viewer focused on providing a simple, user-friendly interface for accessing online games and websites to circumvent internet censorship</p>
+              <p>Version: <span id="about-version">1.0.0</span></p>
+              <p>Created by: Zerone</p>
+              <p>
+                <a href="#" onclick="openChangelogModal(); return false;" style="color: var(--accent); text-decoration: none;">View Changelog</a> |
+                <a href="mailto:your.email@example.com" style="color: var(--accent); text-decoration: none;">Contact</a>
+              </p>
+              <h3 style="margin-top: 1rem;">Credits:</h3>
+              <p style="font-size: 0.9rem;">
+                Uses: Vanta.js, Three.js, Font Awesome.<br>
+              </p>
+              <h3 style="margin-top: 1rem;">Disclaimer:</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">
+                Underground is a third-party application. We are not affiliated with external websites or games. Use responsibly.
+              </p>
             </div>
-          </div>
-        </div>`,
-      Viewer: `<div class="panel"><h2>Viewer</h2><input type="text" id="viewerUrl" placeholder="URL (not proxied)"><button onclick="loadViewer()">Go</button><button onclick="addToLibrary()">Add to Library</button></div>`,
-      Games: generateGamesHTML(),
-      Updater: `
-        <div class="panel">
-          <h2>Updater</h2>
-          <p>Click this button to look for new versions.</p>
-          <button onclick="checkForVersion()">Check for Updates</button>
-          <p id="version-status">Click the button to check for updates.</p>
-        </div>`,
-      Settings: `
-        <div class="panel" style="max-width: 500px;">
-          <h2>Settings</h2>
-          <h3>Theme</h3>
-          <div class="theme-selector">
-            <div class="theme-option theme-default-preview selected" onclick="setTheme('default')" title="Default"></div>
-            <div class="theme-option theme-ocean-preview" onclick="setTheme('ocean')" title="Ocean"></div>
-            <div class="theme-option theme-forest-preview" onclick="setTheme('forest')" title="Forest"></div>
-            <div class="theme-option theme-purple-preview" onclick="setTheme('purple')" title="Purple"></div>
-            <div class="theme-option theme-red-preview" onclick="setTheme('red')" title="Red"></div>
-            <div class="theme-option theme-cyberpunk-preview" onclick="setTheme('cyberpunk')" title="Cyberpunk"></div>
-          </div>
-          <button class="reset-button" onclick="resetApp()">
-            <i class="fas fa-trash-alt"></i> Reset App to Default
-          </button>
-        </div>`,
-      About: `<div class="panel"><h2>About</h2><p>Underground v1.0.0<br>Created by Zerone.</p></div>`
+        `,
     };
 
-    async function checkForVersion() {
-      const versionURL = "https://deluxe-obtainable-trigonometry.glitch.me/version.txt";
-      const indexURL = "https://deluxe-obtainable-trigonometry.glitch.me/index.txt";
-
-      try {
-        const versionResponse = await fetch(versionURL);
-        const currentVersion = (await versionResponse.text()).trim();
-        document.getElementById("version-status").textContent = `Current version: ${currentVersion}`;
-
-        const savedVersion = localStorage.getItem("lastCheckedVersion");
-        if (currentVersion !== savedVersion) {
-          localStorage.setItem("lastCheckedVersion", currentVersion);
-          const indexResponse = await fetch(indexURL);
-          const driveURL = (await indexResponse.text()).trim();
-          autoDownload(driveURL);
-        }
-      } catch (err) {
-        document.getElementById("version-status").textContent = "Error checking version.";
-        console.error(err);
-      }
+    function checkForUpdatesManual() {
+        console.log('Manual update check requested.');
+        const statusEl = document.getElementById('update-status-message');
+        if(statusEl) statusEl.textContent = "Status: Checking for updates...";
+        // Add actual update check logic here if needed
+        setTimeout(() => {
+             if(statusEl) statusEl.textContent = "Status: No updates found (manual check).";
+             console.log('Manual update check simulation complete.');
+        }, 2000);
     }
 
-    function autoDownload(url) {
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
 
-    function switchPage(page) {
-      pageContent.classList.add('fade-out');
-      setTimeout(() => {
-        pageTitle.textContent = page;
-        pageContent.innerHTML = pages[page] || '';
-        pageContent.classList.remove('fade-out');
-    
-        if (page === 'Games') {
-          updateGamesPage();
-          setupDragAndDrop();
-        }
-    
-        if (page === 'Viewer') {
-          const viewerUrlInput = document.querySelector("#viewerUrl");
-          if (viewerUrlInput && viewerUrlInput.value) {
-            viewerUrlInput.value = viewerUrlInput.value;
-          }
-        }
-    
-        if (page === 'Library') {
-          updateLibraryPage();
-        }
-    
-        if (page === 'Home') {
-          fetchNews(); 
-        }
-    
-        if (page !== 'Viewer' && page !== 'Games') {
-          const existingIframe = document.querySelector('iframe');
-          if (existingIframe) existingIframe.remove();
-        }
-      }, 300);
-    }
+    function switchPage(pageKey) {
+       console.log('Switching to page:', pageKey);
+
+       // Handle special case for Games page entry/exit to manage favorite view state
+       if (pageKey === 'Games') {
+           showingFavorites = false; // Always reset to show all games when navigating *to* the Games page
+            pageTitle.textContent = 'Games'; // Ensure title is 'Games' when initially entering
+            pageTitle.style.display = 'block'; // Show title for Games page
+             console.log('Switched to Games page. Resetting favorites view state.');
+
+           // Update the Favorites action card appearance to show 'Favorites'
+            const favActionCard = document.querySelector('.games-header .action-card:nth-child(2)');
+            if (favActionCard) {
+                const icon = favActionCard.querySelector('i.fa-star');
+                const textP = favActionCard.querySelector('p');
+                 if (icon) {
+                     icon.classList.remove('fa-solid');
+                     icon.classList.add('fa-regular'); // Use fa-regular for outline star
+                     icon.style.color = ''; // Remove accent color
+                 }
+                 if (textP) textP.textContent = 'Favorites';
+                 console.log('Reset Games action card to show Favorites.');
+            } else {
+                console.warn('Games action card for favorites not found during page switch.');
+            }
+
+
+       } else if (pageKey === 'Home') {
+           // Hide page title on the Home page
+           pageTitle.style.display = 'none';
+           console.log('Switched to Home page. Hiding page title.');
+           // Reset favorite view state if coming from Games page
+            if (showingFavorites) {
+                 showingFavorites = false;
+                  console.log('Came from favorites view, resetting showingFavorites state.');
+            }
+       } else {
+            // Show page title for other pages
+             pageTitle.style.display = 'block';
+             pageTitle.textContent = pageKey; // Use the key as title for non-Games/Favorites pages
+             console.log('Switched to page:', pageKey, 'Showing page title.');
+
+            // Reset favorite view state if coming from Games page
+             if (showingFavorites) {
+                  showingFavorites = false;
+                   console.log('Came from favorites view on another page, resetting showingFavorites state.');
+             }
+       }
+
+
+       // Fade out content
+       pageContent.classList.add('fade-out');
+       console.log('Adding fade-out class to content.');
+
+
+       // Store last page for potential back navigation - IMPORTANT: only store the actual page key
+       localStorage.setItem('lastActivePage', pageKey);
+       localStorage.setItem('lastActivePageTitle', pageTitle.textContent); // Store the actual title text
+       console.log('Saved last active page:', pageKey);
+
+
+       setTimeout(() => {
+         console.log('Timeout before content switch complete.');
+         // Set content based on the page key
+         pageContent.innerHTML = pages[pageKey] || `<p>Content for ${pageKey} not found.</p>`;
+         console.log(`Content set for page: ${pageKey}. Content found: ${!!pages[pageKey]}`);
+
+
+         // Specific actions after loading content
+         if (pageKey === 'Games') {
+            updateGamesPage(); // This calls generateGamesHTML which now respects the showingFavorites state
+         } else if (pageKey === 'Library') {
+           updateLibraryPage();
+         } else if (pageKey === 'Home') {
+           checkVersion(); // Re-check version when going home
+           fetchNews(); // Fetch news on home page load
+            // The version spans are now in the Home page HTML, checkVersion will target them
+             console.log('Home page specific actions (checkVersion, fetchNews) triggered.');
+         } else if (pageKey === 'Settings') {
+             // Ensure current theme is selected visually
+             setTheme(currentTheme);
+              console.log('Settings page loaded, setTheme called for current theme.');
+         } else if (pageKey === 'About') {
+             // Update about page version if needed
+             const aboutVersionEl = document.getElementById('about-version');
+             if (aboutVersionEl) aboutVersionEl.textContent = "1.0.0"; // Replace with dynamic version if available
+             console.log('About page loaded, version updated.');
+         }
+
+
+         // Fade in new content
+         pageContent.classList.remove('fade-out');
+         console.log('Removing fade-out class, content should fade in.');
+
+
+         // Ensure correct icon is active - ONLY for non-Viewer icons
+          icons.forEach(i => {
+              i.classList.remove('active');
+              // Only activate if the data-page matches the actual pageKey AND it's not the Viewer icon
+              if (i.getAttribute('data-page') === pageKey && pageKey !== 'Viewer') {
+                  i.classList.add('active');
+              }
+          });
+          console.log('Active sidebar icon updated.');
+
+
+       }, 150); // Reduced fade time slightly
+     }
 
 
     function handleIconClick() {
-      icons.forEach(i => i.classList.remove('active'));
-      this.classList.add('active');
       const page = this.getAttribute('data-page');
-      switchPage(page);
+      console.log('Sidebar icon clicked for page:', page);
+
+
+      if (page === 'Viewer') {
+          // Clicking the Viewer icon now launches the overlay directly
+          // Call loadViewerFromLibrary with no URL to open the controls only
+          loadViewerFromLibrary();
+          console.log('Viewer icon clicked, launching viewer overlay.');
+          // Do NOT call switchPage here, as we are staying on the current background page
+          // No need to change active icon as the overlay covers everything
+      } else {
+          // For all other icons, perform normal page switching
+          switchPage(page);
+           console.log('Non-Viewer icon clicked, calling switchPage.');
+      }
     }
 
     function handleTooltipShow(e) {
-      tooltip.style.left = `${e.pageX + 15}px`;
-      tooltip.style.top = `${e.pageY}px`;
-      tooltip.textContent = this.getAttribute('title');
-      tooltip.style.display = 'block';
+       // Debounce or throttle tooltip updates if performance becomes an issue
+       tooltip.style.left = `${e.clientX + 15}px`; // Use clientX for fixed sidebar
+       tooltip.style.top = `${e.clientY}px`;   // Use clientY
+       tooltip.textContent = this.getAttribute('title');
+       tooltip.style.display = 'block';
     }
+
 
     function handleTooltipHide() {
       tooltip.style.display = 'none';
     }
 
-    function handleSidebarHover(e) {
-      if (e.clientX <= 10 && !isSidebarOpen) {
-        document.querySelector('.sidebar').classList.add('open');
-        isSidebarOpen = true;
-      } else if (e.clientX > 60 && isSidebarOpen) {
-        document.querySelector('.sidebar').classList.remove('open');
-        isSidebarOpen = false;
-      }
+    // --- Library Management ---
+    function addToLibraryFromHome() {
+        console.log('addToLibraryFromHome() called.');
+        const urlInput = document.getElementById('homeSearchInput'); // Get input from Home page
+        const url = urlInput ? urlInput.value.trim() : null;
+        addToLibrary(url);
+        // Keep the text in the input box on the Home page
     }
 
-    function addToLibrary() {
-      const url = document.getElementById('viewerUrl').value;
-      if (url) {
-        library.push(url);
-        localStorage.setItem('library', JSON.stringify(library));
-        alert('Website added to library');
+    function addToLibraryFromViewer(url) {
+         console.log('addToLibraryFromViewer() called with URL:', url);
+         addToLibrary(url); // Add the URL currently in the viewer
+    }
+
+
+    function addToLibrary(url) {
+      console.log('addToLibrary() called with URL:', url);
+      if (!url) {
+        alert('Please enter a URL first.');
+        console.warn('addToLibrary failed: No URL provided.');
+        return;
+      }
+       let finalUrl = url;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+         finalUrl = 'https://' + url;
+         console.log('Prepended https to URL for library:', finalUrl);
+       }
+
+      if (!library.includes(finalUrl)) {
+          library.push(finalUrl);
+          localStorage.setItem('library', JSON.stringify(library));
+          alert('Added to Library favorites!');
+          console.log('Added to library:', finalUrl);
+          // Update library view if currently visible
+          if (pageTitle.textContent === 'Library') {
+              updateLibraryPage();
+               console.log('Library page is active, updating view.');
+          }
       } else {
-        alert('Please enter a URL');
+          alert('This URL is already in your Library favorites.');
+          console.log('URL already in library:', finalUrl);
       }
     }
 
-    function removeLibraryItem(event, item) {
-      event.stopPropagation();
-      library = library.filter(libItem => libItem !== item);
-      localStorage.setItem('library', JSON.stringify(library));
-      updateLibraryPage();
+
+    function removeLibraryItem(event, index) {
+      event.stopPropagation(); // Prevent triggering item click
+      console.log('Attempting to remove library item at index:', index);
+      if (index >= 0 && index < library.length) {
+         const itemToRemove = library[index];
+         if (confirm(`Remove "${itemToRemove}" from favorites?`)) {
+            library.splice(index, 1);
+            localStorage.setItem('library', JSON.stringify(library));
+            updateLibraryPage(); // Refresh the library view
+            console.log('Library item removed:', itemToRemove);
+         }
+      } else {
+          console.error("Invalid index for removeLibraryItem:", index);
+      }
     }
-      
+
+
+    function filterLibrary() {
+       const query = document.getElementById('librarySearch').value.toLowerCase();
+       const container = document.getElementById('favoritedWebsites'); // Target only favorites for filtering
+       if (!container) {
+         console.log('Favorited websites container not found for filtering.');
+         return;
+       }
+        console.log('Filtering library favorites with query:', query);
+
+
+       const allItems = container.querySelectorAll('.library-item');
+       let foundMatch = false;
+
+       allItems.forEach(item => {
+          const url = item.getAttribute('data-url')?.toLowerCase(); // Use data-url
+          const matches = url ? url.includes(query) : false;
+          item.style.display = matches ? 'flex' : 'none'; // Use 'flex' as display type
+          if (matches) foundMatch = true;
+       });
+
+        // Add/remove 'no results' message
+        let noResultsMessage = container.querySelector('.no-results-message');
+        const itemsToConsider = library; // Filtering the entire library list
+
+
+        if (!foundMatch && itemsToConsider.length > 0 && !noResultsMessage && query) {
+             // Filter active, no matches, but items exist
+             noResultsMessage = document.createElement('p');
+             noResultsMessage.className = 'no-results-message';
+             noResultsMessage.style.color = 'var(--text-muted)';
+             noResultsMessage.style.textAlign = 'center';
+             noResultsMessage.style.width = '100%';
+             container.appendChild(noResultsMessage);
+             console.log('Created no-results message for filter.');
+        } else if ((foundMatch || !query) && noResultsMessage) {
+            // Filter not active or matches found, remove message
+            noResultsMessage.remove();
+            noResultsMessage = null; // Reset variable
+             console.log('Removed no-results message.');
+        }
+
+        // Update message text based on state
+        if (!foundMatch && noResultsMessage) {
+             noResultsMessage.textContent = 'No favorites match your search.';
+        } else if (!foundMatch && !query && !noResultsMessage && itemsToConsider.length === 0) {
+             // No filter, no items, no message exists yet - create it
+              noResultsMessage = document.createElement('p');
+              noResultsMessage.className = 'no-results-message';
+              noResultsMessage.style.color = 'var(--text-muted)';
+              noResultsMessage.style.textAlign = 'center';
+              noResultsMessage.style.width = '100%';
+              container.appendChild(noResultsMessage);
+             noResultsMessage.textContent = 'No favorites added yet.';
+              console.log('Created initial no-favorites message.');
+        }
+        console.log('Library filtering complete. Found matches:', foundMatch);
+    }
+
+
+    // --- App Reset ---
     function resetApp() {
-      if (confirm("Are you sure you want to reset the app? This will delete all saved games, favorites, and settings.")) {
-        // Clear all localStorage data
+      console.log('Reset App requested.');
+      if (confirm("Reset App? This deletes all custom games, library favorites, viewed history, and settings.")) {
+        console.log('Reset confirmed.');
+        // Clear localStorage
         localStorage.clear();
-        
-        // Reset the app state
-        games = [{
-          name: "Agar.io",
-          url: "https://fluxaga.glitch.me",
-          icon: "https://static.wikia.nocookie.net/yogscast/images/1/19/Agar.io_appstore_logo.png/revision/latest?cb=20160626223327"
-        }];
-        
+        console.log('localStorage cleared.');
+
+        // Reset state variables
+        games = []; // Will be repopulated by loadData
         library = [];
         favoriteGames = [];
         currentTheme = 'default';
-        
-        // Reset the UI
-        setTheme('default');
-        switchPage('Home');
-        updateGamesPage();
-        
-        alert("App has been reset to default settings.");
+        localStorage.setItem('theme', 'default'); // Set default theme immediately
+        showingFavorites = false; // Reset favorite view state
+        console.log('App state variables reset.');
+
+        // Reload data (which includes defaults) and re-initialize UI
+        loadData(); // This will set the default theme class
+        setTheme('default'); // Explicitly call setTheme to update Vanta.js etc.
+        initializeVanta(); // Re-initialize Vanta with default theme (although setTheme should handle this after init)
+        switchPage('Home'); // Go to home page
+
+        alert("App has been reset.");
+        console.log('App reset complete.');
+      } else {
+          console.log('Reset cancelled.');
       }
     }
 
-    function filterLibrary() {
-      const query = document.getElementById('librarySearch').value.toLowerCase();
-      const filteredLibrary = library.filter(item => item.toLowerCase().includes(query));
-      document.getElementById('favoritedWebsites').innerHTML = filteredLibrary.map(item => `
-        <div class="library-item">
-          <div class="remove-icon" onclick="removeLibraryItem(event, '${item}')" title="Remove Website">
-            <i class="fas fa-times"></i>
-          </div>
-          <div class="library-item-content" onclick="loadViewerFromLibrary('${item}')">
-            ${item}
-          </div>
-        </div>
-      `).join('');
-    }
   </script>
 </body>
 </html>
