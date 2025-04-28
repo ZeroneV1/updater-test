@@ -40,7 +40,7 @@ To get undergr0und up and running, you need to host the `Launcher.html` file and
     * Modify the content of these `.txt` files on your hosting service to update the news feed and changelog in your application.
     * See the `TEXT_FORMATTING.md` file for details on how to format the text within `news.txt` and `changelog.txt`, including special syntax for links, text size, and the Game of the Day.
 
-## Customization (Adding Themes and Games)
+## Customization
 
 You can add new themes and games by modifying the code in the `Launcher.html` file.
 
@@ -54,7 +54,7 @@ Themes are defined using CSS variables and corresponding CSS rules. To add a new
 4.  In the `<style>` block, add a CSS rule for your new theme's preview class (e.g., `.theme-mynewtheme-preview`) to define its background color using a linear gradient or a solid color that represents your theme.
 5.  Optionally, update the `setTheme` JavaScript function if you need any specific logic for your new theme (though it should work automatically if you follow the CSS variable structure).
 
-### Adding Games from Code
+### Adding Games
 
 The default list of games is stored in a JavaScript array.
 
