@@ -27,11 +27,17 @@ undergr0und is a custom web-based application designed to provide a simple and a
 8.  The **About** page provides information about the application and credits.
 9.  Click the **Changelog** button (available on Home and About pages) to see the update history.
 
-## Setup
+## Setup and Hosting
 
-1.  Download or obtain the `Launcher.html` file and any associated assets (like image files if you separate them later).
-2.  The application fetches news from `https://hostfilez.glitch.me/news.txt` and the changelog from `https://hostfilez.glitch.me/changelog.txt`. You will need to set up these files on a web server or a service like Glitch for the news and changelog features to work.
-3.  Modify the `news.txt` and `changelog.txt` files on your server to update the content in the app.
+To get undergr0und up and running, you need to host the `Launcher.html` file and ensure the external news and changelog files are accessible.
+
+1.  **Host the `Launcher.html` file:** You can host this file on any web server. Simple options include:
+    * **GitHub Pages:** If your code is on GitHub, you can easily host the HTML file directly from a repository branch (e.g., `gh-pages` branch or the `main`/`master` branch's docs folder).
+    * **Glitch:** You can host the HTML file and your `news.txt` and `changelog.txt` files together on a service like Glitch.
+    * **Any Static Web Host:** Upload the file to a service that hosts static HTML files.
+2.  **External Files (`news.txt` and `changelog.txt`):** The application fetches news from `https://hostfilez.glitch.me/news.txt` and the changelog from `https://hostfilez.glitch.me/changelog.txt`.
+    * Ensure these files exist at the specified URLs. You can host them on the same service as your `Launcher.html` or a different one, as long as they are publicly accessible via HTTP/HTTPS.
+    * Modify the content of these `.txt` files on your hosting service to update the news feed and changelog in your application.
 
 ## Technologies Used
 
@@ -44,30 +50,15 @@ undergr0und is a custom web-based application designed to provide a simple and a
 
 ## Credits
 
-* Created by: Zerone (Based on the About page information).
+* Created by: Zerone
 * Backgrounds: Vanta.js, Three.js.
 * Icons: Font Awesome.
 
 ## License
-
 Copyright (c) [2025] [zerone.v1]
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-This README provides an overview of the undergr0und app. Feel free to expand upon it with more details or specific instructions as your project evolves.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
