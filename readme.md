@@ -38,7 +38,40 @@ To get undergr0und up and running, you need to host the `Launcher.html` file and
 2.  **External Files (`news.txt` and `changelog.txt`):** The application fetches news from `https://hostfilez.glitch.me/news.txt` and the changelog from `https://hostfilez.glitch.me/changelog.txt`.
     * Ensure these files exist at the specified URLs. You can host them on the same service as your `Launcher.html` or a different one, as long as they are publicly accessible via HTTP/HTTPS.
     * Modify the content of these `.txt` files on your hosting service to update the news feed and changelog in your application.
-    * **See the `TEXT_FORMATTING.md` file for details on how to format the text within `news.txt` and `changelog.txt`, including special syntax for links, text size, and the Game of the Day.**
+    * See the `TEXT_FORMATTING.md` file for details on how to format the text within `news.txt` and `changelog.txt`, including special syntax for links, text size, and the Game of the Day.
+
+## Customization (Adding Themes and Games)
+
+You can add new themes and games by modifying the code in the `Launcher.html` file.
+
+### Adding Themes
+
+Themes are defined using CSS variables and corresponding CSS rules. To add a new theme:
+
+1.  Open your `Launcher.html` file in a text editor.
+2.  In the `<style>` block, define a new CSS rule for your theme using a class name (e.g., `.theme-mynewtheme`). Inside this rule, define the CSS variables (`--bg-dark`, `--sidebar-dark`, `--text-light`, etc.) with the color values for your theme. Refer to the existing `.theme-ocean`, `.theme-forest`, etc., rules as examples.
+3.  Find the `pages.Settings` definition in the JavaScript. In the HTML string for the Settings page, locate the `theme-selector` div. Add a new `div` with the class `theme-option` and a class matching your new theme's preview (e.g., `theme-mynewtheme-preview`). Set the `onclick` attribute to call `setTheme('mynewtheme')` and set the `title` attribute.
+4.  In the `<style>` block, add a CSS rule for your new theme's preview class (e.g., `.theme-mynewtheme-preview`) to define its background color using a linear gradient or a solid color that represents your theme.
+5.  Optionally, update the `setTheme` JavaScript function if you need any specific logic for your new theme (though it should work automatically if you follow the CSS variable structure).
+
+### Adding Games from Code
+
+The default list of games is stored in a JavaScript array.
+
+1.  Open your `Launcher.html` file in a text editor.
+2.  Find the `loadData()` JavaScript function.
+3.  Inside this function, locate the `defaultGames` array.
+4.  Add a new object to this array for each game you want to include by default. Follow the existing format for each game object:
+    ```javascript
+    { name: "Game Name", url: "[https://gameurl.com](https://www.google.com/search?q=https://gameurl.com)", icon: "[https://iconurl.com/icon.png](https://www.google.com/search?q=https://iconurl.com/icon.png)", proxiedUrl: "[https://proxiedurl.com](https://www.google.com/search?q=https://proxiedurl.com)", proxied: false },
+    ```
+    * `name`: The name of the game (string).
+    * `url`: The direct URL of the game (string).
+    * `icon`: The URL of the game's icon image (string). You can use `'https://via.placeholder.com/150?text=No+Image'` if you don't have an icon URL.
+    * `proxiedUrl`: The URL of the game when accessed via a proxy (string). Use `'none'` or omit the property if no proxy is available for this game.
+    * `proxied`: A boolean indicating whether the game should be launched via the proxy by default (`true`) or directly (`false`).
+
+Games added this way will be included in the default list whenever the app loads or the data is reset. Users can also add games directly through the app's interface.
 
 ## Technologies Used
 
@@ -58,8 +91,20 @@ To get undergr0und up and running, you need to host the `Launcher.html` file and
 ## License
 Copyright (c) [2025] [zerone.v1]
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
