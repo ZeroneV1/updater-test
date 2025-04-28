@@ -38,6 +38,7 @@ To get undergr0und up and running, you need to host the `Launcher.html` file and
 2.  **External Files (`news.txt` and `changelog.txt`):** The application fetches news from `https://hostfilez.glitch.me/news.txt` and the changelog from `https://hostfilez.glitch.me/changelog.txt`.
     * Ensure these files exist at the specified URLs. You can host them on the same service as your `Launcher.html` or a different one, as long as they are publicly accessible via HTTP/HTTPS.
     * Modify the content of these `.txt` files on your hosting service to update the news feed and changelog in your application.
+    * **See the `TEXT_FORMATTING.md` file for details on how to format the text within `news.txt` and `changelog.txt`, including special syntax for links, text size, and the Game of the Day.**
 
 ## Technologies Used
 
