@@ -1,6 +1,6 @@
-# Text File Formatting for News and Changelog
+# Text File Formatting and Fetch Locations for News and Changelog
 
-Your `news.txt` and `changelog.txt` files support special syntax for formatting text and creating links within the undergr0und application.
+Your `news.txt` and `changelog.txt` files support special syntax for formatting text and creating links within the undergr0und application. This document also explains where in the code you can change the locations from which these files are fetched.
 
 ## General Formatting (News and Changelog)
 
@@ -31,4 +31,22 @@ The following syntax can be used in both `news.txt` and `changelog.txt`:
     `{Exact Game Name}`
     *Example:* If you have a game named "Agar.io" in your games list, including `{Agar.io}` in your `news.txt` will set it as the Game of the Day.
 
-Remember to save your `.txt` files with plain text encoding (like UTF-8) when updating them on your hosting service.
+## Changing Text File Fetch Locations
+
+The URLs from which the `news.txt` and `changelog.txt` files are fetched are specified directly in the JavaScript code within your `Launcher.html` file.
+
+To change these locations:
+
+1.  Open your `Launcher.html` file in a text editor.
+2.  Find the `fetchNews()` JavaScript function. Locate the `fetch()` call within this function:
+    ```javascript
+           fetch('[https://hostfilez.glitch.me/news.txt](https://hostfilez.glitch.me/news.txt)')
+    ```
+    Replace `'https://hostfilez.glitch.me/news.txt'` with the new URL for your `news.txt` file.
+3.  Find the `openChangelogModal()` JavaScript function. Locate the `fetch()` call within this function:
+    ```javascript
+           fetch('[https://hostfilez.glitch.me/changelog.txt](https://hostfilez.glitch.me/changelog.txt)')
+    ```
+    Replace `'https://hostfilez.glitch.me/changelog.txt'` with the new URL for your `changelog.txt` file.
+
+Ensure that the new URLs you provide are publicly accessible via HTTP or HTTPS.
