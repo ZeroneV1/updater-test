@@ -635,12 +635,24 @@
         color: var(--text-light); /* Match theme text color */
         padding: 1rem;
         border-radius: var(--border-radius);
-        max-height: 60vh; /* Limit height */
+        max-height: 60vh;
+        max-width: 900px;/* Limit height */
         overflow-y: auto; /* Allow scrolling */
         border: 1px solid var(--sidebar-dark); /* Subtle border */
     }
 
     /* --- Home Page Specific Styles --- */
+    .home-bottom-section {
+        display: flex; /* Use flexbox to place news and game button side-by-side */
+        justify-content: space-between; /* Push items to the ends */
+        align-items: flex-start; /* Align items to the top */
+        gap: 20px; /* Space between news and game button */
+        width: 95%; /* Match the width of the news panel */
+        max-width: 1100px; /* Adjust max-width as needed to accommodate both */
+        margin: 0 auto; /* Center the section */
+        flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    }
+      
     .home-layout {
         display: flex;
         flex-direction: column;
@@ -714,7 +726,63 @@
         max-width: 800px; /* Limit max width */
         margin: 0 auto; /* Center the news panel */
         flex-shrink: 0; /* Prevent shrinking */
+        flex: 2;
+        min-width: 300px;
     }
+    .game-of-day-container {
+        flex: 1; /* Allow the game container to take remaining space */
+        min-width: 180px; /* Minimum width for the game container */
+        max-width: 200px; /* Maximum width for the game container */
+        display: flex; /* Use flex to center the button */
+        flex-direction: column; /* Stack content vertically if needed */
+        align-items: center; /* Center button horizontally */
+        padding: 1.5rem; /* Add padding similar to panels */
+        background-color: var(--card-bg); /* Use card background */
+        border-radius: var(--border-radius); /* Use defined radius */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Add shadow */
+         text-align: center; /* Center text inside */
+         box-sizing: border-box; /* Include padding in width */
+    }
+
+     .game-of-day-container h3 {
+         margin-top: 0;
+         margin-bottom: 1rem;
+         color: var(--accent);
+     }
+
+
+    .game-of-day-button {
+        /* Inherit styles from game-card but maybe adjust size */
+        background-color: var(--card-bg);
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+        width: 100%; /* Take full width of its container */
+        position: relative;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-sizing: border-box; /* Include padding in width */
+         /* Ensure flex properties don't conflict if container is flex */
+         flex-shrink: 0;
+         flex-grow: 0;
+         margin: 0; /* Remove margin if inheriting from game-card */
+    }
+
+     .game-of-day-button:hover {
+        transform: scale(1.05);
+     }
+
+     .game-of-day-button img {
+        width: 100%;
+        border-radius: var(--border-radius);
+        margin-bottom: 0.5rem;
+     }
+      .game-of-day-button p {
+          margin: 0;
+          color: var(--text-light);
+          font-weight: bold;
+      }
       
     .changelog-button {
         background-color: var(--accent); /* Use the theme's accent color */
@@ -754,7 +822,7 @@
   </div>
 
   <div class="modal" id="changelogModal">
-    <div class="modal-content" style="max-width: 600px; max-height: 80vh;">
+    <div class="modal-content" style="max-width: 900px; max-height: 80vh;">
       <button class="modal-close" onclick="closeChangelogModal()">&times;</button>
       <h2>Changelog</h2>
       <pre id="changelogContent" style="white-space: pre-wrap; font-family: inherit;"></pre>
@@ -925,54 +993,148 @@
     }
 
 
-    function fetchNews() {
+function processLinkedText(text) {
+        let processedText = text;
+
+        const linkRegex = /;(\w+);/g;
+        processedText = processedText.replace(linkRegex, (match, pageName) => {
+            const formattedPageName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
+            return `<a href="#" onclick="switchPage('${escapeHtml(formattedPageName)}'); return false;" style="color: var(--accent); text-decoration: underline; cursor: pointer;">${escapeHtml(pageName)}</a>`;
+        });
+
+        const sizeRegex = /\[\[size:(.*?)\]\](.*?)\[\[\/size\]\]/g;
+         processedText = processedText.replace(sizeRegex, '<span style="font-size: $1;">$2</span>');
+
+        const boldRegex = /\*\*(.*?)\*\*/g;
+        processedText = processedText.replace(boldRegex, '<strong>$1</strong>');
+
+        const italicRegex = /\*(.*?)\*/g;
+        processedText = processedText.replace(italicRegex, '<em>$1</em>');
+
+        return processedText;
+    }
+
+
+function fetchNews() {
        const newsBox = document.getElementById('news-content');
-       if (!newsBox) {
-         console.log("News content element not found.");
-         return; // Don't fetch if element isn't there
+       const gameOfTheDayContainer = document.getElementById('game-of-day-container');
+
+       if (!newsBox || !gameOfTheDayContainer) {
+         console.log("News or Game of the Day elements not found.");
+         return;
        }
+
        newsBox.textContent = "Loading news...";
+       gameOfTheDayContainer.innerHTML = ''; // Clear previous content
        console.log("Fetching news...");
-       fetch('https://hostfilez.glitch.me/news.txt') // Make sure this URL is correct and CORS enabled
+
+       fetch('https://hostfilez.glitch.me/news.txt')
          .then(response => {
               if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
               console.log("News fetched successfully.");
               return response.text();
           })
          .then(text => {
-           newsBox.textContent = text;
+           let rawNewsText = text;
+           let gameOfTheDayName = null;
+
+           const gameOfTheDayRegex = /\{([^}]+)\}/; // Matches {Game name} and captures Game name
+           const match = rawNewsText.match(gameOfTheDayRegex);
+
+           if (match && match[1]) {
+             gameOfTheDayName = match[1].trim();
+             console.log("Found Game of the Day name:", gameOfTheDayName);
+
+             // Remove the {Game name} marker from the news text
+             rawNewsText = rawNewsText.replace(gameOfTheDayRegex, '').trim();
+
+             // Find the game in the games array
+             const gameOfTheDay = games.find(game => game.name.toLowerCase() === gameOfTheDayName.toLowerCase());
+
+             if (gameOfTheDay) {
+               console.log("Found Game of the Day data:", gameOfTheDay.name);
+
+               // Find the index of the game in the main games array (needed for favorite/proxy toggling)
+               const gameIndex = games.findIndex(game => game.name.toLowerCase() === gameOfTheDayName.toLowerCase());
+
+               // Generate HTML for the Game of the Day container
+               gameOfTheDayContainer.innerHTML = `
+                  <h3>Game of the Day</h3>
+                  <div class="game-card" style="width: 100%; margin: 0;">
+                     <img src="${escapeHtml(gameOfTheDay.icon)}" alt="${escapeHtml(gameOfTheDay.name)}"
+                           onerror="this.src='https://via.placeholder.com/150?text=No+Image'"
+                           onclick="loadGame('${escapeHtml(gameOfTheDay.name)}', '${escapeHtml(gameOfTheDay.url)}')">
+                      <p onclick="loadGame('${escapeHtml(gameOfTheDay.name)}', '${escapeHtml(gameOfTheDay.url)}')">${escapeHtml(gameOfTheDay.name)}</p>
+                       <div style="display: flex; flex-direction: column; gap: 5px; align-items: center; margin-top: 5px;">
+                           <button class="favorite-button" onclick="event.stopPropagation(); toggleFavoriteGame(${gameIndex})">
+                                <i class="fas ${isFavoriteGame(gameOfTheDay) ? 'fa-solid' : 'fa-regular'} fa-star" style="${isFavoriteGame(gameOfTheDay) ? 'color: var(--accent);' : ''}"></i>
+                                <span>${isFavoriteGame(gameOfTheDay) ? 'Favorited' : 'Favorite'}</span>
+                           </button>
+                           ${gameOfTheDay.proxiedUrl && gameOfTheDay.proxiedUrl !== 'none' ? // Only show proxy toggle if proxy URL exists
+                            `<button class="favorite-button" onclick="event.stopPropagation(); toggleProxied(${gameIndex})">
+                              <i class="fas fa-shield-alt"></i>
+                              <span>Proxy: ${gameOfTheDay.proxied ? 'On' : 'Off'}</span>
+                            </button>`
+                            : ''
+                          }
+                      </div>
+                   </div>
+               `;
+               console.log("Generated Game of the Day game-card HTML.");
+
+               // Note: Clicking Favorite or Proxy toggle on the Home page
+               // will update the state in games array and localStorage,
+               // but the button display on the Home page won't auto-update
+               // unless you manually re-render the game-of-day-container
+               // or refetch the news after a toggle. The functionality still works.
+
+             } else {
+                 console.log("Game of the Day not found in games list:", gameOfTheDayName);
+                  gameOfTheDayContainer.innerHTML = `
+                     <h3>Game of the Day</h3>
+                     <p style="color: var(--text-muted);">Game "${escapeHtml(gameOfTheDayName)}" not found.</p>
+                  `;
+             }
+           } else {
+             console.log("No {Game name} found in news text.");
+               gameOfTheDayContainer.innerHTML = `
+                  <h3>Game of the Day</h3>
+                  <p style="color: var(--text-muted);">No Game of the Day selected.</p>
+               `;
+           }
+
+           // Process and display the remaining news text
+           const processedNewsText = processLinkedText(rawNewsText);
+           newsBox.innerHTML = processedNewsText;
+
          })
          .catch(err => {
            console.error("Failed to load news:", err);
            newsBox.textContent = "Failed to load news.";
+           gameOfTheDayContainer.innerHTML = `
+               <h3>Game of the Day</h3>
+               <p style="color: var(--text-muted);">Failed to load Game of the Day.</p>
+           `;
          });
      }
 
+
     function openChangelogModal() {
-      console.log('Opening changelog modal.');
       const modal = document.getElementById("changelogModal");
       const content = document.getElementById("changelogContent");
-      if (modal && content) {
-        modal.style.display = "flex";
-        content.textContent = "Loading...";
-        console.log('Fetching changelog...');
-
-        fetch('https://hostfilez.glitch.me/changelog.txt') // Ensure CORS is enabled
-          .then(response => {
-              if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-              console.log("Changelog fetched successfully.");
-              return response.text();
-           })
-          .then(text => {
-            content.textContent = text;
-          })
-          .catch(err => {
-            console.error("Failed to load changelog:", err);
-            content.textContent = "Failed to load changelog.";
-          });
-      } else {
-          console.warn("Changelog modal or content element not found.");
-      }
+      if (!modal || !content) return;
+      modal.style.display = "flex";
+      content.textContent = "Loading...";
+      fetch('https://hostfilez.glitch.me/changelog.txt')
+        .then(response => response.text())
+        .then(text => {
+          const processedText = processLinkedText(text);
+          content.innerHTML = processedText;
+        })
+        .catch(err => {
+          console.error("Failed to load changelog:", err);
+          content.textContent = "Failed to load changelog.";
+        });
     }
 
     function closeChangelogModal() {
@@ -1181,8 +1343,39 @@
       if (games[index] && games[index].proxiedUrl && games[index].proxiedUrl !== 'none') {
          games[index].proxied = !games[index].proxied;
          saveGames();
-         updateGamesPage(); // Refresh the games view
          console.log('Proxy toggled.');
+    
+         // Update UI immediately for the specific card
+          // Check if the clicked button is within the Game of the Day container
+         const gameOfTheDayContainer = document.getElementById('game-of-day-container');
+         let button = null;
+    
+         if (gameOfTheDayContainer && gameOfTheDayContainer.contains(event.target)) {
+             // If the clicked element is inside the Game of the Day container,
+             // find the proxy button relative to the container.
+             // This assumes there's only one proxy button within the game-of-day-container's .game-card
+             button = gameOfTheDayContainer.querySelector('.favorite-button i.fa-shield-alt').closest('button'); // Find button by icon
+             console.log('Updating proxy button in Game of the Day container.');
+    
+         } else {
+             // Otherwise, assume it's a button on the main Games page
+              button = document.querySelector(`.game-card[data-index="${index}"] .favorite-button i.fa-shield-alt`).closest('button'); // Find button by icon
+              console.log('Updating proxy button on Games page.');
+         }
+    
+    
+         if (button) {
+           const span = button.querySelector('span');
+           if (span) {
+             span.textContent = `Proxy: ${games[index].proxied ? 'On' : 'Off'}`;
+              console.log('Proxy button text updated.');
+           }
+         } else {
+            console.warn('Proxy button not found for index:', index);
+         }
+    
+         // If currently showing all games or favorites on Games page, re-render (optional but good for consistency)
+         // updateGamesPage(); // Decided not to re-render the whole games page on proxy toggle unless necessary
       } else {
          alert("This game does not have a proxy URL configured.");
          console.warn('Attempted to toggle proxy for game without proxiedUrl.');
@@ -1785,18 +1978,23 @@
      }
 
 
-    function loadGame(name, url) {
-       console.log('loadGame() called for:', name, url);
-       const game = games.find(g => g.name === name);
-       // Determine if proxy should be used. Check if game exists, has proxied property true, and a valid proxiedUrl
-       const useProxy = game && game.proxied && game.proxiedUrl && game.proxiedUrl !== 'none';
-       const iframeUrl = useProxy ? game.proxiedUrl : url;
-       const displayUrl = useProxy ? "Proxy Active" : url; // Don't show proxy URL in input
+function loadGame(name, url) {
+      console.log('loadGame() called for:', name, url);
+      const game = games.find(g => g.name === name);
+      const useProxy = game && game.proxied && game.proxiedUrl && game.proxiedUrl !== 'none';
+      const targetUrl = useProxy ? game.proxiedUrl : url;
+      const displayUrl = useProxy ? "Proxy Active" : url;
 
-       console.log(`Loading game: ${name}, URL: ${iframeUrl}, Proxied: ${useProxy}`);
-       // Pass the original URL for recents if not using proxy
-       loadViewerFromLibrary(iframeUrl, name, displayUrl, !useProxy ? url : null); // Pass original url for recents if not proxied, null otherwise
-     }
+      if (useProxy) {
+        console.log('Proxy mode active. Loading proxied game in viewer:', game.proxiedUrl);
+        // Removed the window.open and setInterval logic
+        loadViewerFromLibrary(game.proxiedUrl, name, displayUrl, true); // Pass true to update recents
+      } else {
+        console.log('Direct game load:', url);
+        loadViewerFromLibrary(url, name, displayUrl, true); // Pass true to update recents
+      }
+    }
+
 
 
     // --- Favorites ---
@@ -1806,11 +2004,11 @@
         console.error("Invalid index for toggleFavoriteGame:", index);
         return; // Index check
       }
-
+    
       const game = games[index];
       const gameName = game.name; // Use name for consistency
       const isCurrentlyFavorite = favoriteGames.some(favGame => favGame.name === gameName);
-
+    
       if (isCurrentlyFavorite) {
         favoriteGames = favoriteGames.filter(favGame => favGame.name !== gameName);
         console.log('Removed game from favorites.');
@@ -1825,40 +2023,58 @@
       }
       localStorage.setItem('favoriteGames', JSON.stringify(favoriteGames));
        console.log('Favorite games saved:', favoriteGames.length);
-
-
+    
+    
       // Update UI immediately for the specific card
-      const button = document.querySelector(`.game-card[data-index="${index}"] .favorite-button`);
+      // Check if the clicked button is within the Game of the Day container
+      const gameOfTheDayContainer = document.getElementById('game-of-day-container');
+      let button = null;
+    
+      if (gameOfTheDayContainer && gameOfTheDayContainer.contains(event.target)) {
+          // If the clicked element is inside the Game of the Day container,
+          // find the favorite button relative to the container.
+          // This assumes there's only one favorite button within the game-of-day-container's .game-card
+          button = gameOfTheDayContainer.querySelector('.favorite-button');
+          console.log('Updating favorite button in Game of the Day container.');
+    
+      } else {
+          // Otherwise, assume it's a button on the main Games page
+           button = document.querySelector(`.game-card[data-index="${index}"] .favorite-button`);
+           console.log('Updating favorite button on Games page.');
+      }
+    
+    
       if (button) {
         const icon = button.querySelector('i.fa-star');
         const span = button.querySelector('span');
-        if (isCurrentlyFavorite) {
-           if(icon) {
-             icon.classList.remove('fa-solid');
-             icon.classList.add('fa-regular'); // Add regular class for outline
-             icon.style.color = ''; // Reset color
-           }
-           if(span) span.textContent = 'Favorite';
-        } else {
+        const isFavoriteNow = isFavoriteGame(game); // Check the state again after toggling
+        if (isFavoriteNow) {
            if(icon) {
              icon.classList.remove('fa-regular');
              icon.classList.add('fa-solid'); // Add solid class for filled
              icon.style.color = 'var(--accent)'; // Accent color for filled star
            }
            if(span) span.textContent = 'Favorited';
+        } else {
+           if(icon) {
+             icon.classList.remove('fa-solid');
+             icon.classList.add('fa-regular'); // Add regular class for outline
+             icon.style.color = ''; // Reset color
+           }
+           if(span) span.textContent = 'Favorite';
         }
-         console.log('Favorite button UI updated for index:', index);
+         console.log('Favorite button UI updated.');
       } else {
          console.warn('Favorite button not found for index:', index);
       }
-
-
-      // If currently showing favorites view, re-render the page to remove/add the game
-       if (showingFavorites) { // Check the state variable
-          console.log('Currently showing favorites view, re-rendering games page.');
+    
+    
+      // If currently showing favorites view on the Games page, re-render
+       if (isShowingFavoriteGames() && pageTitle.textContent === 'Favorite Games') { // Check state and current page title
+          console.log('Currently showing favorites view on Games page, re-rendering.');
           updateGamesPage(); // Re-render the list based on the updated favoriteGames array
        } else {
-           console.log('Currently showing all games view, individual card UI updated.');
+           console.log('Not on Favorite Games page or showing all games, skipping full re-render.');
        }
     }
 
@@ -1923,7 +2139,7 @@
     // --- Page Definitions & Switching ---
     const pages = {
         Home: `
-<div class="home-layout">
+            <div class="home-layout">
                 <div class="home-header">
                     <div class="home-logo">undergr0und</div>
                 </div>
@@ -1939,9 +2155,14 @@
                         <p>Latest: <span id="home-latest-version">Checking...</span></p>
                     </div>
                 </div>
-                <div class="panel home-news-panel">
-                    <h2>News</h2>
-                    <pre id="news-content" style="white-space: pre-wrap; font-family: inherit; text-align: left; max-height: 200px; overflow-y: auto;"></pre>
+
+                <div class="home-bottom-section">
+                    <div class="panel home-news-panel">
+                        <h2>News</h2>
+                        <pre id="news-content" style="white-space: pre-wrap; font-family: inherit; text-align: left;"></pre>
+                    </div>
+                    <div class="game-of-day-container" id="game-of-day-container">
+                        </div>
                 </div>
             </div>
         `,
