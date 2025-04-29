@@ -19,12 +19,16 @@
     }
 
     .reset-button {
-      background-color: #ff4444;
-      color: white;
-      margin-top: 1rem;
-      width: 100%;
+        background-color: #ff4444;
+        color: white;
+        /* Remove or override the existing margin-top */
+        /* margin-top: 1rem; */
+        width: 100%;
+        /* Add this line to push it to the bottom in a flex column */
+        margin-top: auto !important; /* Use auto to push it down */
+        /* The parent's text-align: center or align-items: center handles horizontal alignment for 100% width */
     }
-
+    
     .reset-button:hover {
       background-color: #cc0000;
     }
@@ -802,6 +806,145 @@
         filter: brightness(1.2); /* Make the button slightly brighter on hover */
         box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Add a subtle shadow on hover */
     }
+/* Updated styles for Settings Grid Layout */
+/* Updated styles for Settings Grid Layout */
+ .settings-grid-container {
+     display: grid;
+     grid-template-columns: repeat(3, 1fr); /* Exactly 3 equal columns */
+     gap: 1.5rem; /* Space between grid items */
+     padding: 1rem; /* Add some padding around the grid */
+     max-width: 900px; /* Limit the maximum width of the grid */
+     margin: 0 auto; /* Center the grid */
+     /* Add responsiveness: Below a certain width, allow fewer columns */
+     @media (max-width: 900px) {
+         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust min width as needed */
+         max-width: none; /* Allow it to take more width on smaller screens */
+     }
+      @media (max-width: 550px) { /* Further adjust for very small screens */
+          grid-template-columns: 1fr; /* Single column */
+      }
+ }
+
+.settings-grid-item {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem; /* Adjust padding as needed */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    display: flex; /* Use flexbox for content within the item */
+    flex-direction: column; /* Stack content vertically */
+    /* Removed justify-content: space-between; to allow content to flow naturally */
+    /* Removed aspect-ratio for more horizontal flexibility */
+    box-sizing: border-box; /* Include padding in the size */
+    text-align: center; /* This centers the text inside */
+    height: 100%; /* Ensure items in the same row have equal height */
+}
+
+.settings-grid-item h2 {
+     margin-top: 0;
+     margin-bottom: 1rem;
+     color: var(--accent);
+     font-size: 1.2rem;
+     /* Removed margin-right: 60px; */
+     text-align: center; /* Ensure the h2 content itself is centered */
+ }
+
+ .settings-grid-item h3 {
+      color: var(--text-light);
+      margin-top: 0.8rem; /* Space above subheadings */
+      margin-bottom: 0.5rem;
+      font-size: 1rem; /* Adjust subheading size */
+ }
+
+    .settings-grid-item p {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-bottom: 0.8rem;
+        flex-grow: 1; /* Add this line to make the paragraph take up available space */
+    }
+
+   .settings-grid-item button {
+       margin-top: 0.8rem; /* Add margin above buttons */
+       width: 100%; /* Make buttons full width */
+   }
+
+   .settings-grid-item input[type="text"],
+   .settings-grid-item select {
+        width: 100%;
+        margin-bottom: 0.8rem;
+        box-sizing: border-box;
+         padding: 0.5rem; /* Add padding */
+         background-color: var(--bg-dark); /* Darker background */
+         color: var(--text-light); /* Light text */
+         border: 1px solid var(--sidebar-dark); /* Subtle border */
+         border-radius: 5px;
+   }
+
+    /* Specific adjustments for Theme Selector within grid item */
+    .settings-grid-item .theme-selector {
+        justify-content: center; /* Center theme options */
+        flex-wrap: wrap;
+        gap: 5px; /* Adjust gap for smaller icons */
+        margin-top: 0.5rem;
+        flex-grow: 1; /* Allow theme selector to take up space */
+         align-items: center; /* Center vertically if space available */
+    }
+
+    .settings-grid-item .theme-option {
+        width: 40px; /* Smaller size for theme options in grid */
+        height: 40px;
+         margin: 0; /* Remove margin defined elsewhere */
+    }
+
+     /* Style for the select dropdown arrow */
+    .settings-grid-item select {
+        -webkit-appearance: none; /* Remove default arrow */
+        -moz-appearance: none;
+        appearance: none;
+        background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.362%22%20height%3D%22292.362%22%3E%3Cpath%20fill%3D%22%23${encodeURIComponent(getComputedStyle(document.documentElement).getPropertyValue('--text-light').trim().substring(1))}%22%20d%3D%22M287.9%20197.2c.9%201.3%201.1%202.9.8%204.3s-1.3%202.6-2.6%203.5l-124.5%20124.5c-1.8%201.8-4.3%202.9-7.4%202.9s-5.7-1.1-7.4-2.9l-124.7-124.7c-1.8-1.8-2.9-4.1-2.9-6.3s1.1-4.5%202.9-6.3l20.8-20.8c1.9-1.9%204.5-3%207.8-3%203.3%200%205.9%201.1%207.8%203l96.8%2096.7%2096.7-96.7c1.9-1.9%204.5-3%207.8-3%203.2%200%205.8%201.1%207.8%203l20.8%2020.8z%22%2F%3E%3C%2Fsvg%3E');
+        background-repeat: no-repeat;
+        background-position: right 0.7em top 50%, 0 0;
+        background-size: 0.65em auto, 100%;
+    }
+      
+    /* Style for individual setting reset buttons */
+/* Style for individual setting reset buttons */
+    .setting-reset-button {
+        background-color: #666; /* Grey background */
+        color: white;
+        padding: 0.3rem 0.6rem; /* Smaller padding */
+        font-size: 0.8rem;     /* Smaller font size */
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        /* Use margin-top: auto to push the button to the bottom in the flex column */
+        margin-top: auto;
+        /* Ensure it is a block element to take up its own line and center horizontally */
+        display: block;
+        /* Center horizontally within the flex item */
+        margin-left: auto;
+        margin-right: auto;
+        /* Optional: set a specific width if not 100% */
+        width: fit-content; /* Adjust width based on content */
+    }
+
+    .setting-reset-button:hover {
+        background-color: #888; /* Lighter grey on hover */
+    }
+
+    /* Adjust grid item padding if needed to accommodate buttons */
+    .settings-grid-item {
+         position: relative; /* Needed for absolute/float positioning inside */
+         padding-bottom: 3rem; /* Add more bottom padding if buttons overlap */
+     }
+    .settings-grid-item h2 {
+         margin-top: 0;
+         margin-bottom: 1rem;
+         color: var(--accent);
+         font-size: 1.2rem; /* Adjust heading size */
+         /* Removed margin-right: 60px; */
+         text-align: center; /* Ensure the title text is centered */
+     }
 
   </style>
 </head>
@@ -1146,61 +1289,229 @@ function fetchNews() {
     }
 
 
+// --- About:Blank Startup Toggle ---
+    function toggleAboutBlankStartup() {
+        const toggle = document.getElementById('aboutBlankToggle');
+        if (toggle) {
+            const isEnabled = toggle.checked;
+            localStorage.setItem('aboutBlankOnStartup', isEnabled);
+            console.log('About:Blank on startup set to:', isEnabled);
+            // Optional: Add user feedback like a small notification/alert
+            // alert(`About:Blank on startup ${isEnabled ? 'enabled' : 'disabled'}.`);
+        } else {
+            console.error("About:Blank toggle element not found.");
+        }
+    }
+
+    // --- Modified loadData function ---
     function loadData() {
-       console.log('Loading data from localStorage...');
-       // Load theme FIRST so Vanta can initialize with it
-       const savedTheme = localStorage.getItem('theme');
-       if (savedTheme) {
-         // Apply class immediately before Vanta init needs it
-         document.body.className = `theme-${savedTheme}`;
-         currentTheme = savedTheme;
-         console.log('Loaded saved theme:', savedTheme);
-       } else {
-         document.body.className = 'theme-default'; // Ensure default is set
-         currentTheme = 'default';
-         console.log('No saved theme found, setting default.');
-       }
+        console.log('Loading data from localStorage...');
+        // Load theme FIRST so Vanta can initialize with it
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.body.className = `theme-${savedTheme}`;
+            currentTheme = savedTheme;
+            console.log('Loaded saved theme:', savedTheme);
+        } else {
+            document.body.className = 'theme-default';
+            currentTheme = 'default';
+            console.log('No saved theme found, setting default.');
+        }
 
-      const defaultGames = [
-        { name: "Agar.io", url: "https://fluxaga.glitch.me", icon: "https://static.wikia.nocookie.net/yogscast/images/1/19/Agar.io_appstore_logo.png", proxiedUrl: "https://flux.englishd.workers.dev/", proxied: false },
-        { name: "Slither.io", url: "https://slither.io", icon: "https://pbs.twimg.com/profile_images/1854966120509267968/gUTLTAMd_400x400.jpg", proxiedUrl: "place", proxied: false }, // Placeholder for proxiedUrl
-        { name: "n-gon", url: "https://landgreen.github.io/n-gon/", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIiXBQof9-UTot6CA0A-X9Ntyp0pNALernmg&s", proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-lcnfgpegn%2Cgktju%60.ko-n%2Fgmn-", proxied: false },
-        { name: "FreeRiderHD", url: "https://freeriderhd.com", icon: "https://cdn.freeriderhd.com/free_rider_hd/sprites/youtube_poster_art.png", proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-wuw%2Cfpegrkdgrjd%2Ccmm-", proxied: false },
-        { name: "Shell Shockers", url: "https://shellshock.io/", icon: "https://rocketgames.imgix.net/uploads/games/s/shell-shockers/shell-shockers.jpg", proxiedUrl: "none", proxied: false },
-        { name: "Happy Wheels", url: "https://totaljerkface.com/happy_wheels.tjf", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8ZZNe14xfg_CvlBFQRnl2Boj4GIEuiyVqYw&s", proxiedUrl: "https://nyx-2b7o.onrender.com/active/go/hvtrs8%2F-tmtclhepkdaae%2Ccmm-hcpry%5Dwjeglq.vjd", proxied: false }
-      ];
-
-      const savedGames = localStorage.getItem('games');
-      const userGames = savedGames ? JSON.parse(savedGames) : [];
-
-      games = [...defaultGames];
-      const gameNames = new Set(defaultGames.map(g => g.name));
-      userGames.forEach(g => {
-          if (!gameNames.has(g.name)) {
-              games.push(g);
-              gameNames.add(g.name);
-          }
-      });
-      console.log('Games loaded:', games.length);
-
-      const savedLibrary = localStorage.getItem('library');
-      library = savedLibrary ? JSON.parse(savedLibrary) : [];
-      console.log('Library loaded:', library.length);
+        // --- Check and apply About:Blank on Startup preference ---
+        const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
+        // Default to true (enabled) if not explicitly set to false
+        const shouldOpenInAboutBlank = aboutBlankPref !== 'false';
+        if (shouldOpenInAboutBlank) {
+             // You might want to gate this behind a check to ensure it only happens
+             // when the page is *initially* loaded, not on subsequent calls to loadData.
+             // A simple flag or checking the window location could work.
+             // For simplicity here, we'll assume it's checked elsewhere or desired on every loadData call.
+             // openAppInAboutBlank(); // Consider the implications of calling this here.
+             console.log('About:Blank on startup is enabled (logic placeholder).');
+        } else {
+             console.log('About:Blank on startup is disabled.');
+        }
+         // Ensure the toggle reflects the saved state when the Settings page loads
+         const toggle = document.getElementById('aboutBlankToggle');
+         if (toggle) {
+             toggle.checked = shouldOpenInAboutBlank;
+         }
+        // --- End About:Blank Check ---
 
 
-      const savedFavoriteGames = localStorage.getItem('favoriteGames');
-      favoriteGames = savedFavoriteGames ? JSON.parse(savedFavoriteGames) : [];
-      console.log('Favorite games loaded:', favoriteGames.length);
+        const defaultGames = [
+             { name: "Agar.io", url: "https://fluxaga.glitch.me", icon: "https://static.wikia.nocookie.net/yogscast/images/1/19/Agar.io_appstore_logo.png", proxiedUrl: "https://flux.englishd.workers.dev/", proxied: false },
+             { name: "Slither.io", url: "https://slither.io", icon: "https://pbs.twimg.com/profile_images/1854966120509267968/gUTLTAMd_400x400.jpg", proxiedUrl: "place", proxied: false }, // Placeholder for proxiedUrl
+             { name: "n-gon", url: "https://landgreen.github.io/n-gon/", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIiXBQof9-UTot6CA0A-X9Ntyp0pNALernmg&s", proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-lcnfgpegn%2Cgktju%60.ko-n%2Fgmn-", proxied: false },
+             { name: "FreeRiderHD", url: "https://freeriderhd.com", icon: "https://cdn.freeriderhd.com/free_rider_hd/sprites/youtube_poster_art.png", proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-wuw%2Cfpegrkdgrjd%2Ccmm-", proxied: false },
+             { name: "Shell Shockers", url: "https://shellshock.io/", icon: "https://rocketgames.imgix.net/uploads/games/s/shell-shockers/shell-shockers.jpg", proxiedUrl: "none", proxied: false },
+             { name: "Happy Wheels", url: "https://totaljerkface.com/happy_wheels.tjf", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8ZZNe14xfg_CvlBFQRnl2Boj4GIEuiyVqYw&s", proxiedUrl: "https://nyx-2b7o.onrender.com/active/go/hvtrs8%2F-tmtclhepkdaae%2Ccmm-hcpry%5Dwjeglq.vjd", proxied: false }
+        ];
+
+        const savedGames = localStorage.getItem('games');
+        const userGames = savedGames ? JSON.parse(savedGames) : [];
+
+        games = [...defaultGames];
+        const gameNames = new Set(defaultGames.map(g => g.name));
+        userGames.forEach(g => {
+            if (!gameNames.has(g.name)) {
+                games.push(g);
+                gameNames.add(g.name);
+            }
+        });
+        console.log('Games loaded:', games.length);
+
+        const savedLibrary = localStorage.getItem('library');
+        library = savedLibrary ? JSON.parse(savedLibrary) : [];
+        console.log('Library loaded:', library.length);
 
 
-       // Update theme selector UI based on loaded theme
-       document.querySelectorAll('.theme-option').forEach(option => {
+        const savedFavoriteGames = localStorage.getItem('favoriteGames');
+        favoriteGames = savedFavoriteGames ? JSON.parse(savedFavoriteGames) : [];
+        console.log('Favorite games loaded:', favoriteGames.length);
+
+        // --- Load App Appearance Settings ---
+        const savedAppSettings = localStorage.getItem('appSettings');
+        if (savedAppSettings) {
+            const appSettings = JSON.parse(savedAppSettings);
+            applyAppSettings(appSettings);
+            console.log('Loaded and applied saved app settings.');
+        } else {
+            applyAppSettings({
+                tabTitle: 'Underground',
+                faviconUrl: ''
+            });
+            console.log('No saved app settings found, applying defaults.');
+        }
+        // --- End Load App Appearance Settings ---
+
+        document.querySelectorAll('.theme-option').forEach(option => {
             option.classList.remove('selected');
             if (option.classList.contains(`theme-${currentTheme}-preview`)) {
                 option.classList.add('selected');
             }
         });
-       console.log('Theme selector UI updated.');
+        console.log('Theme selector UI updated.');
+    }
+
+    function applyAppSettings(settings) {
+    console.log('Applying app settings:', settings);
+    // Apply Tab Title
+    if (settings.tabTitle !== undefined) { // Check if setting exists
+        document.title = settings.tabTitle;
+        console.log('Applied app tab title:', settings.tabTitle);
+    }
+
+    // Apply Favicon
+    let link = document.querySelector("link[rel~='icon']");
+    if (settings.faviconUrl) { // Check if a URL is provided
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.getElementsByTagName('head')[0].appendChild(link);
+             console.log('Created favicon link element.');
+        }
+        link.href = settings.faviconUrl;
+        console.log('Applied app favicon URL:', settings.faviconUrl);
+    } else {
+         // If no favicon URL is provided, remove the link element to use browser default
+        if (link) {
+             link.remove(); // Remove the custom favicon link
+             console.log('Removed custom favicon, using browser default.');
+        }
+    }
+
+    // Update the UI elements on the Settings page if they exist
+    const appTabTitleInput = document.getElementById('appTabTitleInput');
+    const appFaviconUrlInput = document.getElementById('appFaviconUrlInput');
+
+    if (appTabTitleInput && settings.tabTitle !== undefined) {
+         appTabTitleInput.value = settings.tabTitle;
+    }
+     if (appFaviconUrlInput && settings.faviconUrl !== undefined) {
+        appFaviconUrlInput.value = settings.faviconUrl;
+     }
+     console.log('Updated app settings page UI elements.');
+}
+
+    function saveAppSettings() {
+    console.log('Saving app settings...');
+    const appTabTitleInput = document.getElementById('appTabTitleInput');
+    const appFaviconUrlInput = document.getElementById('appFaviconUrlInput');
+
+    if (!appTabTitleInput || !appFaviconUrlInput) {
+        console.error("App settings input elements not found, cannot save.");
+        alert("Error: App Settings page elements not found.");
+        return;
+    }
+
+    const appSettingsToSave = {
+        tabTitle: appTabTitleInput.value.trim(),
+        faviconUrl: appFaviconUrlInput.value.trim()
+    };
+
+    localStorage.setItem('appSettings', JSON.stringify(appSettingsToSave)); // Use 'appSettings' key
+    console.log('App settings saved to localStorage:', appSettingsToSave);
+
+    // Apply the newly saved settings immediately
+    applyAppSettings(appSettingsToSave);
+
+    alert('App Settings saved!');
+}
+
+function openAppInAboutBlank() {
+        console.log('Attempting to open app in about:blank window by getting current document HTML and writing, setting opener to null.');
+        // Get the full HTML content of the current page
+        const htmlContent = document.documentElement.outerHTML;
+        const currentAppUrl = window.location.href; // Still useful context, though not fetched
+
+        const newWindow = window.open('about:blank', '_blank');
+
+        if (newWindow) {
+            console.log('Opened new about:blank window.');
+
+            // Set opener to null immediately to try and break the link
+            try {
+                newWindow.opener = null;
+                console.log('Set new window opener to null.');
+            } catch (e) {
+                console.warn('Failed to set new window opener to null:', e);
+            }
+
+
+            // Use setTimeout to allow the window document to be ready for writing
+            setTimeout(() => {
+                try {
+                    // Write the obtained HTML content into the new window's document
+                    newWindow.document.open();
+                    newWindow.document.write(htmlContent);
+                    newWindow.document.close();
+
+                    console.log('Successfully wrote current document HTML to about:blank window.');
+
+                    // Optional: You might want to set the new window's history or URL to the original URL
+                    // This can sometimes help with relative paths but might re-introduce detection issues
+                    try {
+                         // Setting history.pushState is cleaner than changing location.href directly if you want to spoof the URL
+                         newWindow.history.pushState({}, '', currentAppUrl);
+                         console.log('Attempted to set new window history state URL.');
+                    } catch (e) {
+                         console.warn('Failed to set new window history state URL:', e);
+                    }
+
+
+                } catch (e) {
+                    console.error('Failed to write HTML content to about:blank window:', e);
+                     // This alert indicates that writing to the document itself failed
+                     alert("Could not write app content to about:blank window.");
+                }
+            }, 50); // Small delay
+
+        } else {
+            alert('Could not open a new window. Please check your browser popup blocker.');
+            console.warn('Failed to open new window for about:blank.');
+        }
     }
 
     function setupEventListeners() {
@@ -2135,9 +2446,93 @@ function loadGame(name, url) {
       // Re-render the games list based on the new state
       updateGamesPage();
     }
+    const cloakPresets = {
+        goguardian: { title: 'GoGuardian Admin', favicon: 'https://www.goguardian.com/favicon.ico' },
+        drive: { title: 'My Drive - Google Drive', favicon: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png' },
+        classroom: { title: 'Classes', favicon: 'https://ssl.gstatic.com/classroom/favicon.png' },
+        // 'custom' will use the values saved via 'App Appearance'
+        custom: { title: null, favicon: null } // Placeholder
+    };
 
+    function applyPresetCloak() {
+        const select = document.getElementById('tabCloakSelect');
+        if (!select) {
+            console.error("Tab cloak select element not found.");
+            alert("Error: Could not find tab cloak dropdown.");
+            return;
+        }
+        const selectedValue = select.value;
+        let settingsToApply;
+
+        if (selectedValue === 'custom') {
+            // Load custom settings from localStorage
+            const savedAppSettings = localStorage.getItem('appSettings');
+            settingsToApply = savedAppSettings ? JSON.parse(savedAppSettings) : { title: 'Underground', favicon: '' }; // Default if no custom saved
+             console.log('Applying custom cloak settings from App Appearance.');
+        } else if (cloakPresets[selectedValue]) {
+            settingsToApply = {
+                tabTitle: cloakPresets[selectedValue].title,
+                faviconUrl: cloakPresets[selectedValue].favicon
+            };
+             console.log(`Applying preset cloak: ${selectedValue}`);
+        } else {
+             console.error(`Invalid cloak preset selected: ${selectedValue}`);
+             alert("Invalid cloak option selected.");
+             return;
+        }
+
+        // Apply the settings
+        applyAppSettings(settingsToApply);
+
+        // Save the *choice* of preset (or 'custom') so it can be re-selected on load
+        localStorage.setItem('currentCloakPreset', selectedValue);
+
+        alert(`Tab cloak applied: ${select.options[select.selectedIndex].text}`);
+    }
+
+    function resetCloak() {
+        console.log('Resetting tab cloak to default (Underground).');
+        // Reset to the application's default title and potentially remove favicon
+        const defaultSettings = {
+            tabTitle: 'Underground', // Your app's default name
+            faviconUrl: '' // Default (no favicon)
+        };
+        applyAppSettings(defaultSettings);
+
+        // Remove the saved preset choice and custom settings
+        localStorage.removeItem('currentCloakPreset');
+        // Optionally, you might want to keep custom settings but just un-apply the cloak:
+        // localStorage.setItem('currentCloakPreset', 'custom'); // Revert selection to custom
+        // const savedAppSettings = localStorage.getItem('appSettings');
+        // if (savedAppSettings) applyAppSettings(JSON.parse(savedAppSettings));
+
+        // Update the dropdown selection
+        const select = document.getElementById('tabCloakSelect');
+        if (select) {
+            select.value = 'custom'; // Set dropdown to custom after reset
+        }
+
+        alert("Tab cloak reset to default.");
+    }
+
+    // Function to load and apply the saved cloak state when settings page loads
+    function loadTabCloakSettings() {
+        const savedPreset = localStorage.getItem('currentCloakPreset');
+        const select = document.getElementById('tabCloakSelect');
+
+        if (select && savedPreset) {
+            select.value = savedPreset;
+            console.log(`Loaded saved cloak preset selection: ${savedPreset}`);
+            // Optional: Automatically re-apply the cloak based on saved preset?
+            // applyPresetCloak(); // Be cautious if this has side effects on initial load
+        } else if (select) {
+             select.value = 'custom'; // Default to custom if nothing saved
+              console.log('No saved cloak preset found, defaulting select to custom.');
+        }
+    }
+      
     // --- Page Definitions & Switching ---
-    const pages = {
+const pages = {
         Home: `
             <div class="home-layout">
                 <div class="home-header">
@@ -2191,23 +2586,90 @@ function loadGame(name, url) {
               <p id="update-status-message" style="color: var(--text-muted); margin-top: 1rem;">Status: Idle</p>
                <button onclick="openChangelogModal()" style="margin-top: 1rem;">View Changelog</button> </div>`,
         Settings: `
-            <div class="panel" style="max-width: 500px;">
-              <h2>Settings</h2>
-              <h3>Theme</h3>
-              <div class="theme-selector">
-                <div class="theme-option theme-default-preview selected" onclick="setTheme('default')" title="Default"></div>
-                <div class="theme-option theme-ocean-preview" onclick="setTheme('ocean')" title="Ocean"></div>
-                <div class="theme-option theme-forest-preview" onclick="setTheme('forest')" title="Forest"></div>
-                <div class="theme-option theme-purple-preview" onclick="setTheme('purple')" title="Purple"></div>
-                <div class="theme-option theme-red-preview" onclick="setTheme('red')" title="Red"></div>
-                <div class="theme-option theme-cyberpunk-preview" onclick="setTheme('cyberpunk')" title="Cyberpunk"></div>
+            <div class="settings-grid-container">
+              <div class="settings-grid-item">
+                 <h2>Theme</h2>
+                 <h3>Theme Selection</h3>
+                  <div class="theme-selector">
+                    <div class="theme-option theme-default-preview selected" onclick="setTheme('default')" title="Default"></div>
+                    <div class="theme-option theme-ocean-preview" onclick="setTheme('ocean')" title="Ocean"></div>
+                    <div class="theme-option theme-forest-preview" onclick="setTheme('forest')" title="Forest"></div>
+                    <div class="theme-option theme-purple-preview" onclick="setTheme('purple')" title="Purple"></div>
+                    <div class="theme-option theme-red-preview" onclick="setTheme('red')" title="Red"></div>
+                    <div class="theme-option theme-cyberpunk-preview" onclick="setTheme('cyberpunk')" title="Cyberpunk"></div>
+                  </div>
+                   <button class="setting-reset-button" onclick="resetThemeSettings()" title="Reset Theme to Default">
+                       <i class="fas fa-undo"></i> Reset
+                   </button>
               </div>
-              <h3 style="margin-top: 2rem;">Reset</h3>
-              <button class="reset-button" onclick="resetApp()">
-                <i class="fas fa-trash-alt"></i> Reset App Data
-              </button>
-              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">This deletes saved games, library, favorites, viewed history, and settings.</p>
-            </div>`,
+
+              <div class="settings-grid-item">
+                <h2>About:Blank</h2>
+                <p>Cloak the site in an about:blank page and toggle about:blank on startup.</p>
+                <div style="display: flex; align-items: center; gap: 10px; justify-content: center; flex-direction: column; height: 100%;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                         <label class="switch">
+                           <input type="checkbox" id="aboutBlankToggle" onclick="toggleAboutBlankStartup()" checked>
+                           <span class="slider round"></span>
+                         </label>
+                         <span>Enabled on Startup</span>
+                    </div>
+                    <button onclick="openAppInAboutBlank()">Open Popup Now</button>
+                </div>
+                   <button class="setting-reset-button" onclick="resetAboutBlankSettings()" title="Reset About:Blank Setting">
+                       <i class="fas fa-undo"></i> Reset
+                   </button>
+              </div>
+
+              <div class="settings-grid-item">
+                <h2>Panic Key</h2>
+                 <p>Quick open another site with one press.</p>
+                 <input type="text" id="panicKeyInput" placeholder="Enter Key (e.g., Escape, Alt+Q)">
+                 <input type="text" id="panicUrlInput" placeholder="Redirect URL (e.g., https://google.com)">
+                 <button onclick="savePanicKeySettings()">Save Panic Key</button>
+                   <button class="setting-reset-button" onclick="resetPanicKeySettings()" title="Reset Panic Key">
+                       <i class="fas fa-undo"></i> Reset
+                   </button>
+              </div>
+
+              <div class="settings-grid-item">
+                <h2>Presets</h2>
+                <p>Change the title and icon using presets.</p>
+                 <select id="tabCloakSelect">
+                  <option value="goguardian">GoGuardian Admin Block</option>
+                  <option value="drive">Google Drive</option>
+                  <option value="classroom">Google Classroom</option>
+                  <option value="custom">Custom (Use App Appearance)</option>
+                </select>
+                <button onclick="applyPresetCloak()">Apply Cloak</button>
+                <button class="setting-reset-button" onclick="resetCloak()" title="Reset Tab Cloak to Default">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+                 </div>
+
+              <div class="settings-grid-item">
+                   <h2>App Appearance</h2>
+                   <p>Set a custom title and icon (favicon). Used by 'Custom' cloak.</p>
+                   <input type="text" id="appTabTitleInput" placeholder="Custom Tab Title">
+                   <input type="text" id="appFaviconUrlInput" placeholder="Custom Favicon URL">
+                   <button onclick="saveAppSettings()">Save App Appearance</button>
+                   <button class="setting-reset-button" onclick="resetAppAppearanceSettings()" title="Reset App Appearance to Default">
+                       <i class="fas fa-undo"></i> Reset
+                   </button>
+              </div>
+
+
+               <div class="settings-grid-item">
+                <h2>Reset All Data
+                    </h2>
+                <p>This deletes all saved data (games, library, all settings).</p>
+                <button class="reset-button" onclick="resetApp()">
+                  <i class="fas fa-trash-alt"></i> Reset App Data
+                </button>
+               </div>
+
+               </div>
+        `,
        About: `
             <div class="panel" style="max-width: 500px; text-align: left;">
               <h2>About Underground</h2>
@@ -2216,7 +2678,7 @@ function loadGame(name, url) {
               <p>Created by: Zerone</p>
               <p>
                 <a href="#" onclick="openChangelogModal(); return false;" style="color: var(--accent); text-decoration: none;">View Changelog</a> |
-                <a href="mailto:your.email@example.com" style="color: var(--accent); text-decoration: none;">Contact</a>
+                <a href="https://github.com/ZeroneV1" style="color: var(--accent); text-decoration: none;">Contact</a>
               </p>
               <h3 style="margin-top: 1rem;">Credits:</h3>
               <p style="font-size: 0.9rem;">
@@ -2535,7 +2997,318 @@ function loadGame(name, url) {
           console.log('Reset cancelled.');
       }
     }
+// --- Panic Key ---
+    let panicKey = null;
+    let panicUrl = null;
 
+    function savePanicKeySettings() {
+        const keyInput = document.getElementById('panicKeyInput');
+        const urlInput = document.getElementById('panicUrlInput');
+
+        if (keyInput && urlInput) {
+            const key = keyInput.value.trim();
+            const url = urlInput.value.trim();
+
+            if (!key || !url) {
+                alert("Please enter both a key and a URL for the panic key.");
+                return;
+            }
+             // Basic URL validation (add https:// if missing)
+             let finalUrl = url;
+             if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+                 finalUrl = 'https://' + finalUrl;
+             }
+
+            // Save to localStorage and update global variables
+            localStorage.setItem('panicKey', key);
+            localStorage.setItem('panicUrl', finalUrl);
+            panicKey = key;
+            panicUrl = finalUrl;
+
+            alert(`Panic key set to '${key}' redirecting to '${finalUrl}'.`);
+            console.log('Panic key settings saved:', { key: panicKey, url: panicUrl });
+
+        } else {
+            console.error("Panic key input elements not found.");
+            alert("Error: Could not find panic key input elements.");
+        }
+    }
+
+    function loadPanicKeySettings() {
+        panicKey = localStorage.getItem('panicKey');
+        panicUrl = localStorage.getItem('panicUrl');
+        console.log('Loaded panic key settings:', { key: panicKey, url: panicUrl });
+
+        // Update input fields if on settings page
+        if (pageTitle.textContent === 'Settings') { // Check if settings page is active
+             const keyInput = document.getElementById('panicKeyInput');
+             const urlInput = document.getElementById('panicUrlInput');
+             if (keyInput && panicKey) keyInput.value = panicKey;
+             if (urlInput && panicUrl) urlInput.value = panicUrl;
+        }
+    }
+
+function checkPanicKey(event) {
+        const targetElement = event.target;
+        // Log the tag name of the element that received the keydown event
+        console.log(`Keydown event target: ${targetElement ? targetElement.tagName : 'null'}, Type: ${targetElement ? targetElement.type : 'N/A'}`);
+
+        // Check if the event originated from an input field or textarea
+        if (targetElement && (targetElement.tagName.toLowerCase() === 'input' || targetElement.tagName.toLowerCase() === 'textarea')) {
+            // Specifically log if we are skipping because it's an input/textarea
+            console.log('Target is input/textarea. Panic key check skipped.');
+            return; // Stop execution if typing in these fields
+        } else {
+             // Log if we are proceeding because it's *not* an input/textarea
+            console.log('Target is NOT input/textarea. Proceeding with panic key check.');
+        }
+
+        // --- Original panic key check logic ---
+        if (!panicKey || !panicUrl) {
+             // Log if the key/URL isn't set up
+             console.log('Panic key or URL not set in variables. Aborting check.');
+             return;
+        }
+
+        // Construct the key identifier string from the event
+        let pressedKey = '';
+        if (event.altKey) pressedKey += 'Alt+';
+        if (event.ctrlKey) pressedKey += 'Control+'; // Note: Might be intercepted by OS/browser shortcuts
+        if (event.shiftKey) pressedKey += 'Shift+';
+        // Use event.key for character keys and specific names like 'Escape', 'Enter'
+        pressedKey += event.key;
+        // Log the keys being compared
+        console.log(`Constructed pressedKey: "${pressedKey}", Comparing (case-insensitive) against panicKey: "${panicKey}"`);
+
+
+        // Case-insensitive comparison
+        if (pressedKey.toLowerCase() === panicKey.toLowerCase()) {
+            // Log the successful match before redirecting
+            console.log(`Panic key MATCHED: "${pressedKey}". Redirecting to: ${panicUrl}`);
+            event.preventDefault(); // Prevent default action just in case
+            window.location.href = panicUrl;
+        } else {
+             // Log if the keys didn't match
+             console.log('Panic key did NOT match.');
+        }
+    }
+
+    // --- Modify setupEventListeners to add panic key listener ---
+    function setupEventListeners() {
+      icons.forEach(icon => {
+        icon.addEventListener('click', handleIconClick);
+        icon.addEventListener('mousemove', handleTooltipShow);
+        icon.addEventListener('mouseleave', handleTooltipHide);
+      });
+
+      addGameModal.addEventListener('click', (e) => {
+        if (e.target === addGameModal) closeModal();
+      });
+
+      changelogModal.addEventListener('click', (e) => {
+          if (e.target === changelogModal) closeChangelogModal();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (addGameModal.style.display === 'flex') closeModal();
+            if (changelogModal.style.display === 'flex') closeChangelogModal();
+        }
+        // Check for panic key on any keydown event
+        checkPanicKey(e);
+      });
+
+       const sidebar = document.querySelector('.sidebar');
+       document.addEventListener('mousemove', (e) => {
+           if (e.clientX < 10 && !sidebar.classList.contains('open')) {
+               sidebar.classList.add('open');
+           } else if (e.clientX > 70 && sidebar.classList.contains('open')) {
+               sidebar.classList.remove('open');
+           }
+       });
+       document.documentElement.addEventListener('mouseleave', (e) => {
+          if (sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+          }
+       });
+      console.log('Core event listeners set up.');
+    }
+
+     // --- Modify window.addEventListener('DOMContentLoaded') ---
+    window.addEventListener('DOMContentLoaded', async () => {
+      console.log('DOMContentLoaded fired.');
+      loadData(); // Load theme, app settings, games, library, favorites
+      loadPanicKeySettings(); // Load panic key settings after other data
+      console.log('Theme, app, game, library, favorite, panic key data loaded.');
+
+      setTimeout(() => {
+          console.log('Attempting to initialize Vanta.js...');
+          initializeVanta();
+          console.log('initializeVanta() called. Vanta effect:', vantaEffect);
+          if (vantaEffect) {
+              console.log('Calling setTheme with currentTheme after Vanta initialization.');
+              setTheme(currentTheme); // Ensure Vanta uses the correct initial theme colors
+          } else {
+              console.warn('Vanta effect is null after initialization, cannot call setTheme to update options.');
+          }
+      }, 50);
+
+      setupEventListeners(); // Setup listeners including the panic key listener
+      console.log('Event listeners set up.');
+      updateGamesPage();
+      setupDragAndDrop();
+      console.log('Games page updated and drag/drop setup.');
+      switchPage('Home');
+      console.log('Switched to Home page.');
+    });
+
+     // --- Modify switchPage function ---
+     function switchPage(pageKey) {
+        console.log('Switching to page:', pageKey);
+
+        // Handle page-specific logic before fading out
+        if (pageKey === 'Games') {
+            showingFavorites = false;
+            pageTitle.textContent = 'Games';
+            pageTitle.style.display = 'block';
+            console.log('Switched to Games page. Resetting favorites view state.');
+        } else if (pageKey === 'Home') {
+            pageTitle.style.display = 'none';
+            console.log('Switched to Home page. Hiding page title.');
+            if (showingFavorites) {
+                showingFavorites = false;
+                console.log('Came from favorites view, resetting showingFavorites state.');
+            }
+        } else {
+            pageTitle.style.display = 'block';
+            pageTitle.textContent = pageKey;
+            console.log('Switched to page:', pageKey, 'Showing page title.');
+             if (showingFavorites) {
+                  showingFavorites = false;
+                   console.log('Came from favorites view on another page, resetting showingFavorites state.');
+             }
+        }
+
+        pageContent.classList.add('fade-out');
+        console.log('Adding fade-out class to content.');
+
+        localStorage.setItem('lastActivePage', pageKey);
+        localStorage.setItem('lastActivePageTitle', pageTitle.textContent);
+        console.log('Saved last active page:', pageKey);
+
+        setTimeout(() => {
+            console.log('Timeout before content switch complete.');
+            pageContent.innerHTML = pages[pageKey] || `<p>Content for ${pageKey} not found.</p>`;
+            console.log(`Content set for page: ${pageKey}. Content found: ${!!pages[pageKey]}`);
+
+            // Specific actions after loading content
+            if (pageKey === 'Games') {
+                updateGamesPage();
+            } else if (pageKey === 'Library') {
+                updateLibraryPage();
+            } else if (pageKey === 'Home') {
+                checkVersion();
+                fetchNews();
+                console.log('Home page specific actions (checkVersion, fetchNews) triggered.');
+            } else if (pageKey === 'Settings') {
+                setTheme(currentTheme); // Ensure theme selector visually matches
+                loadPanicKeySettings(); // Ensure panic key inputs show saved values
+                // Load App Settings into inputs
+                const savedAppSettings = localStorage.getItem('appSettings');
+                 if (savedAppSettings) {
+                     applyAppSettings(JSON.parse(savedAppSettings)); // Reloads settings into inputs
+                 }
+                 // Load Tab Cloaker state
+                 loadTabCloakSettings(); // Ensure dropdown/button state is correct
+                // Load About:Blank toggle state
+                const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
+                const shouldOpenInAboutBlank = aboutBlankPref !== 'false';
+                const toggle = document.getElementById('aboutBlankToggle');
+                if (toggle) {
+                    toggle.checked = shouldOpenInAboutBlank;
+                }
+
+                console.log('Settings page loaded, UI updated for theme, panic key, app settings, cloaker, and about:blank.');
+            } else if (pageKey === 'About') {
+                const aboutVersionEl = document.getElementById('about-version');
+                if (aboutVersionEl) aboutVersionEl.textContent = "1.0.0";
+                console.log('About page loaded, version updated.');
+            }
+
+            pageContent.classList.remove('fade-out');
+            console.log('Removing fade-out class, content should fade in.');
+
+            icons.forEach(i => {
+                i.classList.remove('active');
+                if (i.getAttribute('data-page') === pageKey && pageKey !== 'Viewer') {
+                    i.classList.add('active');
+                }
+            });
+            console.log('Active sidebar icon updated.');
+
+        }, 150);
+     }
+
+    // --- Individual Settings Reset Functions ---
+
+    function resetThemeSettings() {
+        console.log("Resetting theme to default.");
+        setTheme('default'); // This already updates localStorage and UI
+        alert("Theme reset to Default.");
+    }
+
+    function resetAboutBlankSettings() {
+        console.log("Resetting About:Blank settings.");
+        const toggle = document.getElementById('aboutBlankToggle');
+        if (toggle) {
+            toggle.checked = true; // Set to default state (checked/enabled)
+        }
+        localStorage.removeItem('aboutBlankOnStartup'); // Remove saved preference
+        console.log("Removed aboutBlankOnStartup from localStorage.");
+        alert("About:Blank setting reset to default (Enabled on Startup).");
+    }
+
+    function resetPanicKeySettings() {
+        console.log("Resetting Panic Key settings.");
+        const keyInput = document.getElementById('panicKeyInput');
+        const urlInput = document.getElementById('panicUrlInput');
+
+        // Clear UI
+        if (keyInput) keyInput.value = '';
+        if (urlInput) urlInput.value = '';
+
+        // Clear variables and localStorage
+        panicKey = null;
+        panicUrl = null;
+        localStorage.removeItem('panicKey');
+        localStorage.removeItem('panicUrl');
+        console.log("Removed panicKey and panicUrl from localStorage.");
+        alert("Panic Key settings cleared.");
+    }
+
+    // For Tab Cloaker, the existing resetCloak() function works, so we just call that
+    // from the new button. No new JS function needed here unless you want different behavior.
+
+    function resetAppAppearanceSettings() {
+        console.log("Resetting App Appearance settings.");
+        const titleInput = document.getElementById('appTabTitleInput');
+        const iconInput = document.getElementById('appFaviconUrlInput');
+
+        // Clear UI
+        if (titleInput) titleInput.value = '';
+        if (iconInput) iconInput.value = '';
+
+        // Clear localStorage
+        localStorage.removeItem('appSettings');
+        console.log("Removed appSettings from localStorage.");
+
+        // Apply default appearance
+        applyAppSettings({
+            tabTitle: 'Underground', // Your app's default name
+            faviconUrl: ''
+        });
+        alert("App Appearance reset to default.");
+    }
   </script>
 </body>
 </html>
