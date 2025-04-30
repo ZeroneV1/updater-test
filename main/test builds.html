@@ -5,7 +5,7 @@
   <title>Underground</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    :root, .theme-default {
+    :root { /* Apply variables to the root element */
       --bg-dark: #1c1c1e;
       --sidebar-dark: #2c2c2e;
       --text-light: #fff;
@@ -18,61 +18,30 @@
       --search-height: 40px; /* Added for consistent search bar height */
     }
 
+    /* Individual theme classes removed as variables are applied to :root by JS */
+    /* .theme-default { ... } */
+    /* .theme-ocean { ... } */
+    /* .theme-forest { ... } */
+    /* .theme-purple { ... } */
+    /* .theme-red { ... } */
+    /* .theme-cyberpunk { ... } */
+
+
     .reset-button {
-      background-color: #ff4444;
-      color: white;
-      margin-top: 1rem;
-      width: 100%;
+        background-color: #ff4444;
+        color: white;
+        /* Remove or override the existing margin-top */
+        /* margin-top: 1rem; */
+        width: 100%;
+        /* Add this line to push it to the bottom in a flex column */
+        margin-top: auto !important; /* Use auto to push it down */
+        /* The parent's text-align: center or align-items: center handles horizontal alignment for 100% width */
     }
 
     .reset-button:hover {
       background-color: #cc0000;
     }
 
-    .theme-ocean {
-      --bg-dark: #0f172a;
-      --sidebar-dark: #1e293b;
-      --text-light: #f8fafc;
-      --text-muted: #94a3b8;
-      --card-bg: #1e293b;
-      --accent: #0ea5e9;
-    }
-
-    .theme-forest {
-      --bg-dark: #1a2e05;
-      --sidebar-dark: #2b3e0f;
-      --text-light: #f0fdf4;
-      --text-muted: #86efac;
-      --card-bg: #2b3e0f;
-      --accent: #22c55e;
-    }
-
-    .theme-purple {
-      --bg-dark: #1e1b4b;
-      --sidebar-dark: #312e81;
-      --text-light: #f5f3ff;
-      --text-muted: #c4b5fd;
-      --card-bg: #312e81;
-      --accent: #a855f7;
-    }
-
-    .theme-red {
-      --bg-dark: #450a0a;
-      --sidebar-dark: #7f1d1d;
-      --text-light: #fef2f2;
-      --text-muted: #fca5a5;
-      --card-bg: #7f1d1d;
-      --accent: #ef4444;
-    }
-
-    .theme-cyberpunk {
-      --bg-dark: #0f0f1a;
-      --sidebar-dark: #1a1a2e;
-      --text-light: #e6e6ff;
-      --text-muted: #b3b3ff;
-      --card-bg: #1a1a2e;
-      --accent: #ff00ff; /* Example accent for cyberpunk */
-    }
 
     body {
       margin: 0;
@@ -80,7 +49,7 @@
       display: flex;
       /* Background color is now primarily handled by Vanta.js */
       /* background-color: var(--bg-dark); */
-      color: var(--text-light);
+      color: var(--text-light); /* Use variable */
       height: 100vh;
       overflow: hidden;
       position: relative; /* Needed for z-index stacking */
@@ -103,7 +72,7 @@
       top: 0;
       left: -60px;
       height: 100%;
-      background-color: var(--sidebar-dark);
+      background-color: var(--sidebar-dark); /* Use variable */
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -118,7 +87,7 @@
     }
 
     .icon {
-      color: var(--text-muted);
+      color: var(--text-muted); /* Use variable */
       font-size: var(--icon-size);
       padding: 10px;
       border-radius: var(--border-radius);
@@ -128,14 +97,14 @@
     }
 
     .icon:hover, .icon.active {
-      background-color: var(--accent);
-      color: white;
+      background-color: var(--accent); /* Use variable */
+      color: white; /* Or var(--text-light) if you want icon hover color to change */
     }
 
     .tooltip {
       position: fixed;
-      background-color: var(--accent);
-      color: white;
+      background-color: var(--accent); /* Use variable */
+      color: white; /* Or var(--text-light) */
       padding: 4px 8px;
       border-radius: 4px;
       font-size: 0.8rem;
@@ -158,6 +127,7 @@
       background-color: transparent; /* Let Vanta show through */
       width: 100%; /* Ensure content takes full width */
       box-sizing: border-box;
+      color: var(--text-light); /* Ensure text color is set for the content area */
     }
 
     .sidebar.open ~ .content {
@@ -176,7 +146,7 @@
         max-width: 800px; /* Example: Give panels a max-width to prevent them from stretching too wide on large screens */
         width: 95%; /* Ensure responsiveness */
         box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Existing shadow */
-        background-color: var(--card-bg);
+        background-color: var(--card-bg); /* Use variable */
         border-radius: var(--border-radius);
         box-sizing: border-box;
         color: var(--text-light); /* Ensure text color is set for the panel */
@@ -197,30 +167,31 @@
     .panel-container.fade-out {
       opacity: 0;
     }
-      
+
     .panel h2 {
         margin-top: 0; /* Remove top margin from the first element */
         margin-bottom: 1rem; /* Space below the heading */
         color: var(--accent); /* Use accent for headings */
     }
-    
+
     .panel h3 {
          margin-top: 1.5rem; /* Space above subheadings */
          margin-bottom: 0.8rem; /* Space below subheadings */
          color: var(--text-light); /* Or var(--accent) */
     }
-    
+
     .panel p {
         margin-bottom: 1em; /* Space below paragraphs */
+         color: var(--text-muted); /* Use variable for paragraph text */
     }
 
     input[type="text"] {
-      background: var(--card-bg);
-      border: 1px solid var(--accent);
+      background: var(--card-bg); /* Use variable */
+      border: 1px solid var(--accent); /* Use variable */
       padding: 0.5rem;
       width: 100%; /* Take full width of parent */
       margin-bottom: 0.5rem;
-      color: var(--text-light);
+      color: var(--text-light); /* Use variable */
       border-radius: 5px;
       transition: border var(--transition-speed) ease;
       box-sizing: border-box; /* Include padding and border in element's total width */
@@ -231,12 +202,12 @@
 
     input[type="text"]:focus {
       outline: none;
-      border-color: var(--text-light);
+      border-color: var(--text-light); /* Use variable */
     }
 
     button {
-      background-color: var(--accent);
-      color: black; /* Changed for better contrast on accent */
+      background-color: var(--accent); /* Use variable */
+      color: black; /* Changed for better contrast on accent, or use var(--bg-dark) */
       border: none; /* Removed border */
       padding: 0.5rem 1rem;
       border-radius: 5px;
@@ -252,7 +223,7 @@
 
 
     .game-card, .action-card {
-      background-color: var(--card-bg);
+      background-color: var(--card-bg); /* Use variable */
       border-radius: 10px;
       padding: 1rem;
       text-align: center;
@@ -304,8 +275,8 @@
       justify-content: center;
       gap: 10px;
       padding: 10px;
-      background-color: var(--bg-dark);
-      border-top: 1px solid #444;
+      background-color: var(--bg-dark); /* Use variable */
+      border-top: 1px solid #444; /* Keep static or make a variable */
       z-index: 25; /* Above iframe */
       box-sizing: border-box;
     }
@@ -315,10 +286,10 @@
       flex: 1;
       padding: 8px;
       border-radius: 4px;
-      border: 1px solid #ccc;
+      border: 1px solid #ccc; /* Keep static or make a variable */
       margin-right: 10px;
-      background-color: var(--card-bg);
-      color: var(--text-light);
+      background-color: var(--card-bg); /* Use variable */
+      color: var(--text-light); /* Use variable */
     }
 
     .bottom-controls button {
@@ -328,8 +299,8 @@
       cursor: pointer;
       display: flex;
       align-items: center;
-      background-color: var(--accent);
-      color: black; /* Changed color */
+      background-color: var(--accent); /* Use variable */
+      color: black; /* Changed color, or use var(--bg-dark) */
     }
     .bottom-controls button:hover {
        filter: brightness(1.2);
@@ -342,7 +313,7 @@
 
     .bottom-icons {
       margin-top: auto;
-      border-top: 1px solid #444;
+      border-top: 1px solid #444; /* Keep static or make a variable */
       padding-top: 1rem;
       width: 100%;
       display: flex;
@@ -361,19 +332,19 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgba(0, 0, 0, 0.7); /* Keep static or make a variable */
       z-index: 100;
       justify-content: center;
       align-items: center;
     }
 
     .modal-content {
-      background-color: var(--card-bg);
+      background-color: var(--card-bg); /* Use variable */
       padding: 2rem;
       border-radius: var(--border-radius);
       width: 300px;
       position: relative;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3); /* Keep static or make a variable */
     }
 
     .modal-close {
@@ -382,13 +353,13 @@
       right: 10px;
       background: none;
       border: none;
-      color: var(--text-muted);
+      color: var(--text-muted); /* Use variable */
       font-size: var(--icon-size);
       cursor: pointer;
     }
 
     .modal-close:hover {
-      color: white;
+      color: white; /* Or var(--text-light) */
     }
 
     .modal-buttons {
@@ -416,7 +387,7 @@
 
     .remove-game {
       margin-top: 1rem;
-      background-color: #ff4444;
+      background-color: #ff4444; /* Keep specific color or make a variable */
       color: white;
       font-weight: bold;
       width: 100%;
@@ -426,8 +397,8 @@
       position: absolute;
       top: 5px;
       right: 5px;
-      color: #ff4444;
-      background: rgba(0,0,0,0.7);
+      color: #ff4444; /* Keep specific color or make a variable */
+      background: rgba(0,0,0,0.7); /* Keep static or make a variable */
       border-radius: 50%;
       width: 20px;
       height: 20px;
@@ -441,7 +412,7 @@
     }
 
     .remove-icon:hover {
-      background: #ff4444;
+      background: #ff4444; /* Keep specific color or make a variable */
       color: white;
     }
 
@@ -452,17 +423,15 @@
     }
 
     .game-card-placeholder {
-      border: 2px dashed #444;
+      border: 2px dashed #444; /* Keep static or make a variable */
       background-color: transparent;
     }
 
     .theme-option {
       width: 50px;
       height: 50px;
-      border-radius: var(--border-radius);
       margin: 5px;
       cursor: pointer;
-      border: 2px solid transparent;
       transition: transform 0.2s, border-color 0.2s; /* Smooth transition */
     }
 
@@ -472,7 +441,7 @@
     }
 
     .theme-option.selected {
-      border-color: var(--accent);
+      border-color: var(--accent); /* Use variable */
       transform: scale(1.1);
     }
 
@@ -483,18 +452,21 @@
       margin-top: 1rem;
     }
 
-     /* Added theme previews */
+     /* Added theme previews (These should remain with specific colors for the swatch) */
     .theme-default-preview { background: linear-gradient(135deg, #1c1c1e 50%, #2c2c2e 50%); }
     .theme-ocean-preview { background: linear-gradient(135deg, #0f172a 50%, #1e293b 50%); }
     .theme-forest-preview { background: linear-gradient(135deg, #1a2e05 50%, #2b3e0f 50%); }
     .theme-purple-preview { background: linear-gradient(135deg, #1e1b4b 50%, #312e81 50%); }
     .theme-red-preview { background: linear-gradient(135deg, #450a0a 50%, #7f1d1d 50%); }
     .theme-cyberpunk-preview { background: linear-gradient(135deg, #0f0f1a 50%, #1a1a2e 50%); }
+    .theme-sunset-preview { background: linear-gradient(135deg, #2c1a1a 50%, #4a2c2c 50%); }
+    .theme-forest-night-preview { background: linear-gradient(135deg, #0d1a0b 50%, #1a2e17 50%); }
+    .theme-midnight-sky-preview { background: linear-gradient(135deg, #1a1c2e 50%, #2b2e4a 50%); }
 
 
     .favorite-button {
       background-color: transparent;
-      color: var(--text-muted); /* Use muted text color */
+      color: var(--text-muted); /* Use muted text color variable */
       border: none;
       padding: 5px 8px;
       border-radius: 5px;
@@ -507,11 +479,11 @@
     }
 
     .favorite-button:hover {
-      background-color: rgba(255,255,255,0.1);
-      color: var(--text-light); /* Lighten on hover */
+      background-color: rgba(255,255,255,0.1); /* Keep static or make a variable */
+      color: var(--text-light); /* Lighten on hover using variable */
     }
      .favorite-button i.fa-star { /* Style filled star */
-        color: var(--accent);
+        color: var(--accent); /* Use variable */
      }
 
 
@@ -529,7 +501,7 @@
       transition: all 0.2s ease;
       width: 90%;
       margin: 4px auto;
-      background-color: var(--card-bg);
+      background-color: var(--card-bg); /* Use variable */
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -550,15 +522,15 @@
       font-size: 0.9rem;
       border-radius: 4px;
       transition: all 0.2s ease;
-      color: var(--text-light); /* Ensure text is visible */
+      color: var(--text-light); /* Ensure text is visible using variable */
     }
 
     .library-item:hover {
-       background-color: var(--sidebar-dark); /* Darker background on hover */
+       background-color: var(--sidebar-dark); /* Darker background on hover using variable */
     }
 
     .library-item:hover .library-item-content {
-       color: var(--accent); /* Accent color for text on hover */
+       color: var(--accent); /* Accent color for text on hover using variable */
        background-color: transparent; /* Remove background change */
      }
 
@@ -568,7 +540,7 @@
       left: 6px;
       top: 50%; /* Center vertically */
       transform: translateY(-50%); /* Center vertically */
-      color: var(--text-muted);
+      color: var(--text-muted); /* Use variable */
       width: 18px;
       height: 18px;
       display: flex;
@@ -580,8 +552,8 @@
     }
 
     .library-item:hover .remove-icon {
-       color: #ff4444; /* Red remove icon on hover */
-       background: rgba(255, 68, 68, 0.2); /* Slight red background */
+       color: #ff4444; /* Red remove icon on hover - keep static or make variable */
+       background: rgba(255, 68, 68, 0.2); /* Slight red background - keep static or make variable */
     }
 
 
@@ -597,15 +569,15 @@
     .action-card i {
       font-size: 2rem;
       margin-bottom: 0.5rem;
-      color: var(--accent);
+      color: var(--accent); /* Use variable */
     }
 
     .action-card p {
       margin: 0;
-       color: var(--text-muted); /* Muted text for actions */
+       color: var(--text-muted); /* Muted text for actions using variable */
     }
      .action-card:hover p {
-        color: var(--text-light); /* Lighten text on hover */
+        color: var(--text-light); /* Lighten text on hover using variable */
      }
 
     .library-columns {
@@ -626,8 +598,8 @@
       text-align: center;
       margin-bottom: 1rem;
       padding-bottom: 8px;
-      border-bottom: 1px solid var(--accent);
-      color: var(--accent); /* Accent color for headings */
+      border-bottom: 1px solid var(--accent); /* Use variable */
+      color: var(--accent); /* Accent color for headings using variable */
     }
     /* Add specific styling for changelog modal content */
     #changelogContent {
@@ -635,12 +607,24 @@
         color: var(--text-light); /* Match theme text color */
         padding: 1rem;
         border-radius: var(--border-radius);
-        max-height: 60vh; /* Limit height */
+        max-height: 60vh;
+        max-width: 900px;/* Limit height */
         overflow-y: auto; /* Allow scrolling */
-        border: 1px solid var(--sidebar-dark); /* Subtle border */
+        border: 1px solid var(--sidebar-dark); /* Subtle border using variable */
     }
 
     /* --- Home Page Specific Styles --- */
+    .home-bottom-section {
+        display: flex; /* Use flexbox to place news and game button side-by-side */
+        justify-content: space-between; /* Push items to the ends */
+        align-items: flex-start; /* Align items to the top */
+        gap: 20px; /* Space between news and game button */
+        width: 95%; /* Match the width of the news panel */
+        max-width: 1100px; /* Adjust max-width as needed to accommodate both */
+        margin: 0 auto; /* Center the section */
+        flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    }
+
     .home-layout {
         display: flex;
         flex-direction: column;
@@ -651,20 +635,20 @@
         overflow-y: auto; /* Allow scrolling if content exceeds height */
         padding-top: 20px; /* Add some space at the top */
     }
-    
+
     .home-header {
         width: 100%;
         text-align: center; /* Center the logo */
         margin-bottom: 20px; /* Space below the logo */
     }
-    
+
     .home-logo {
         font-size: 3rem; /* Large font size for the name */
         font-weight: bold;
-        color: var(--text-light); /* Ensure name is bright */
-        text-shadow: 0 0 10px var(--accent); /* Optional: glow effect */
+        color: var(--text-light); /* Ensure name is bright using variable */
+        text-shadow: 0 0 10px var(--accent); /* Optional: glow effect using variable */
     }
-    
+
     .home-main-section {
         display: flex;
         align-items: center;
@@ -673,7 +657,7 @@
         margin-bottom: 30px; /* Space below this section */
         flex-wrap: wrap; /* Allow wrapping on smaller screens */
     }
-    
+
     .home-search-container {
         display: flex;
         align-items: center;
@@ -681,43 +665,106 @@
         flex-grow: 1; /* Allow search to take available space */
         max-width: 400px; /* Limit max width */
     }
-    
+
     .home-search-container input[type="text"] {
         flex-grow: 1; /* Allow input to fill space */
         padding-left: calc(1rem + 24px); /* Adjust padding for icon */
     }
-    
+
     .home-search-container .search-icon {
         position: absolute;
         left: 10px;
-        color: var(--text-muted);
+        color: var(--text-muted); /* Use variable */
         font-size: 1.2rem;
         height: var(--search-height); /* Match search height */
         display: flex;
         align-items: center; /* Vertically center icon */
     }
-    
+
     .home-status {
-        color: var(--text-muted);
+        color: var(--text-muted); /* Use variable */
         font-size: 0.9rem;
         display: flex; /* Use flexbox for status items */
         gap: 15px; /* Space between status items */
     }
-    
+
     .home-status p {
         margin: 0; /* Remove default paragraph margin */
     }
-    
-    
+
+
     .home-news-panel {
         width: 95%; /* Adjust width as needed */
         max-width: 800px; /* Limit max width */
         margin: 0 auto; /* Center the news panel */
         flex-shrink: 0; /* Prevent shrinking */
+        flex: 2;
+        min-width: 300px;
     }
-      
+
+     /* Explicitly set color for the pre tag containing news content */
+    #news-content {
+        color: var(--text-light); /* Ensure news content text uses the light text color variable */
+    }
+
+
+    .game-of-day-container {
+        flex: 1; /* Allow the game container to take remaining space */
+        min-width: 180px; /* Minimum width for the game container */
+        max-width: 200px; /* Maximum width for the game container */
+        display: flex; /* Use flex to center the button */
+        flex-direction: column; /* Stack content vertically if needed */
+        align-items: center; /* Center button horizontally */
+        padding: 1.5rem; /* Add padding similar to panels */
+        background-color: var(--card-bg); /* Use card background variable */
+        border-radius: var(--border-radius); /* Use defined radius */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2); /* Add shadow */
+         text-align: center; /* Center text inside */
+         box-sizing: border-box; /* Include padding in width */
+    }
+
+     .game-of-day-container h3 {
+         margin-top: 0;
+         margin-bottom: 1rem;
+         color: var(--accent); /* Use variable */
+     }
+
+
+    .game-of-day-button {
+        /* Inherit styles from game-card but maybe adjust size */
+        background-color: var(--card-bg); /* Use variable */
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.2s;
+        width: 100%; /* Take full width of its container */
+        position: relative;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-sizing: border-box; /* Include padding in width */
+         /* Ensure flex properties don't conflict if container is flex */
+         flex-shrink: 0;
+         flex-grow: 0;
+         margin: 0; /* Remove margin if inheriting from game-card */
+    }
+
+     .game-of-day-button:hover {
+        transform: scale(1.05);
+     }
+
+     .game-of-day-button img {
+        width: 100%;
+        border-radius: var(--border-radius);
+        margin-bottom: 0.5rem;
+     }
+      .game-of-day-button p {
+          margin: 0;
+          color: var(--text-light); /* Use variable */
+          font-weight: bold;
+      }
+
     .changelog-button {
-        background-color: var(--accent); /* Use the theme's accent color */
+        background-color: var(--accent); /* Use the theme's accent color variable */
         color: black; /* Set text color to black for contrast on the accent color */
         border: none; /* Remove the border */
         padding: 0.5rem 1rem;
@@ -729,11 +776,152 @@
         align-items: center; /* Vertically center the icon and text */
         gap: 5px; /* Add a small gap between the icon and the text */
     }
-    
+
     .changelog-button:hover {
         filter: brightness(1.2); /* Make the button slightly brighter on hover */
         box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Add a subtle shadow on hover */
     }
+/* Updated styles for Settings Grid Layout */
+/* Updated styles for Settings Grid Layout */
+ .settings-grid-container {
+     display: grid;
+     grid-template-columns: repeat(3, 1fr); /* Exactly 3 equal columns */
+     gap: 1.5rem; /* Space between grid items */
+     padding: 1rem; /* Add some padding around the grid */
+     max-width: 900px; /* Limit the maximum width of the grid */
+     margin: 0 auto; /* Center the grid */
+     /* Add responsiveness: Below a certain width, allow fewer columns */
+     @media (max-width: 900px) {
+         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust min width as needed */
+         max-width: none; /* Allow it to take more width on smaller screens */
+     }
+      @media (max-width: 550px) { /* Further adjust for very small screens */
+          grid-template-columns: 1fr; /* Single column */
+      }
+ }
+
+.settings-grid-item {
+    background-color: var(--card-bg); /* Use variable */
+    border-radius: var(--border-radius);
+    padding: 1.5rem; /* Adjust padding as needed */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    display: flex; /* Use flexbox for content within the item */
+    flex-direction: column; /* Stack content vertically */
+    /* Removed justify-content: space-between; to allow content to flow naturally */
+    /* Removed aspect-ratio for more horizontal flexibility */
+    box-sizing: border-box; /* Include padding in the size */
+    text-align: center; /* This centers the text inside */
+    height: 100%; /* Ensure items in the same row have equal height */
+}
+
+.settings-grid-item h2 {
+     margin-top: 0;
+     margin-bottom: 1rem;
+     color: var(--accent); /* Use variable */
+     font-size: 1.2rem;
+     /* Removed margin-right: 60px; */
+     text-align: center; /* Ensure the h2 content itself is centered */
+ }
+
+ .settings-grid-item h3 {
+      color: var(--text-light); /* Use variable */
+      margin-top: 0.8rem; /* Space above subheadings */
+      margin-bottom: 0.5rem;
+      font-size: 1rem; /* Adjust subheading size */
+ }
+
+    .settings-grid-item p {
+        font-size: 0.9rem;
+        color: var(--text-muted); /* Use variable */
+        margin-bottom: 0.8rem;
+        flex-grow: 1; /* Add this line to make the paragraph take up available space */
+    }
+
+   .settings-grid-item button {
+       margin-top: 0.8rem; /* Add margin above buttons */
+       width: 100%; /* Make buttons full width */
+   }
+
+   .settings-grid-item input[type="text"],
+   .settings-grid-item select {
+        width: 100%;
+        margin-bottom: 0.8rem;
+        box-sizing: border-box;
+         padding: 0.5rem; /* Add padding */
+         background-color: var(--bg-dark); /* Darker background using variable */
+         color: var(--text-light); /* Light text using variable */
+         border: 1px solid var(--sidebar-dark); /* Subtle border using variable */
+         border-radius: 5px;
+   }
+
+    /* Specific adjustments for Theme Selector within grid item */
+    .settings-grid-item .theme-selector {
+        justify-content: center; /* Center theme options */
+        flex-wrap: wrap;
+        gap: 5px; /* Adjust gap for smaller icons */
+        margin-top: 0.5rem;
+        flex-grow: 1; /* Allow theme selector to take up space */
+         align-items: center; /* Center vertically if space available */
+    }
+
+    .settings-grid-item .theme-option {
+        width: 40px; /* Smaller size for theme options in grid */
+        height: 40px;
+         margin: 0; /* Remove margin defined elsewhere */
+    }
+
+     /* Style for the select dropdown arrow */
+    .settings-grid-item select {
+        -webkit-appearance: none; /* Remove default arrow */
+        -moz-appearance: none;
+        appearance: none;
+        /* The fill color in the SVG is calculated based on --text-light */
+        background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.362%22%20height%3D%22292.362%22%3E%3Cpath%20fill%3D%22%23${encodeURIComponent(getComputedStyle(document.documentElement).getPropertyValue('--text-light').trim().substring(1))}%22%20d%3D%22M287.9%20197.2c.9%201.3%201.1%202.9.8%204.3s-1.3%202.6-2.6%203.5l-124.5%20124.5c-1.8%201.8-4.3%202.9-7.4%202.9s-5.7-1.1-7.4-2.9l-124.7-124.7c-1.8-1.8-2.9-4.1-2.9-6.3s1.1-4.5%202.9-6.3l20.8-20.8c1.9-1.9%204.5-3%207.8-3%203.3%200%205.9%201.1%207.8%203l96.8%2096.7%2096.7-96.7c1.9-1.9%204.5-3%207.8-3%203.2%200%205.8%201.1%207.8%203l20.8%2020.8z%22%2F%3E%3C%2Fsvg%3E');
+        background-repeat: no-repeat;
+        background-position: right 0.7em top 50%, 0 0;
+        background-size: 0.65em auto, 100%;
+    }
+
+    /* Style for individual setting reset buttons */
+/* Style for individual setting reset buttons */
+    .setting-reset-button {
+        background-color: #666; /* Grey background - keep static or make variable */
+        color: white;
+        padding: 0.3rem 0.6rem; /* Smaller padding */
+        font-size: 0.8rem;     /* Smaller font size */
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        /* Use margin-top: auto to push the button to the bottom in the flex column */
+        margin-top: auto;
+        /* Ensure it is a block element to take up its own line and center horizontally */
+        display: block;
+        /* Center horizontally within the flex item */
+        margin-left: auto;
+        margin-right: auto;
+        /* Optional: set a specific width if not 100% */
+        width: fit-content; /* Adjust width based on content */
+    }
+
+    .setting-reset-button:hover {
+        background-color: #888; /* Lighter grey on hover - keep static or make variable */
+    }
+
+    /* Adjust grid item padding if needed to accommodate buttons */
+    .settings-grid-item {
+         position: relative; /* Needed for absolute/float positioning inside */
+         padding-bottom: 3rem; /* Add more bottom padding if buttons overlap */
+     }
+    .settings-grid-item h2 {
+         margin-top: 0;
+         margin-bottom: 1rem;
+         color: var(--accent); /* Use variable */
+         font-size: 1.2rem; /* Adjust heading size */
+         /* Removed margin-right: 60px; */
+         text-align: center; /* Ensure the title text is centered */
+     }
+
 
   </style>
 </head>
@@ -754,7 +942,7 @@
   </div>
 
   <div class="modal" id="changelogModal">
-    <div class="modal-content" style="max-width: 600px; max-height: 80vh;">
+    <div class="modal-content" style="max-width: 900px; max-height: 80vh;">
       <button class="modal-close" onclick="closeChangelogModal()">&times;</button>
       <h2>Changelog</h2>
       <pre id="changelogContent" style="white-space: pre-wrap; font-family: inherit;"></pre>
@@ -797,11 +985,126 @@
     let library = [];
     let draggedItem = null;
     let draggedIndex = null;
-    let currentTheme = 'default';
+    // Removed: let currentTheme = 'default'; // We will use currentThemeName instead
     let favoriteGames = [];
     let isSidebarOpen = false;
-    let vantaEffect = null; // Variable to hold the Vanta instance
-    let showingFavorites = false; // New state variable for favorite games view
+    let vantaEffect = null;
+    let showingFavorites = false;
+    
+    // Define themes in an array
+    const themes = [
+      {
+        name: 'default',
+        previewClass: 'theme-default-preview', // Keep existing preview class for visual swatch
+        variables: {
+          '--bg-dark': '#1c1c1e',
+          '--sidebar-dark': '#2c2c2e',
+          '--text-light': '#fff',
+          '--text-muted': '#aaa',
+          '--card-bg': '#1a1a1a',
+          '--accent': '#00ff84',
+        }
+      },
+      {
+        name: 'ocean',
+         previewClass: 'theme-ocean-preview',
+        variables: {
+          '--bg-dark': '#0f172a',
+          '--sidebar-dark': '#1e293b',
+          '--text-light': '#f8fafc',
+          '--text-muted': '#94a3b8',
+          '--card-bg': '#1e293b',
+          '--accent': '#0ea5e9',
+        }
+      },
+       {
+          name: 'forest',
+          previewClass: 'theme-forest-preview',
+          variables: {
+            '--bg-dark': '#1a2e05',
+            '--sidebar-dark': '#2b3e0f',
+            '--text-light': '#f0fdf4',
+            '--text-muted': '#86efac',
+            '--card-bg': '#2b3e0f',
+            '--accent': '#22c55e',
+          }
+        },
+         {
+          name: 'purple',
+           previewClass: 'theme-purple-preview',
+          variables: {
+            '--bg-dark': '#1e1b4b',
+            '--sidebar-dark': '#312e81',
+            '--text-light': '#f5f3ff',
+            '--text-muted': '#c4b5fd',
+            '--card-bg': '#312e81',
+            '--accent': '#a855f7',
+          }
+        },
+         {
+          name: 'red',
+           previewClass: 'theme-red-preview',
+          variables: {
+            '--bg-dark': '#450a0a',
+            '--sidebar-dark': '#7f1d1d',
+            '--text-light': '#fef2f2',
+            '--text-muted': '#fca5a5',
+            '--card-bg': '#7f1d1d',
+            '--accent': '#ef4444',
+          }
+        },
+         {
+          name: 'cyberpunk',
+           previewClass: 'theme-cyberpunk-preview',
+          variables: {
+            '--bg-dark': '#0f0f1a',
+            '--sidebar-dark': '#1a1a2e',
+            '--text-light': '#e6e6ff',
+            '--text-muted': '#b3b3ff',
+            '--card-bg': '#1a1a2e',
+            '--accent': '#ff00ff',
+          }
+        },
+         {
+           name: 'sunset',
+           previewClass: 'theme-sunset-preview',
+           variables: {
+             '--bg-dark': '#2c1a1a',
+             '--sidebar-dark': '#4a2c2c',
+             '--text-light': '#fff0e0',
+             '--text-muted': '#e0b0a0',
+             '--card-bg': '#3a2222',
+             '--accent': '#ff8844',
+           }
+         },
+         {
+           name: 'forest-night',
+           previewClass: 'theme-forest-night-preview',
+           variables: {
+             '--bg-dark': '#0d1a0b',
+             '--sidebar-dark': '#1a2e17',
+             '--text-light': '#e0f2f1',
+             '--text-muted': '#a7ffeb',
+             '--card-bg': '#132611',
+             '--accent': '#64ffda',
+           }
+         },
+         // --- New Theme: Midnight Sky ---
+         {
+            name: 'midnight-sky',
+            previewClass: 'theme-midnight-sky-preview',
+            variables: {
+                '--bg-dark': '#1a1c2e',      // Deep blue-black
+                '--sidebar-dark': '#2b2e4a', // Darker blue
+                '--text-light': '#e0e0ff',   // Pale lavender text
+                '--text-muted': '#a0a0c0',   // Muted gray-blue
+                '--card-bg': '#20233d',      // Dark blue for cards
+                '--accent': '#7b68ee',       // Medium purple accent
+            }
+         }
+    ];
+
+let currentThemeName = 'default'; // Store the name of the current theme
 
     // --- VANTA.JS HELPER ---
     // Function to convert CSS hex/rgb color to Vanta's number format
@@ -947,19 +1250,106 @@ function processLinkedText(text) {
     }
 
 
-    function fetchNews() {
+function fetchNews() {
        const newsBox = document.getElementById('news-content');
-       if (!newsBox) return;
+       const gameOfTheDayContainer = document.getElementById('game-of-day-container');
+
+       if (!newsBox || !gameOfTheDayContainer) {
+         console.log("News or Game of the Day elements not found.");
+         return;
+       }
+
        newsBox.textContent = "Loading news...";
+       gameOfTheDayContainer.innerHTML = ''; // Clear previous content
+       console.log("Fetching news...");
+
        fetch('https://hostfilez.glitch.me/news.txt')
-         .then(response => response.text())
+         .then(response => {
+              if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+              console.log("News fetched successfully.");
+              return response.text();
+          })
          .then(text => {
-           const processedText = processLinkedText(text);
-           newsBox.innerHTML = processedText;
+           let rawNewsText = text;
+           let gameOfTheDayName = null;
+
+           const gameOfTheDayRegex = /\{([^}]+)\}/; // Matches {Game name} and captures Game name
+           const match = rawNewsText.match(gameOfTheDayRegex);
+
+           if (match && match[1]) {
+             gameOfTheDayName = match[1].trim();
+             console.log("Found Game of the Day name:", gameOfTheDayName);
+
+             // Remove the {Game name} marker from the news text
+             rawNewsText = rawNewsText.replace(gameOfTheDayRegex, '').trim();
+
+             // Find the game in the games array
+             const gameOfTheDay = games.find(game => game.name.toLowerCase() === gameOfTheDayName.toLowerCase());
+
+             if (gameOfTheDay) {
+               console.log("Found Game of the Day data:", gameOfTheDay.name);
+
+               // Find the index of the game in the main games array (needed for favorite/proxy toggling)
+               const gameIndex = games.findIndex(game => game.name.toLowerCase() === gameOfTheDayName.toLowerCase());
+
+               // Generate HTML for the Game of the Day container
+               gameOfTheDayContainer.innerHTML = `
+                  <h3>Game of the Day</h3>
+                  <div class="game-card" style="width: 100%; margin: 0;">
+                     <img src="${escapeHtml(gameOfTheDay.icon)}" alt="${escapeHtml(gameOfTheDay.name)}"
+                           onerror="this.src='https://via.placeholder.com/150?text=No+Image'"
+                           onclick="loadGame('${escapeHtml(gameOfTheDay.name)}', '${escapeHtml(gameOfTheDay.url)}')">
+                      <p onclick="loadGame('${escapeHtml(gameOfTheDay.name)}', '${escapeHtml(gameOfTheDay.url)}')">${escapeHtml(gameOfTheDay.name)}</p>
+                       <div style="display: flex; flex-direction: column; gap: 5px; align-items: center; margin-top: 5px;">
+                           <button class="favorite-button" onclick="event.stopPropagation(); toggleFavoriteGame(${gameIndex})">
+                                <i class="fas ${isFavoriteGame(gameOfTheDay) ? 'fa-solid' : 'fa-regular'} fa-star" style="${isFavoriteGame(gameOfTheDay) ? 'color: var(--accent);' : ''}"></i>
+                                <span>${isFavoriteGame(gameOfTheDay) ? 'Favorited' : 'Favorite'}</span>
+                           </button>
+                           ${gameOfTheDay.proxiedUrl && gameOfTheDay.proxiedUrl !== 'none' ? // Only show proxy toggle if proxy URL exists
+                            `<button class="favorite-button" onclick="event.stopPropagation(); toggleProxied(${gameIndex})">
+                              <i class="fas fa-shield-alt"></i>
+                              <span>Proxy: ${gameOfTheDay.proxied ? 'On' : 'Off'}</span>
+                            </button>`
+                            : ''
+                          }
+                      </div>
+                   </div>
+               `;
+               console.log("Generated Game of the Day game-card HTML.");
+
+               // Note: Clicking Favorite or Proxy toggle on the Home page
+               // will update the state in games array and localStorage,
+               // but the button display on the Home page won't auto-update
+               // unless you manually re-render the game-of-day-container
+               // or refetch the news after a toggle. The functionality still works.
+
+             } else {
+                 console.log("Game of the Day not found in games list:", gameOfTheDayName);
+                  gameOfTheDayContainer.innerHTML = `
+                     <h3>Game of the Day</h3>
+                     <p style="color: var(--text-muted);">Game "${escapeHtml(gameOfTheDayName)}" not found.</p>
+                  `;
+             }
+           } else {
+             console.log("No {Game name} found in news text.");
+               gameOfTheDayContainer.innerHTML = `
+                  <h3>Game of the Day</h3>
+                  <p style="color: var(--text-muted);">No Game of the Day selected.</p>
+               `;
+           }
+
+           // Process and display the remaining news text
+           const processedNewsText = processLinkedText(rawNewsText);
+           newsBox.innerHTML = processedNewsText;
+
          })
          .catch(err => {
            console.error("Failed to load news:", err);
            newsBox.textContent = "Failed to load news.";
+           gameOfTheDayContainer.innerHTML = `
+               <h3>Game of the Day</h3>
+               <p style="color: var(--text-muted);">Failed to load Game of the Day.</p>
+           `;
          });
      }
 
@@ -991,61 +1381,223 @@ function processLinkedText(text) {
     }
 
 
-    function loadData() {
-       console.log('Loading data from localStorage...');
-       // Load theme FIRST so Vanta can initialize with it
-       const savedTheme = localStorage.getItem('theme');
-       if (savedTheme) {
-         // Apply class immediately before Vanta init needs it
-         document.body.className = `theme-${savedTheme}`;
-         currentTheme = savedTheme;
-         console.log('Loaded saved theme:', savedTheme);
-       } else {
-         document.body.className = 'theme-default'; // Ensure default is set
-         currentTheme = 'default';
-         console.log('No saved theme found, setting default.');
-       }
+// --- About:Blank Startup Toggle ---
+    function toggleAboutBlankStartup() {
+        const toggle = document.getElementById('aboutBlankToggle');
+        if (toggle) {
+            const isEnabled = toggle.checked;
+            localStorage.setItem('aboutBlankOnStartup', isEnabled);
+            console.log('About:Blank on startup set to:', isEnabled);
+            // Optional: Add user feedback like a small notification/alert
+            // alert(`About:Blank on startup ${isEnabled ? 'enabled' : 'disabled'}.`);
+        } else {
+            console.error("About:Blank toggle element not found.");
+        }
+    }
 
-      const defaultGames = [
-        { name: "Agar.io", url: "https://fluxaga.glitch.me", icon: "https://static.wikia.nocookie.net/yogscast/images/1/19/Agar.io_appstore_logo.png", proxiedUrl: "https://flux.englishd.workers.dev/", proxied: false },
-        { name: "Slither.io", url: "https://slither.io", icon: "https://pbs.twimg.com/profile_images/1854966120509267968/gUTLTAMd_400x400.jpg", proxiedUrl: "place", proxied: false }, // Placeholder for proxiedUrl
-        { name: "n-gon", url: "https://landgreen.github.io/n-gon/", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIiXBQof9-UTot6CA0A-X9Ntyp0pNALernmg&s", proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-lcnfgpegn%2Cgktju%60.ko-n%2Fgmn-", proxied: false },
-        { name: "FreeRiderHD", url: "https://freeriderhd.com", icon: "https://cdn.freeriderhd.com/free_rider_hd/sprites/youtube_poster_art.png", proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-wuw%2Cfpegrkdgrjd%2Ccmm-", proxied: false },
-        { name: "Shell Shockers", url: "https://shellshock.io/", icon: "https://rocketgames.imgix.net/uploads/games/s/shell-shockers/shell-shockers.jpg", proxiedUrl: "none", proxied: false },
-        { name: "Happy Wheels", url: "https://totaljerkface.com/happy_wheels.tjf", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8ZZNe14xfg_CvlBFQRnl2Boj4GIEuiyVqYw&s", proxiedUrl: "https://nyx-2b7o.onrender.com/active/go/hvtrs8%2F-tmtclhepkdaae%2Ccmm-hcpry%5Dwjeglq.vjd", proxied: false }
-      ];
+    // --- Modified loadData function ---
+function loadData() {
+        console.log('Loading data from localStorage...');
+        // Load theme name first
+        const savedThemeName = localStorage.getItem('theme') || 'default'; // Default to 'default'
+        currentThemeName = savedThemeName; // Set the state variable
 
-      const savedGames = localStorage.getItem('games');
-      const userGames = savedGames ? JSON.parse(savedGames) : [];
+        // Apply the theme using the new setTheme function
+        // Call setTheme here to apply the variables from the themes array
+        setTheme(currentThemeName);
 
-      games = [...defaultGames];
-      const gameNames = new Set(defaultGames.map(g => g.name));
-      userGames.forEach(g => {
-          if (!gameNames.has(g.name)) {
-              games.push(g);
-              gameNames.add(g.name);
-          }
-      });
-      console.log('Games loaded:', games.length);
+        console.log('Theme data loaded. Initial theme:', currentThemeName);
 
-      const savedLibrary = localStorage.getItem('library');
-      library = savedLibrary ? JSON.parse(savedLibrary) : [];
-      console.log('Library loaded:', library.length);
+        // --- Check and apply About:Blank on Startup preference ---
+        const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
+        // Default to true (enabled) if not explicitly set to false
+        const shouldOpenInAboutBlank = aboutBlankPref !== 'false';
+        if (shouldOpenInAboutBlank) {
+             // You might want to gate this behind a check to ensure it only happens
+             // when the page is *initially* loaded, not on subsequent calls to loadData.
+             // A simple flag or checking the window location could work.
+             // For simplicity here, we'll assume it's checked elsewhere or desired on every loadData call.
+             // openAppInAboutBlank(); // Consider the implications of calling this here.
+             console.log('About:Blank on startup is enabled (logic placeholder).');
+        } else {
+             console.log('About:Blank on startup is disabled.');
+        }
+         // Ensure the toggle reflects the saved state when the Settings page loads
+         const toggle = document.getElementById('aboutBlankToggle');
+         if (toggle) {
+             toggle.checked = shouldOpenInAboutBlank;
+         }
+        // --- End About:Blank Check ---
 
 
-      const savedFavoriteGames = localStorage.getItem('favoriteGames');
-      favoriteGames = savedFavoriteGames ? JSON.parse(savedFavoriteGames) : [];
-      console.log('Favorite games loaded:', favoriteGames.length);
+        const defaultGames = [
+             { name: "Agar.io", url: "https://fluxaga.glitch.me", icon: "https://static.wikia.nocookie.net/yogscast/images/1/19/Agar.io_appstore_logo.png", proxiedUrl: "https://flux.englishd.workers.dev/", proxied: false },
+             { name: "Slither.io", url: "https://slither.io", icon: "https://pbs.twimg.com/profile_images/1854966120509267968/gUTLTAMd_400x400.jpg", proxiedUrl: "place", proxied: false }, // Placeholder for proxiedUrl
+             { name: "n-gon", url: "https://landgreen.github.io/n-gon/", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIiXBQof9-UTot6CA0A-X9Ntyp0pNALernmg&s", proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-lcnfgpegn%2Cgktju%60.ko-n%2Fgmn-", proxied: false },
+             { name: "FreeRiderHD", url: "https://freeriderhd.com", icon: "https://cdn.freeriderhd.com/free_rider_hd/sprites/youtube_poster_art.png", proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-wuw%2Cfpegrkdgrjd%2Ccmm-", proxied: false },
+             { name: "Shell Shockers", url: "https://shellshock.io/", icon: "https://rocketgames.imgix.net/uploads/games/s/shell-shockers/shell-shockers.jpg", proxiedUrl: "none", proxied: false },
+             { name: "Happy Wheels", url: "https://totaljerkface.com/happy_wheels.tjf", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8ZZNe14xfg_CvlBFQRnl2Boj4GIEuiyVqYw&s", proxiedUrl: "https://nyx-2b7o.onrender.com/active/go/hvtrs8%2F-tmtclhepkdaae%2Ccmm-hcpry%5Dwjeglq.vjd", proxied: false }
+        ];
 
+        const savedGames = localStorage.getItem('games');
+        const userGames = savedGames ? JSON.parse(savedGames) : [];
 
-       // Update theme selector UI based on loaded theme
-       document.querySelectorAll('.theme-option').forEach(option => {
-            option.classList.remove('selected');
-            if (option.classList.contains(`theme-${currentTheme}-preview`)) {
-                option.classList.add('selected');
+        games = [...defaultGames];
+        const gameNames = new Set(defaultGames.map(g => g.name));
+        userGames.forEach(g => {
+            if (!gameNames.has(g.name)) {
+                games.push(g);
+                gameNames.add(g.name);
             }
         });
-       console.log('Theme selector UI updated.');
+        console.log('Games loaded:', games.length);
+
+        const savedLibrary = localStorage.getItem('library');
+        library = savedLibrary ? JSON.parse(savedLibrary) : [];
+        console.log('Library loaded:', library.length);
+
+
+        const savedFavoriteGames = localStorage.getItem('favoriteGames');
+        favoriteGames = savedFavoriteGames ? JSON.parse(savedFavoriteGames) : [];
+        console.log('Favorite games loaded:', favoriteGames.length);
+
+        // --- Load App Appearance Settings ---
+        const savedAppSettings = localStorage.getItem('appSettings');
+        if (savedAppSettings) {
+            const appSettings = JSON.parse(savedAppSettings);
+            applyAppSettings(appSettings); // applyAppSettings updates the UI inputs as well
+            console.log('Loaded and applied saved app settings.');
+        } else {
+            // If no saved settings, apply defaults and update UI inputs to show defaults
+            applyAppSettings({
+                tabTitle: 'Underground',
+                faviconUrl: ''
+            });
+            console.log('No saved app settings found, applying defaults.');
+        }
+
+        console.log('Theme selector UI update logic is handled by setTheme.');
+
+         console.log('Data loading complete.');
+    }
+
+    function applyAppSettings(settings) {
+    console.log('Applying app settings:', settings);
+    // Apply Tab Title
+    if (settings.tabTitle !== undefined) { // Check if setting exists
+        document.title = settings.tabTitle;
+        console.log('Applied app tab title:', settings.tabTitle);
+    }
+
+    // Apply Favicon
+    let link = document.querySelector("link[rel~='icon']");
+    if (settings.faviconUrl) { // Check if a URL is provided
+        if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.getElementsByTagName('head')[0].appendChild(link);
+             console.log('Created favicon link element.');
+        }
+        link.href = settings.faviconUrl;
+        console.log('Applied app favicon URL:', settings.faviconUrl);
+    } else {
+         // If no favicon URL is provided, remove the link element to use browser default
+        if (link) {
+             link.remove(); // Remove the custom favicon link
+             console.log('Removed custom favicon, using browser default.');
+        }
+    }
+
+    // Update the UI elements on the Settings page if they exist
+    const appTabTitleInput = document.getElementById('appTabTitleInput');
+    const appFaviconUrlInput = document.getElementById('appFaviconUrlInput');
+
+    if (appTabTitleInput && settings.tabTitle !== undefined) {
+         appTabTitleInput.value = settings.tabTitle;
+    }
+     if (appFaviconUrlInput && settings.faviconUrl !== undefined) {
+        appFaviconUrlInput.value = settings.faviconUrl;
+     }
+     console.log('Updated app settings page UI elements.');
+}
+
+    function saveAppSettings() {
+    console.log('Saving app settings...');
+    const appTabTitleInput = document.getElementById('appTabTitleInput');
+    const appFaviconUrlInput = document.getElementById('appFaviconUrlInput');
+
+    if (!appTabTitleInput || !appFaviconUrlInput) {
+        console.error("App settings input elements not found, cannot save.");
+        alert("Error: App Settings page elements not found.");
+        return;
+    }
+
+    const appSettingsToSave = {
+        tabTitle: appTabTitleInput.value.trim(),
+        faviconUrl: appFaviconUrlInput.value.trim()
+    };
+
+    localStorage.setItem('appSettings', JSON.stringify(appSettingsToSave)); // Use 'appSettings' key
+    console.log('App settings saved to localStorage:', appSettingsToSave);
+
+    // Apply the newly saved settings immediately
+    applyAppSettings(appSettingsToSave);
+
+    alert('App Settings saved!');
+}
+
+function openAppInAboutBlank() {
+        console.log('Attempting to open app in about:blank window by getting current document HTML and writing, setting opener to null.');
+        // Get the full HTML content of the current page
+        const htmlContent = document.documentElement.outerHTML;
+        const currentAppUrl = window.location.href; // Still useful context, though not fetched
+
+        const newWindow = window.open('about:blank', '_blank');
+
+        if (newWindow) {
+            console.log('Opened new about:blank window.');
+
+            // Set opener to null immediately to try and break the link
+            try {
+                newWindow.opener = null;
+                console.log('Set new window opener to null.');
+            } catch (e) {
+                console.warn('Failed to set new window opener to null:', e);
+            }
+
+
+            // Use setTimeout to allow the window document to be ready for writing
+            setTimeout(() => {
+                try {
+                    // Write the obtained HTML content into the new window's document
+                    newWindow.document.open();
+                    newWindow.document.write(htmlContent);
+                    newWindow.document.close();
+
+                    console.log('Successfully wrote current document HTML to about:blank window.');
+
+                    // Optional: You might want to set the new window's history or URL to the original URL
+                    // This can sometimes help with relative paths but might re-introduce detection issues
+                    try {
+                         // Setting history.pushState is cleaner than changing location.href directly if you want to spoof the URL
+                         newWindow.history.pushState({}, '', currentAppUrl);
+                         console.log('Attempted to set new window history state URL.');
+                    } catch (e) {
+                         console.warn('Failed to set new window history state URL:', e);
+                    }
+
+
+                } catch (e) {
+                    console.error('Failed to write HTML content to about:blank window:', e);
+                     // This alert indicates that writing to the document itself failed
+                     alert("Could not write app content to about:blank window.");
+                }
+            }, 50); // Small delay
+
+        } else {
+            alert('Could not open a new window. Please check your browser popup blocker.');
+            console.warn('Failed to open new window for about:blank.');
+        }
     }
 
     function setupEventListeners() {
@@ -1188,8 +1740,39 @@ function processLinkedText(text) {
       if (games[index] && games[index].proxiedUrl && games[index].proxiedUrl !== 'none') {
          games[index].proxied = !games[index].proxied;
          saveGames();
-         updateGamesPage(); // Refresh the games view
          console.log('Proxy toggled.');
+    
+         // Update UI immediately for the specific card
+          // Check if the clicked button is within the Game of the Day container
+         const gameOfTheDayContainer = document.getElementById('game-of-day-container');
+         let button = null;
+    
+         if (gameOfTheDayContainer && gameOfTheDayContainer.contains(event.target)) {
+             // If the clicked element is inside the Game of the Day container,
+             // find the proxy button relative to the container.
+             // This assumes there's only one proxy button within the game-of-day-container's .game-card
+             button = gameOfTheDayContainer.querySelector('.favorite-button i.fa-shield-alt').closest('button'); // Find button by icon
+             console.log('Updating proxy button in Game of the Day container.');
+    
+         } else {
+             // Otherwise, assume it's a button on the main Games page
+              button = document.querySelector(`.game-card[data-index="${index}"] .favorite-button i.fa-shield-alt`).closest('button'); // Find button by icon
+              console.log('Updating proxy button on Games page.');
+         }
+    
+    
+         if (button) {
+           const span = button.querySelector('span');
+           if (span) {
+             span.textContent = `Proxy: ${games[index].proxied ? 'On' : 'Off'}`;
+              console.log('Proxy button text updated.');
+           }
+         } else {
+            console.warn('Proxy button not found for index:', index);
+         }
+    
+         // If currently showing all games or favorites on Games page, re-render (optional but good for consistency)
+         // updateGamesPage(); // Decided not to re-render the whole games page on proxy toggle unless necessary
       } else {
          alert("This game does not have a proxy URL configured.");
          console.warn('Attempted to toggle proxy for game without proxiedUrl.');
@@ -1598,57 +2181,62 @@ function processLinkedText(text) {
 
 
     // --- Theme Handling ---
-     function setTheme(theme) {
-       console.log('Attempting to set theme:', theme); // Log theme change
-       document.body.className = `theme-${theme}`;
-       currentTheme = theme;
-       localStorage.setItem('theme', theme);
-       console.log('Theme class applied to body and saved to localStorage.');
-
-       // Update theme selector UI
-       document.querySelectorAll('.theme-option').forEach(option => {
-         option.classList.remove('selected');
-         if (option.classList.contains(`theme-${theme}-preview`)) {
-           option.classList.add('selected');
-         }
-       });
-       console.log('Theme selector UI updated.');
-
-
-       // Update Vanta.js colors and parameters
-       if (vantaEffect) {
-           console.log('Vanta.js effect exists, updating options...');
-           // Allow CSS variables to apply first, then get computed values
-            setTimeout(() => {
-               const computedStyle = getComputedStyle(document.body);
-               // Get the new baseColor dynamically from the theme's --bg-dark
-               const themeBgDark = computedStyle.getPropertyValue('--bg-dark').trim();
-               console.log(`Computed --bg-dark for theme ${theme} during setOptions:`, themeBgDark); // Log computed CSS variable
-
-               const newThemeBaseColor = colorToVantaFormat(themeBgDark);
-               console.log(`Converted Vanta.js baseColor for theme ${theme} during setOptions:`, '0x' + newThemeBaseColor.toString(16)); // Log converted Vanta color
-
-               vantaEffect.setOptions({
-                 highlightColor: 0x0,    // Keep highlightColor static at 0x0
-                 midtoneColor: 0x0,      // Keep midtoneColor static at 0x0
-                 lowlightColor: 0x0,     // Keep lowlightColor static at 0x0
-                 baseColor: newThemeBaseColor, // Update baseColor dynamically
-                 blurFactor: 0.56, // Keep static blurFactor
-                 speed: 1.10,      // Keep static speed
-                 zoom: 1.20        // Keep static zoom
-               });
-               console.log('Vanta.js options updated.'); // Confirm setOptions was called
-
-           }, 50); // Small delay to ensure styles are computed
-       } else {
-           console.log('Vanta.js effect not initialized (null) when setTheme was called. Skipping setOptions.'); // Log if vantaEffect is null
-            // Optional: Attempt to re-initialize if it's null? Might cause issues.
-            // if (!vantaEffect) {
-            //    console.warn("Vanta effect was null in setTheme, attempting re-initialization.");
-            //    initializeVanta();
-            // }
-       }
-     }
+    function setTheme(themeName) {
+      console.log('Attempting to set theme:', themeName);
+    
+      const selectedTheme = themes.find(theme => theme.name === themeName);
+    
+      if (!selectedTheme) {
+        console.error('Theme not found:', themeName);
+        return;
+      }
+    
+      // Apply CSS variables from the selected theme to the document root
+      for (const [variable, value] of Object.entries(selectedTheme.variables)) {
+        document.documentElement.style.setProperty(variable, value);
+      }
+    
+      currentThemeName = themeName; // Update the current theme name state
+      localStorage.setItem('theme', themeName);
+      console.log('Theme applied and saved to localStorage:', themeName);
+    
+      // Update theme selector UI
+      document.querySelectorAll('.theme-option').forEach(option => {
+        option.classList.remove('selected');
+        // Find the option element that corresponds to the selected theme's previewClass
+        if (option.classList.contains(selectedTheme.previewClass)) {
+          option.classList.add('selected');
+        }
+      });
+      console.log('Theme selector UI updated.');
+    
+       // Update Vanta.js colors and parameters - Keep this logic as it is,
+       // it reads computed styles after they are applied.
+        if (vantaEffect) {
+            console.log('Vanta.js effect exists, updating options...');
+             // Use document.documentElement to get computed styles from :root
+             setTimeout(() => { // Small delay to ensure styles are computed
+                 const computedStyle = getComputedStyle(document.documentElement);
+                 const themeBgDark = computedStyle.getPropertyValue('--bg-dark').trim();
+                 console.log(`Computed --bg-dark for theme ${themeName} during setOptions:`, themeBgDark);
+                 const newThemeBaseColor = colorToVantaFormat(themeBgDark);
+                 console.log(`Converted Vanta.js baseColor for theme ${themeName} during setOptions:`, '0x' + newThemeBaseColor.toString(16));
+    
+                 vantaEffect.setOptions({
+                   highlightColor: 0x0,
+                   midtoneColor: 0x0,
+                   lowlightColor: 0x0,
+                   baseColor: newThemeBaseColor,
+                   blurFactor: 0.56,
+                   speed: 1.10,
+                   zoom: 1.20
+                 });
+                 console.log('Vanta.js options updated.');
+             }, 50);
+           } else {
+               console.log('Vanta.js effect not initialized (null) when setTheme was called. Skipping setOptions.');
+           }
+    }
 
     // --- Game Filtering & Display ---
     function filterGames() {
@@ -1707,46 +2295,99 @@ function processLinkedText(text) {
     }
 
     function updateGamesPage() {
-      console.log('Updating Games page content.');
-      const gamesContent = generateGamesHTML(); // Get the HTML string based on showingFavorites
-
-      // Update the page content ONLY if we are currently displaying the Games or Favorite Games view
-       // Check the actual pageTitle text to know if we are *conceptually* on the games page view
-      if (pageTitle.textContent === 'Games' || pageTitle.textContent === 'Favorite Games') {
-         pageContent.innerHTML = gamesContent; // Set the innerHTML
-         console.log('Games page HTML updated.');
-         // Re-run setup for drag/drop as elements were replaced
-         setupDragAndDrop();
-         // Restore search term if it exists
-         const searchInput = document.getElementById('gameSearch');
-         if (searchInput && searchInput.value) {
-            filterGames(); // Re-apply filter
-         } else {
-             // If no search term, ensure initial "No games found" message is correct
-             const container = document.getElementById('gamesContainerInner');
-              const gamesToConsider = isShowingFavoriteGames() ? games.filter(game => favoriteGames.some(fav => fav.name === game.name)) : games;
-             if (container && gamesToConsider.length === 0 && !container.querySelector('.no-games-message')) {
-                 let noGamesMessage = document.createElement('p');
-                 noGamesMessage.className = 'no-games-message';
-                 noGamesMessage.style.color = 'var(--text-muted)';
-                 noGamesMessage.style.width = '100%';
-                 noGamesMessage.style.textAlign = 'center';
-                 noGamesMessage.textContent = isShowingFavoriteGames() ? 'No favorite games found.' : 'No games found.';
-                 container.appendChild(noGamesMessage);
-                  console.log('Displayed initial "No games found" message.');
-             } else if (container && gamesToConsider.length > 0 && container.querySelector('.no-games-message') && !searchInput.value) {
-                 // Games now exist, and no filter is active, remove the "No games found" message
-                 container.querySelector('.no-games-message').remove();
-                  console.log('Removed "No games found" message as games are present.');
+           console.log('Updating Games page content. Showing favorites:', isShowingFavoriteGames());
+           const gamesToDisplay = isShowingFavoriteGames() ?
+             games.filter(game => favoriteGames.some(fav => fav.name === game.name)) :
+             games;
+    
+           // Generate the cards first
+           const gameCardsHTML = gamesToDisplay.map((game, index) => {
+             // Find original index to use for actions (like remove/favorite/proxy)
+             const originalIndex = games.findIndex(g => g.name === game.name);
+             // Ensure the index is valid before generating the card
+             if (originalIndex === -1) return ''; // Skip if game not found in main list
+    
+             return `
+               <div class="game-card" draggable="true" data-index="${originalIndex}">
+                 <div class="remove-icon" onclick="removeGame(event, ${originalIndex})" title="Remove Game">
+                   <i class="fas fa-times"></i>
+                 </div>
+                 <img src="${escapeHtml(game.icon)}" alt="${escapeHtml(game.name)}"
+                      onerror="this.src='https://via.placeholder.com/150?text=No+Image'"
+                      onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">
+                 <p onclick="loadGame('${escapeHtml(game.name)}', '${escapeHtml(game.url)}')">${escapeHtml(game.name)}</p>
+                 <div style="display: flex; flex-direction: column; gap: 5px; align-items: center; margin-top: 5px;">
+                   <button class="favorite-button" onclick="event.stopPropagation(); toggleFavoriteGame(${originalIndex})">
+                     <i class="fas ${isFavoriteGame(game) ? 'fa-solid' : 'fa-regular'} fa-star" style="${isFavoriteGame(game) ? 'color: var(--accent);' : ''}"></i>
+                     <span>${isFavoriteGame(game) ? 'Favorited' : 'Favorite'}</span>
+                   </button>
+                   ${game.proxiedUrl && game.proxiedUrl !== 'none' ? // Only show proxy toggle if proxy URL exists
+                     `<button class="favorite-button" onclick="event.stopPropagation(); toggleProxied(${originalIndex})">
+                       <i class="fas fa-shield-alt"></i>
+                       <span>Proxy: ${game.proxied ? 'On' : 'Off'}</span>
+                     </button>`
+                     : ''
+                   }
+                 </div>
+               </div>`;
+             }).join('');
+    
+    
+           // Return the full container HTML
+           const gamesContent = `
+             <input type="text" id="gameSearch" placeholder="Search Games..." oninput="filterGames()" style="width: 90%; max-width: 400px; margin: 0 auto 1.5rem auto; display: block;">
+             <div class="games-header">
+               <div class="action-card" onclick="showAddGameModal()">
+                 <i class="fas fa-plus"></i>
+                 <p>Add Game</p>
+               </div>
+               <div class="action-card" onclick="toggleFavoriteGamesView()">
+                 <i class="fas fa-star" style="${isShowingFavoriteGames() ? 'color: var(--accent);' : ''}"></i>
+                 <p>${isShowingFavoriteGames() ? 'All Games' : 'Favorites'}</p>
+               </div>
+             </div>
+             <div class="games-container" id="gamesContainerInner">
+                 ${gameCardsHTML || '<p class="no-games-message" style="color: var(--text-muted); width: 100%; text-align: center;">No games found.</p>'}
+             </div>`;
+    
+    
+          // Update the page content ONLY if we are currently displaying the Games or Favorite Games view
+           // Check the actual pageTitle text to know if we are *conceptually* on the games page view
+          if (pageTitle.textContent === 'Games' || pageTitle.textContent === 'Favorite Games') {
+             pageContent.innerHTML = gamesContent; // Set the innerHTML
+             console.log('Games page HTML updated.');
+             // Re-run setup for drag/drop as elements were replaced
+             setupDragAndDrop();
+             // Restore search term if it exists
+             const searchInput = document.getElementById('gameSearch');
+             if (searchInput && searchInput.value) {
+                filterGames(); // Re-apply filter
+             } else {
+                 // If no search term, ensure initial "No games found" message is correct
+                 const container = document.getElementById('gamesContainerInner');
+                  const gamesToConsider = isShowingFavoriteGames() ? games.filter(game => favoriteGames.some(fav => fav.name === game.name)) : games;
+                 if (container && gamesToConsider.length === 0 && !container.querySelector('.no-games-message')) {
+                     let noGamesMessage = document.createElement('p');
+                     noGamesMessage.className = 'no-games-message';
+                     noGamesMessage.style.color = 'var(--text-muted)'; // This line was potentially the issue or nearby
+                     noGamesMessage.style.width = '100%';
+                     noGamesMessage.style.textAlign = 'center';
+                     noGamesMessage.textContent = isShowingFavoriteGames() ? 'No favorite games found.' : 'No games found.';
+                     container.appendChild(noGamesMessage);
+                      console.log('Displayed initial "No games found" message.');
+                 } else if (container && gamesToConsider.length > 0 && container.querySelector('.no-games-message') && !searchInput.value) {
+                     // Games now exist, and no filter is active, remove the "No games found" message
+                     container.querySelector('.no-games-message').remove();
+                      console.log('Removed "No games found" message as games are present.');
+                 }
+    
              }
-
-         }
-      } else {
-          console.log('Not on Games or Favorite Games page, skipping content update.');
-      }
-      // Updating pages.Games might not be necessary if content is always generated
-      // pages.Games = gamesContent;
-    }
+          } else {
+              console.log('Not on Games or Favorite Games page, skipping content update.');
+          }
+          // Updating pages.Games might not be necessary if content is always generated
+          // pages.Games = gamesContent;
+        }
 
 
     // --- Library Page ---
@@ -1792,29 +2433,20 @@ function processLinkedText(text) {
      }
 
 
-    function loadGame(name, url) {
+function loadGame(name, url) {
       console.log('loadGame() called for:', name, url);
       const game = games.find(g => g.name === name);
       const useProxy = game && game.proxied && game.proxiedUrl && game.proxiedUrl !== 'none';
       const targetUrl = useProxy ? game.proxiedUrl : url;
       const displayUrl = useProxy ? "Proxy Active" : url;
-    
+
       if (useProxy) {
-        console.log('Proxy mode active. Initializing service worker first...');
-        const proxyOrigin = new URL(game.proxiedUrl).origin;
-        const popup = window.open(proxyOrigin, "_blank");
-    
-        const waitForServiceWorker = setInterval(() => {
-          if (navigator.serviceWorker.controller) {
-            clearInterval(waitForServiceWorker);
-            if (popup && !popup.closed) popup.close();
-            console.log('Service worker registered. Loading proxied game:', game.proxiedUrl);
-            loadViewerFromLibrary(game.proxiedUrl, name, displayUrl, null);
-          }
-        }, 300);
+        console.log('Proxy mode active. Loading proxied game in viewer:', game.proxiedUrl);
+        // Removed the window.open and setInterval logic
+        loadViewerFromLibrary(game.proxiedUrl, name, displayUrl, true); // Pass true to update recents
       } else {
         console.log('Direct game load:', url);
-        loadViewerFromLibrary(url, name, displayUrl, url);
+        loadViewerFromLibrary(url, name, displayUrl, true); // Pass true to update recents
       }
     }
 
@@ -1827,11 +2459,11 @@ function processLinkedText(text) {
         console.error("Invalid index for toggleFavoriteGame:", index);
         return; // Index check
       }
-
+    
       const game = games[index];
       const gameName = game.name; // Use name for consistency
       const isCurrentlyFavorite = favoriteGames.some(favGame => favGame.name === gameName);
-
+    
       if (isCurrentlyFavorite) {
         favoriteGames = favoriteGames.filter(favGame => favGame.name !== gameName);
         console.log('Removed game from favorites.');
@@ -1846,40 +2478,58 @@ function processLinkedText(text) {
       }
       localStorage.setItem('favoriteGames', JSON.stringify(favoriteGames));
        console.log('Favorite games saved:', favoriteGames.length);
-
-
+    
+    
       // Update UI immediately for the specific card
-      const button = document.querySelector(`.game-card[data-index="${index}"] .favorite-button`);
+      // Check if the clicked button is within the Game of the Day container
+      const gameOfTheDayContainer = document.getElementById('game-of-day-container');
+      let button = null;
+    
+      if (gameOfTheDayContainer && gameOfTheDayContainer.contains(event.target)) {
+          // If the clicked element is inside the Game of the Day container,
+          // find the favorite button relative to the container.
+          // This assumes there's only one favorite button within the game-of-day-container's .game-card
+          button = gameOfTheDayContainer.querySelector('.favorite-button');
+          console.log('Updating favorite button in Game of the Day container.');
+    
+      } else {
+          // Otherwise, assume it's a button on the main Games page
+           button = document.querySelector(`.game-card[data-index="${index}"] .favorite-button`);
+           console.log('Updating favorite button on Games page.');
+      }
+    
+    
       if (button) {
         const icon = button.querySelector('i.fa-star');
         const span = button.querySelector('span');
-        if (isCurrentlyFavorite) {
-           if(icon) {
-             icon.classList.remove('fa-solid');
-             icon.classList.add('fa-regular'); // Add regular class for outline
-             icon.style.color = ''; // Reset color
-           }
-           if(span) span.textContent = 'Favorite';
-        } else {
+        const isFavoriteNow = isFavoriteGame(game); // Check the state again after toggling
+        if (isFavoriteNow) {
            if(icon) {
              icon.classList.remove('fa-regular');
              icon.classList.add('fa-solid'); // Add solid class for filled
              icon.style.color = 'var(--accent)'; // Accent color for filled star
            }
            if(span) span.textContent = 'Favorited';
+        } else {
+           if(icon) {
+             icon.classList.remove('fa-solid');
+             icon.classList.add('fa-regular'); // Add regular class for outline
+             icon.style.color = ''; // Reset color
+           }
+           if(span) span.textContent = 'Favorite';
         }
-         console.log('Favorite button UI updated for index:', index);
+         console.log('Favorite button UI updated.');
       } else {
          console.warn('Favorite button not found for index:', index);
       }
-
-
-      // If currently showing favorites view, re-render the page to remove/add the game
-       if (showingFavorites) { // Check the state variable
-          console.log('Currently showing favorites view, re-rendering games page.');
+    
+    
+      // If currently showing favorites view on the Games page, re-render
+       if (isShowingFavoriteGames() && pageTitle.textContent === 'Favorite Games') { // Check state and current page title
+          console.log('Currently showing favorites view on Games page, re-rendering.');
           updateGamesPage(); // Re-render the list based on the updated favoriteGames array
        } else {
-           console.log('Currently showing all games view, individual card UI updated.');
+           console.log('Not on Favorite Games page or showing all games, skipping full re-render.');
        }
     }
 
@@ -1940,11 +2590,95 @@ function processLinkedText(text) {
       // Re-render the games list based on the new state
       updateGamesPage();
     }
+    const cloakPresets = {
+        goguardian: { title: 'GoGuardian Admin', favicon: 'https://www.goguardian.com/favicon.ico' },
+        drive: { title: 'My Drive - Google Drive', favicon: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png' },
+        classroom: { title: 'Classes', favicon: 'https://ssl.gstatic.com/classroom/favicon.png' },
+        // 'custom' will use the values saved via 'App Appearance'
+        custom: { title: null, favicon: null } // Placeholder
+    };
 
+    function applyPresetCloak() {
+        const select = document.getElementById('tabCloakSelect');
+        if (!select) {
+            console.error("Tab cloak select element not found.");
+            alert("Error: Could not find tab cloak dropdown.");
+            return;
+        }
+        const selectedValue = select.value;
+        let settingsToApply;
+
+        if (selectedValue === 'custom') {
+            // Load custom settings from localStorage
+            const savedAppSettings = localStorage.getItem('appSettings');
+            settingsToApply = savedAppSettings ? JSON.parse(savedAppSettings) : { title: 'Underground', favicon: '' }; // Default if no custom saved
+             console.log('Applying custom cloak settings from App Appearance.');
+        } else if (cloakPresets[selectedValue]) {
+            settingsToApply = {
+                tabTitle: cloakPresets[selectedValue].title,
+                faviconUrl: cloakPresets[selectedValue].favicon
+            };
+             console.log(`Applying preset cloak: ${selectedValue}`);
+        } else {
+             console.error(`Invalid cloak preset selected: ${selectedValue}`);
+             alert("Invalid cloak option selected.");
+             return;
+        }
+
+        // Apply the settings
+        applyAppSettings(settingsToApply);
+
+        // Save the *choice* of preset (or 'custom') so it can be re-selected on load
+        localStorage.setItem('currentCloakPreset', selectedValue);
+
+        alert(`Tab cloak applied: ${select.options[select.selectedIndex].text}`);
+    }
+
+    function resetCloak() {
+        console.log('Resetting tab cloak to default (Underground).');
+        // Reset to the application's default title and potentially remove favicon
+        const defaultSettings = {
+            tabTitle: 'Underground', // Your app's default name
+            faviconUrl: '' // Default (no favicon)
+        };
+        applyAppSettings(defaultSettings);
+
+        // Remove the saved preset choice and custom settings
+        localStorage.removeItem('currentCloakPreset');
+        // Optionally, you might want to keep custom settings but just un-apply the cloak:
+        // localStorage.setItem('currentCloakPreset', 'custom'); // Revert selection to custom
+        // const savedAppSettings = localStorage.getItem('appSettings');
+        // if (savedAppSettings) applyAppSettings(JSON.parse(savedAppSettings));
+
+        // Update the dropdown selection
+        const select = document.getElementById('tabCloakSelect');
+        if (select) {
+            select.value = 'custom'; // Set dropdown to custom after reset
+        }
+
+        alert("Tab cloak reset to default.");
+    }
+
+    // Function to load and apply the saved cloak state when settings page loads
+    function loadTabCloakSettings() {
+        const savedPreset = localStorage.getItem('currentCloakPreset');
+        const select = document.getElementById('tabCloakSelect');
+
+        if (select && savedPreset) {
+            select.value = savedPreset;
+            console.log(`Loaded saved cloak preset selection: ${savedPreset}`);
+            // Optional: Automatically re-apply the cloak based on saved preset?
+            // applyPresetCloak(); // Be cautious if this has side effects on initial load
+        } else if (select) {
+             select.value = 'custom'; // Default to custom if nothing saved
+              console.log('No saved cloak preset found, defaulting select to custom.');
+        }
+    }
+      
     // --- Page Definitions & Switching ---
-    const pages = {
+const pages = {
         Home: `
-<div class="home-layout">
+            <div class="home-layout">
                 <div class="home-header">
                     <div class="home-logo">undergr0und</div>
                 </div>
@@ -1960,9 +2694,14 @@ function processLinkedText(text) {
                         <p>Latest: <span id="home-latest-version">Checking...</span></p>
                     </div>
                 </div>
-                <div class="panel home-news-panel">
-                    <h2>News</h2>
-                    <pre id="news-content" style="white-space: pre-wrap; font-family: inherit; text-align: left; max-height: 200px; overflow-y: auto;"></pre>
+
+                <div class="home-bottom-section">
+                    <div class="panel home-news-panel">
+                        <h2>News</h2>
+                        <pre id="news-content" style="white-space: pre-wrap; font-family: inherit; text-align: left;"></pre>
+                    </div>
+                    <div class="game-of-day-container" id="game-of-day-container">
+                        </div>
                 </div>
             </div>
         `,
@@ -1991,23 +2730,90 @@ function processLinkedText(text) {
               <p id="update-status-message" style="color: var(--text-muted); margin-top: 1rem;">Status: Idle</p>
                <button onclick="openChangelogModal()" style="margin-top: 1rem;">View Changelog</button> </div>`,
         Settings: `
-            <div class="panel" style="max-width: 500px;">
-              <h2>Settings</h2>
-              <h3>Theme</h3>
-              <div class="theme-selector">
-                <div class="theme-option theme-default-preview selected" onclick="setTheme('default')" title="Default"></div>
-                <div class="theme-option theme-ocean-preview" onclick="setTheme('ocean')" title="Ocean"></div>
-                <div class="theme-option theme-forest-preview" onclick="setTheme('forest')" title="Forest"></div>
-                <div class="theme-option theme-purple-preview" onclick="setTheme('purple')" title="Purple"></div>
-                <div class="theme-option theme-red-preview" onclick="setTheme('red')" title="Red"></div>
-                <div class="theme-option theme-cyberpunk-preview" onclick="setTheme('cyberpunk')" title="Cyberpunk"></div>
+        <div class="settings-grid-container">
+          <div class="settings-grid-item">
+             <h2>Theme</h2>
+             <h3>Theme Selection</h3>
+              <div class="theme-selector" id="themeSelector">
+                  ${themes.map(theme => `
+                      <div class="theme-option ${theme.previewClass}"
+                           onclick="setTheme('${theme.name}')"
+                           title="${theme.name.charAt(0).toUpperCase() + theme.name.slice(1)}">
+                      </div>
+                  `).join('')}
               </div>
-              <h3 style="margin-top: 2rem;">Reset</h3>
-              <button class="reset-button" onclick="resetApp()">
-                <i class="fas fa-trash-alt"></i> Reset App Data
-              </button>
-              <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">This deletes saved games, library, favorites, viewed history, and settings.</p>
-            </div>`,
+               <button class="setting-reset-button" onclick="resetThemeSettings()" title="Reset Theme to Default">
+                   <i class="fas fa-undo"></i> Reset
+               </button>
+          </div>
+
+          <div class="settings-grid-item">
+            <h2>About:Blank</h2>
+            <p>Cloak the site in an about:blank page and toggle about:blank on startup.</p>
+            <div style="display: flex; align-items: center; gap: 10px; justify-content: center; flex-direction: column; height: 100%;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                     <label class="switch">
+                       <input type="checkbox" id="aboutBlankToggle" onclick="toggleAboutBlankStartup()" checked>
+                       <span class="slider round"></span>
+                     </label>
+                     <span>Enabled on Startup</span>
+                </div>
+                <button onclick="openAppInAboutBlank()">Open Popup Now</button>
+            </div>
+               <button class="setting-reset-button" onclick="resetAboutBlankSettings()" title="Reset About:Blank Setting">
+                   <i class="fas fa-undo"></i> Reset
+               </button>
+          </div>
+
+          <div class="settings-grid-item">
+            <h2>Panic Key</h2>
+             <p>Quick open another site with one press.</p>
+             <input type="text" id="panicKeyInput" placeholder="Enter Key (e.g., Escape, Alt+Q)">
+             <input type="text" id="panicUrlInput" placeholder="Redirect URL (e.g., https://google.com)">
+             <button onclick="savePanicKeySettings()">Save Panic Key</button>
+               <button class="setting-reset-button" onclick="resetPanicKeySettings()" title="Reset Panic Key">
+                   <i class="fas fa-undo"></i> Reset
+               </button>
+          </div>
+
+          <div class="settings-grid-item">
+            <h2>Presets</h2>
+            <p>Change the title and icon using presets.</p>
+             <select id="tabCloakSelect">
+              <option value="goguardian">GoGuardian Admin Block</option>
+              <option value="drive">Google Drive</option>
+              <option value="classroom">Google Classroom</option>
+              <option value="custom">Custom (Use App Appearance)</option>
+            </select>
+            <button onclick="applyPresetCloak()">Apply Cloak</button>
+            <button class="setting-reset-button" onclick="resetCloak()" title="Reset Tab Cloak to Default">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+             </div>
+
+          <div class="settings-grid-item">
+               <h2>App Appearance</h2>
+               <p>Set a custom title and icon (favicon). Used by 'Custom' cloak.</p>
+               <input type="text" id="appTabTitleInput" placeholder="Custom Tab Title">
+               <input type="text" id="appFaviconUrlInput" placeholder="Custom Favicon URL">
+               <button onclick="saveAppSettings()">Save App Appearance</button>
+               <button class="setting-reset-button" onclick="resetAppAppearanceSettings()" title="Reset App Appearance to Default">
+                   <i class="fas fa-undo"></i> Reset
+               </button>
+          </div>
+
+
+           <div class="settings-grid-item">
+            <h2>Reset All Data
+                </h2>
+            <p>This deletes all saved data (games, library, all settings).</p>
+            <button class="reset-button" onclick="resetApp()">
+              <i class="fas fa-trash-alt"></i> Reset App Data
+            </button>
+           </div>
+
+           </div>
+    `,
        About: `
             <div class="panel" style="max-width: 500px; text-align: left;">
               <h2>About Underground</h2>
@@ -2016,7 +2822,7 @@ function processLinkedText(text) {
               <p>Created by: Zerone</p>
               <p>
                 <a href="#" onclick="openChangelogModal(); return false;" style="color: var(--accent); text-decoration: none;">View Changelog</a> |
-                <a href="mailto:your.email@example.com" style="color: var(--accent); text-decoration: none;">Contact</a>
+                <a href="https://github.com/ZeroneV1" style="color: var(--accent); text-decoration: none;">Contact</a>
               </p>
               <h3 style="margin-top: 1rem;">Credits:</h3>
               <p style="font-size: 0.9rem;">
@@ -2335,7 +3141,318 @@ function processLinkedText(text) {
           console.log('Reset cancelled.');
       }
     }
+// --- Panic Key ---
+    let panicKey = null;
+    let panicUrl = null;
 
+    function savePanicKeySettings() {
+        const keyInput = document.getElementById('panicKeyInput');
+        const urlInput = document.getElementById('panicUrlInput');
+
+        if (keyInput && urlInput) {
+            const key = keyInput.value.trim();
+            const url = urlInput.value.trim();
+
+            if (!key || !url) {
+                alert("Please enter both a key and a URL for the panic key.");
+                return;
+            }
+             // Basic URL validation (add https:// if missing)
+             let finalUrl = url;
+             if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+                 finalUrl = 'https://' + finalUrl;
+             }
+
+            // Save to localStorage and update global variables
+            localStorage.setItem('panicKey', key);
+            localStorage.setItem('panicUrl', finalUrl);
+            panicKey = key;
+            panicUrl = finalUrl;
+
+            alert(`Panic key set to '${key}' redirecting to '${finalUrl}'.`);
+            console.log('Panic key settings saved:', { key: panicKey, url: panicUrl });
+
+        } else {
+            console.error("Panic key input elements not found.");
+            alert("Error: Could not find panic key input elements.");
+        }
+    }
+
+    function loadPanicKeySettings() {
+        panicKey = localStorage.getItem('panicKey');
+        panicUrl = localStorage.getItem('panicUrl');
+        console.log('Loaded panic key settings:', { key: panicKey, url: panicUrl });
+
+        // Update input fields if on settings page
+        if (pageTitle.textContent === 'Settings') { // Check if settings page is active
+             const keyInput = document.getElementById('panicKeyInput');
+             const urlInput = document.getElementById('panicUrlInput');
+             if (keyInput && panicKey) keyInput.value = panicKey;
+             if (urlInput && panicUrl) urlInput.value = panicUrl;
+        }
+    }
+
+function checkPanicKey(event) {
+        const targetElement = event.target;
+        // Log the tag name of the element that received the keydown event
+        console.log(`Keydown event target: ${targetElement ? targetElement.tagName : 'null'}, Type: ${targetElement ? targetElement.type : 'N/A'}`);
+
+        // Check if the event originated from an input field or textarea
+        if (targetElement && (targetElement.tagName.toLowerCase() === 'input' || targetElement.tagName.toLowerCase() === 'textarea')) {
+            // Specifically log if we are skipping because it's an input/textarea
+            console.log('Target is input/textarea. Panic key check skipped.');
+            return; // Stop execution if typing in these fields
+        } else {
+             // Log if we are proceeding because it's *not* an input/textarea
+            console.log('Target is NOT input/textarea. Proceeding with panic key check.');
+        }
+
+        // --- Original panic key check logic ---
+        if (!panicKey || !panicUrl) {
+             // Log if the key/URL isn't set up
+             console.log('Panic key or URL not set in variables. Aborting check.');
+             return;
+        }
+
+        // Construct the key identifier string from the event
+        let pressedKey = '';
+        if (event.altKey) pressedKey += 'Alt+';
+        if (event.ctrlKey) pressedKey += 'Control+'; // Note: Might be intercepted by OS/browser shortcuts
+        if (event.shiftKey) pressedKey += 'Shift+';
+        // Use event.key for character keys and specific names like 'Escape', 'Enter'
+        pressedKey += event.key;
+        // Log the keys being compared
+        console.log(`Constructed pressedKey: "${pressedKey}", Comparing (case-insensitive) against panicKey: "${panicKey}"`);
+
+
+        // Case-insensitive comparison
+        if (pressedKey.toLowerCase() === panicKey.toLowerCase()) {
+            // Log the successful match before redirecting
+            console.log(`Panic key MATCHED: "${pressedKey}". Redirecting to: ${panicUrl}`);
+            event.preventDefault(); // Prevent default action just in case
+            window.location.href = panicUrl;
+        } else {
+             // Log if the keys didn't match
+             console.log('Panic key did NOT match.');
+        }
+    }
+
+    // --- Modify setupEventListeners to add panic key listener ---
+    function setupEventListeners() {
+      icons.forEach(icon => {
+        icon.addEventListener('click', handleIconClick);
+        icon.addEventListener('mousemove', handleTooltipShow);
+        icon.addEventListener('mouseleave', handleTooltipHide);
+      });
+
+      addGameModal.addEventListener('click', (e) => {
+        if (e.target === addGameModal) closeModal();
+      });
+
+      changelogModal.addEventListener('click', (e) => {
+          if (e.target === changelogModal) closeChangelogModal();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (addGameModal.style.display === 'flex') closeModal();
+            if (changelogModal.style.display === 'flex') closeChangelogModal();
+        }
+        // Check for panic key on any keydown event
+        checkPanicKey(e);
+      });
+
+       const sidebar = document.querySelector('.sidebar');
+       document.addEventListener('mousemove', (e) => {
+           if (e.clientX < 10 && !sidebar.classList.contains('open')) {
+               sidebar.classList.add('open');
+           } else if (e.clientX > 70 && sidebar.classList.contains('open')) {
+               sidebar.classList.remove('open');
+           }
+       });
+       document.documentElement.addEventListener('mouseleave', (e) => {
+          if (sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+          }
+       });
+      console.log('Core event listeners set up.');
+    }
+
+     // --- Modify window.addEventListener('DOMContentLoaded') ---
+    window.addEventListener('DOMContentLoaded', async () => {
+      console.log('DOMContentLoaded fired.');
+      loadData(); // Load theme, app settings, games, library, favorites
+      loadPanicKeySettings(); // Load panic key settings after other data
+      console.log('Theme, app, game, library, favorite, panic key data loaded.');
+
+      setTimeout(() => {
+          console.log('Attempting to initialize Vanta.js...');
+          initializeVanta();
+          console.log('initializeVanta() called. Vanta effect:', vantaEffect);
+          if (vantaEffect) {
+              console.log('Calling setTheme with currentTheme after Vanta initialization.');
+              setTheme(currentTheme); // Ensure Vanta uses the correct initial theme colors
+          } else {
+              console.warn('Vanta effect is null after initialization, cannot call setTheme to update options.');
+          }
+      }, 50);
+
+      setupEventListeners(); // Setup listeners including the panic key listener
+      console.log('Event listeners set up.');
+      updateGamesPage();
+      setupDragAndDrop();
+      console.log('Games page updated and drag/drop setup.');
+      switchPage('Home');
+      console.log('Switched to Home page.');
+    });
+
+     // --- Modify switchPage function ---
+     function switchPage(pageKey) {
+        console.log('Switching to page:', pageKey);
+
+        // Handle page-specific logic before fading out
+        if (pageKey === 'Games') {
+            showingFavorites = false;
+            pageTitle.textContent = 'Games';
+            pageTitle.style.display = 'block';
+            console.log('Switched to Games page. Resetting favorites view state.');
+        } else if (pageKey === 'Home') {
+            pageTitle.style.display = 'none';
+            console.log('Switched to Home page. Hiding page title.');
+            if (showingFavorites) {
+                showingFavorites = false;
+                console.log('Came from favorites view, resetting showingFavorites state.');
+            }
+        } else {
+            pageTitle.style.display = 'block';
+            pageTitle.textContent = pageKey;
+            console.log('Switched to page:', pageKey, 'Showing page title.');
+             if (showingFavorites) {
+                  showingFavorites = false;
+                   console.log('Came from favorites view on another page, resetting showingFavorites state.');
+             }
+        }
+
+        pageContent.classList.add('fade-out');
+        console.log('Adding fade-out class to content.');
+
+        localStorage.setItem('lastActivePage', pageKey);
+        localStorage.setItem('lastActivePageTitle', pageTitle.textContent);
+        console.log('Saved last active page:', pageKey);
+
+        setTimeout(() => {
+            console.log('Timeout before content switch complete.');
+            pageContent.innerHTML = pages[pageKey] || `<p>Content for ${pageKey} not found.</p>`;
+            console.log(`Content set for page: ${pageKey}. Content found: ${!!pages[pageKey]}`);
+
+            // Specific actions after loading content
+            if (pageKey === 'Games') {
+                updateGamesPage();
+            } else if (pageKey === 'Library') {
+                updateLibraryPage();
+            } else if (pageKey === 'Home') {
+                checkVersion();
+                fetchNews();
+                console.log('Home page specific actions (checkVersion, fetchNews) triggered.');
+            } else if (pageKey === 'Settings') {
+                setTheme(currentThemeName); // Ensure theme selector visually matches
+                loadPanicKeySettings(); // Ensure panic key inputs show saved values
+                // Load App Settings into inputs
+                const savedAppSettings = localStorage.getItem('appSettings');
+                 if (savedAppSettings) {
+                     applyAppSettings(JSON.parse(savedAppSettings)); // Reloads settings into inputs
+                 }
+                 // Load Tab Cloaker state
+                 loadTabCloakSettings(); // Ensure dropdown/button state is correct
+                // Load About:Blank toggle state
+                const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
+                const shouldOpenInAboutBlank = aboutBlankPref !== 'false';
+                const toggle = document.getElementById('aboutBlankToggle');
+                if (toggle) {
+                    toggle.checked = shouldOpenInAboutBlank;
+                }
+
+                console.log('Settings page loaded, UI updated for theme, panic key, app settings, cloaker, and about:blank.');
+            } else if (pageKey === 'About') {
+                const aboutVersionEl = document.getElementById('about-version');
+                if (aboutVersionEl) aboutVersionEl.textContent = "1.0.0";
+                console.log('About page loaded, version updated.');
+            }
+
+            pageContent.classList.remove('fade-out');
+            console.log('Removing fade-out class, content should fade in.');
+
+            icons.forEach(i => {
+                i.classList.remove('active');
+                if (i.getAttribute('data-page') === pageKey && pageKey !== 'Viewer') {
+                    i.classList.add('active');
+                }
+            });
+            console.log('Active sidebar icon updated.');
+
+        }, 150);
+     }
+
+    // --- Individual Settings Reset Functions ---
+
+    function resetThemeSettings() {
+        console.log("Resetting theme to default.");
+        setTheme('default'); // This already updates localStorage and UI
+        alert("Theme reset to Default.");
+    }
+
+    function resetAboutBlankSettings() {
+        console.log("Resetting About:Blank settings.");
+        const toggle = document.getElementById('aboutBlankToggle');
+        if (toggle) {
+            toggle.checked = true; // Set to default state (checked/enabled)
+        }
+        localStorage.removeItem('aboutBlankOnStartup'); // Remove saved preference
+        console.log("Removed aboutBlankOnStartup from localStorage.");
+        alert("About:Blank setting reset to default (Enabled on Startup).");
+    }
+
+    function resetPanicKeySettings() {
+        console.log("Resetting Panic Key settings.");
+        const keyInput = document.getElementById('panicKeyInput');
+        const urlInput = document.getElementById('panicUrlInput');
+
+        // Clear UI
+        if (keyInput) keyInput.value = '';
+        if (urlInput) urlInput.value = '';
+
+        // Clear variables and localStorage
+        panicKey = null;
+        panicUrl = null;
+        localStorage.removeItem('panicKey');
+        localStorage.removeItem('panicUrl');
+        console.log("Removed panicKey and panicUrl from localStorage.");
+        alert("Panic Key settings cleared.");
+    }
+
+    // For Tab Cloaker, the existing resetCloak() function works, so we just call that
+    // from the new button. No new JS function needed here unless you want different behavior.
+
+    function resetAppAppearanceSettings() {
+        console.log("Resetting App Appearance settings.");
+        const titleInput = document.getElementById('appTabTitleInput');
+        const iconInput = document.getElementById('appFaviconUrlInput');
+
+        // Clear UI
+        if (titleInput) titleInput.value = '';
+        if (iconInput) iconInput.value = '';
+
+        // Clear localStorage
+        localStorage.removeItem('appSettings');
+        console.log("Removed appSettings from localStorage.");
+
+        // Apply default appearance
+        applyAppSettings({
+            tabTitle: 'Underground', // Your app's default name
+            faviconUrl: ''
+        });
+        alert("App Appearance reset to default.");
+    }
   </script>
 </body>
 </html>
