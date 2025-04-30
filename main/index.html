@@ -452,17 +452,16 @@
       margin-top: 1rem;
     }
 
-     /* Added theme previews (These should remain with specific colors for the swatch) */
     .theme-default-preview { background: linear-gradient(135deg, #1c1c1e 50%, #2c2c2e 50%); }
-    .theme-ocean-preview { background: linear-gradient(135deg, #0f172a 50%, #1e293b 50%); }
-    .theme-forest-preview { background: linear-gradient(135deg, #1a2e05 50%, #2b3e0f 50%); }
-    .theme-purple-preview { background: linear-gradient(135deg, #1e1b4b 50%, #312e81 50%); }
-    .theme-red-preview { background: linear-gradient(135deg, #450a0a 50%, #7f1d1d 50%); }
     .theme-cyberpunk-preview { background: linear-gradient(135deg, #0f0f1a 50%, #1a1a2e 50%); }
     .theme-sunset-preview { background: linear-gradient(135deg, #2c1a1a 50%, #4a2c2c 50%); }
     .theme-forest-night-preview { background: linear-gradient(135deg, #0d1a0b 50%, #1a2e17 50%); }
     .theme-midnight-sky-preview { background: linear-gradient(135deg, #1a1c2e 50%, #2b2e4a 50%); }
-
+    .theme-volcano-preview { background: linear-gradient(135deg, #3a0d0d 50%, #5f1c1c 50%); }
+    .theme-arctic-preview { background: linear-gradient(135deg, #0a1a1c 50%, #1c3a3d 50%); }
+    .theme-grayscale-preview { background: linear-gradient(135deg, #1c1c1c 50%, #2c2c2c 50%); }
+    .theme-sunny-preview { background: linear-gradient(135deg, #4a3a1a 50%, #6a4a1a 50%); }
+    .theme-marine-preview { background: linear-gradient(135deg, #0f2a3a 50%, #1a3c4a 50%); }
 
     .favorite-button {
       background-color: transparent;
@@ -1006,54 +1005,6 @@
         }
       },
       {
-        name: 'ocean',
-         previewClass: 'theme-ocean-preview',
-        variables: {
-          '--bg-dark': '#0f172a',
-          '--sidebar-dark': '#1e293b',
-          '--text-light': '#f8fafc',
-          '--text-muted': '#94a3b8',
-          '--card-bg': '#1e293b',
-          '--accent': '#0ea5e9',
-        }
-      },
-       {
-          name: 'forest',
-          previewClass: 'theme-forest-preview',
-          variables: {
-            '--bg-dark': '#1a2e05',
-            '--sidebar-dark': '#2b3e0f',
-            '--text-light': '#f0fdf4',
-            '--text-muted': '#86efac',
-            '--card-bg': '#2b3e0f',
-            '--accent': '#22c55e',
-          }
-        },
-         {
-          name: 'purple',
-           previewClass: 'theme-purple-preview',
-          variables: {
-            '--bg-dark': '#1e1b4b',
-            '--sidebar-dark': '#312e81',
-            '--text-light': '#f5f3ff',
-            '--text-muted': '#c4b5fd',
-            '--card-bg': '#312e81',
-            '--accent': '#a855f7',
-          }
-        },
-         {
-          name: 'red',
-           previewClass: 'theme-red-preview',
-          variables: {
-            '--bg-dark': '#450a0a',
-            '--sidebar-dark': '#7f1d1d',
-            '--text-light': '#fef2f2',
-            '--text-muted': '#fca5a5',
-            '--card-bg': '#7f1d1d',
-            '--accent': '#ef4444',
-          }
-        },
-         {
           name: 'cyberpunk',
            previewClass: 'theme-cyberpunk-preview',
           variables: {
@@ -1066,17 +1017,17 @@
           }
         },
          {
-           name: 'sunset',
-           previewClass: 'theme-sunset-preview',
-           variables: {
-             '--bg-dark': '#2c1a1a',
-             '--sidebar-dark': '#4a2c2c',
-             '--text-light': '#fff0e0',
-             '--text-muted': '#e0b0a0',
-             '--card-bg': '#3a2222',
-             '--accent': '#ff8844',
-           }
-         },
+          name: 'sunset', // <--- Sunset theme is now kept
+          previewClass: 'theme-sunset-preview',
+          variables: {
+            '--bg-dark': '#2c1a1a',
+            '--sidebar-dark': '#4a2c2c',
+            '--text-light': '#fff0e0',
+            '--text-muted': '#e0b0a0',
+            '--card-bg': '#3a2222',
+            '--accent': '#ff8844',
+          }
+        },
          {
            name: 'forest-night',
            previewClass: 'theme-forest-night-preview',
@@ -1089,17 +1040,77 @@
              '--accent': '#64ffda',
            }
          },
-         // --- New Theme: Midnight Sky ---
          {
             name: 'midnight-sky',
             previewClass: 'theme-midnight-sky-preview',
             variables: {
-                '--bg-dark': '#1a1c2e',      // Deep blue-black
-                '--sidebar-dark': '#2b2e4a', // Darker blue
-                '--text-light': '#e0e0ff',   // Pale lavender text
-                '--text-muted': '#a0a0c0',   // Muted gray-blue
-                '--card-bg': '#20233d',      // Dark blue for cards
-                '--accent': '#7b68ee',       // Medium purple accent
+                '--bg-dark': '#1a1c2e',
+                '--sidebar-dark': '#2b2e4a',
+                '--text-light': '#e0e0ff',
+                '--text-muted': '#a0a0c0',
+                '--card-bg': '#20233d',
+                '--accent': '#7b68ee',
+            }
+         },
+         // --- New Themes (Plum removed) ---
+        {
+           name: 'volcano',
+           previewClass: 'theme-volcano-preview',
+           variables: {
+               '--bg-dark': '#3a0d0d',
+               '--sidebar-dark': '#5f1c1c',
+               '--text-light': '#fff0e0',
+               '--text-muted': '#e0b0a0',
+               '--card-bg': '#4a1414',
+               '--accent': '#ff4500',
+           }
+        },
+        {
+           name: 'arctic',
+           previewClass: 'theme-arctic-preview',
+           variables: {
+               '--bg-dark': '#0a1a1c',
+               '--sidebar-dark': '#1c3a3d',
+               '--text-light': '#e0ffff',
+               '--text-muted': '#a0e0e0',
+               '--card-bg': '#152a2c',
+               '--accent': '#00ffff',
+           }
+        },
+         {
+            name: 'grayscale',
+            previewClass: 'theme-grayscale-preview',
+            variables: {
+                '--bg-dark': '#1c1c1c',
+                '--sidebar-dark': '#2c2c2c',
+                '--text-light': '#ffffff',
+                '--text-muted': '#cccccc',
+                '--card-bg': '#202020',
+                '--accent': '#808080',
+            }
+         },
+         {
+            name: 'sunny',
+            previewClass: 'theme-sunny-preview',
+            variables: {
+                '--bg-dark': '#4a3a1a',
+                '--sidebar-dark': '#6a4a1a',
+                '--text-light': '#fffacd',
+                '--text-muted': '#f0d8a0',
+                '--card-bg': '#5a4a1a',
+                '--accent': '#ffcc00',
+            }
+         },
+        {
+            name: 'marine', // <--- New Marine theme
+            previewClass: 'theme-marine-preview',
+            variables: {
+                '--bg-dark': '#0f2a3a',      // Dark blue-green
+                '--sidebar-dark': '#1a3c4a', // Darker blue-green
+                '--text-light': '#e0f0ff',   // Pale blue
+                '--text-muted': '#a0c0d0',   // Muted blue-gray
+                '--card-bg': '#15303a',      // Dark blue-green for cards
+                '--accent': '#00bfff',       // Deep sky blue
             }
          }
     ];
