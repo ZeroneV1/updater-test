@@ -1001,6 +1001,58 @@
          box-sizing: border-box; /* Include padding/border in width */
     }
 
+    /* --- Sliding Notification Styles --- */
+    .sliding-notification {
+        position: fixed;
+        top: 20px; /* Distance from the top */
+        right: 20px; /* Distance from the right */
+        /* Initially position it off-screen to the right */
+        transform: translateX(120%); /* 120% ensures it's fully off-screen */
+        opacity: 0; /* Start hidden */
+        visibility: hidden; /* Hide from screen readers and clicks when off-screen */
+    
+        background-color: var(--card-bg); /* Use theme card background */
+        color: var(--text-light); /* Use theme text color */
+        padding: 1rem 1.5rem; /* Adjust padding as needed */
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        z-index: 150; /* Ensure it's above content but below main overlays like update */
+        max-width: 300px; /* Limit the width */
+        word-wrap: break-word; /* Prevent long words from overflowing */
+        overflow-wrap: break-word; /* Standard property */
+    
+        /* Add transition for smooth sliding and fading */
+        transition: transform 0.5s ease-out, opacity 0.5s ease-out, visibility 0.5s ease-out;
+    }
+    
+    .sliding-notification.show {
+        /* Position it on-screen */
+        transform: translateX(0);
+        opacity: 1; /* Fade in */
+        visibility: visible; /* Make visible */
+    }
+    
+    .sliding-notification h3 {
+        margin-top: 0;
+        margin-bottom: 0.5rem; /* Space below the title */
+        color: var(--accent); /* Use theme accent color for title */
+        font-size: 1.1rem;
+    }
+    
+    .sliding-notification div { /* Styling for the body content */
+        font-size: 0.9rem;
+        line-height: 1.4;
+        color: var(--text-muted); /* Muted text for body */
+        /* Styling to match news text (from your <pre id="news-content"> styles) */
+        white-space: pre-wrap; /* Allow wrapping but preserve line breaks */
+        font-family: inherit; /* Use the same font as the rest of the body */
+        text-align: left; /* Left-align the text */
+         margin-top: 0.5rem; /* Add some space above the body */
+         /* Add any other specific text styles from your news section here, e.g., font-weight, text-decoration */
+         /* font-weight: normal; */
+         /* text-decoration: none; */
+    }
+
 
   </style>
 </head>
@@ -1046,6 +1098,11 @@
     </div>
   </div>
 
+    <div class="sliding-notification" id="slidingNotification">
+        <h3 id="slidingNotificationTitle">Notification Title</h3>
+        <div id="slidingNotificationBody">Notification body text...</div>
+      </div>
+    
   <div class="sidebar">
     <div class="icon active" data-page="Home" title="Home"><i class="fas fa-home"></i></div>
     <div class="icon" data-page="Library" title="Library"><i class="fas fa-book"></i></div>
@@ -1346,6 +1403,29 @@ let currentThemeName = 'default'; // Store the name of the current theme
             console.error("Error initializing Vanta.js:", error);
             vantaEffect = null; // Ensure vantaEffect is null if creation failed
         }
+    }
+
+// For Update Check (keep existing variables if you have them)
+    // let updateDownloadUrl = null;
+
+    // For Sliding Notification
+    let lastShownNotificationContent = null; // To track the content of the last shown sliding notification
+    let hideNotificationTimeout = null; // To store the timeout ID for hiding the notification
+
+    // localStorage Helpers for Notification Content Tracking
+    function getLastShownNotificationContent() {
+        // Retrieve from localStorage, defaults to null if not found
+        return localStorage.getItem('lastShownNotificationContent');
+    }
+
+    function setLastShownNotificationContent(content) {
+        // Store the content string in localStorage
+        localStorage.setItem('lastShownNotificationContent', content);
+    }
+
+    function clearLastShownNotificationContent() {
+        // Remove the item from localStorage
+        localStorage.removeItem('lastShownNotificationContent');
     }
 
 
@@ -1721,48 +1801,6 @@ function openAppInAboutBlank() {
         }
     }
 
-    function setupEventListeners() {
-      icons.forEach(icon => {
-        icon.addEventListener('click', handleIconClick);
-        icon.addEventListener('mousemove', handleTooltipShow);
-        icon.addEventListener('mouseleave', handleTooltipHide);
-      });
-
-      addGameModal.addEventListener('click', (e) => {
-        if (e.target === addGameModal) closeModal();
-      });
-
-      // Use existing changelogModal variable
-      changelogModal.addEventListener('click', (e) => {
-          if (e.target === changelogModal) closeChangelogModal();
-      });
-
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (addGameModal.style.display === 'flex') closeModal();
-            if (changelogModal.style.display === 'flex') closeChangelogModal();
-        }
-      });
-
-      // Sidebar hover - simplified
-       const sidebar = document.querySelector('.sidebar');
-       document.addEventListener('mousemove', (e) => {
-           if (e.clientX < 10 && !sidebar.classList.contains('open')) {
-               sidebar.classList.add('open');
-           } else if (e.clientX > 70 && sidebar.classList.contains('open')) { // Give more leeway
-               sidebar.classList.remove('open');
-           }
-       });
-       // Ensure sidebar closes if mouse leaves window from the left
-       document.documentElement.addEventListener('mouseleave', (e) => {
-          if (sidebar.classList.contains('open')) {
-            sidebar.classList.remove('open');
-          }
-       });
-      console.log('Core event listeners set up.');
-
-    }
 
     function handleReloadSiteClick() {
             console.log("Reload Site button clicked. Reloading page.");
@@ -3227,7 +3265,7 @@ const pages = {
              console.log('Home page specific actions (checkVersion, fetchNews) triggered.');
          } else if (pageKey === 'Settings') {
              // Ensure current theme is selected visually
-             setTheme(currentTheme);
+             // setTheme(currentTheme);
               console.log('Settings page loaded, setTheme called for current theme.');
          } else if (pageKey === 'About') {
              // Update about page version if needed
@@ -3537,215 +3575,251 @@ function checkPanicKey(event) {
     }
 
     // --- Modify setupEventListeners to add panic key listener ---
-    function setupEventListeners() {
-          icons.forEach(icon => {
-            icon.addEventListener('click', handleIconClick);
-            icon.addEventListener('mousemove', handleTooltipShow);
-            icon.addEventListener('mouseleave', handleTooltipHide);
-          });
-    
-          addGameModal.addEventListener('click', (e) => {
-            if (e.target === addGameModal) closeModal();
-          });
-    
-          changelogModal.addEventListener('click', (e) => {
-              if (e.target === changelogModal) closeChangelogModal();
-          });
-    
-          document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                if (addGameModal.style.display === 'flex') closeModal();
-                if (changelogModal.style.display === 'flex') closeChangelogModal();
-                // Allow Escape key to dismiss the update overlay if it's visible
-                 const updateOverlay = document.getElementById("updateOverlay");
-                 if (updateOverlay && updateOverlay.style.display === 'flex') {
-                    hideUpdateOverlay();
-                 }
+function setupEventListeners() {
+      // Get sidebar element once
+      const sidebar = document.querySelector('.sidebar'); // Ensure this exists
+
+      // Sidebar Icon Click Listeners
+      // Ensure 'icons' variable (NodeList of sidebar icons) is defined globally or accessible
+      if (typeof icons !== 'undefined' && icons) {
+           icons.forEach(icon => {
+             icon.addEventListener('click', handleIconClick);
+             // Tooltip Listeners
+             icon.addEventListener('mousemove', handleTooltipShow);
+             icon.addEventListener('mouseleave', handleTooltipHide);
+           });
+           console.log('Sidebar icon and tooltip event listeners set up.');
+      } else {
+           console.warn('Sidebar icons (variable "icons") not found. Sidebar listeners not fully set up.');
+      }
+
+
+      // Modal Click-outside-content Listeners
+      const addGameModal = document.getElementById('addGameModal'); // Ensure this exists in your HTML
+      if (addGameModal) {
+           addGameModal.addEventListener('click', (e) => {
+               // Assuming closeModal() is your function to hide addGameModal
+             if (e.target === addGameModal) closeModal();
+           });
+           console.log('Add Game Modal click listener set up.');
+      } else {
+           console.warn('Add Game Modal element not found.');
+      }
+
+      // --- Include Changelog Modal Listener from Function 1 if you still use it ---
+      // If you removed the changelogModal HTML, you can remove this block.
+      const changelogModal = document.getElementById('changelogModal'); // Ensure this exists if used
+      if (changelogModal) {
+           changelogModal.addEventListener('click', (e) => {
+               // Assuming closeChangelogModal() hides this modal
+              if (e.target === changelogModal) closeChangelogModal(); // Make sure closeChangelogModal is defined
+           });
+           console.log('Changelog Modal click listener set up.');
+      } else {
+           console.log('Changelog Modal element not found or not used.'); // Log info if not present
+      }
+
+
+      // Global Keydown Listener (for Escape key and Panic Key)
+      document.addEventListener('keydown', (e) => {
+        // --- Handle Escape Key for Modals/Overlays/Notifications ---
+        if (e.key === 'Escape') {
+            // Close the add game modal if open
+            const currentAddGameModal = document.getElementById('addGameModal');
+            if (currentAddGameModal && currentAddGameModal.style.display === 'flex') {
+                closeModal(); // Assuming closeModal() hides addGameModal
+                 console.log('Escape pressed: Closed Add Game Modal.');
+                 return; // Consume the event if a modal was closed
             }
-            // Check for panic key on any keydown event
+
+            // If you use the changelog modal, add check here
+             const currentChangelogModal = document.getElementById('changelogModal');
+             if (currentChangelogModal && currentChangelogModal.style.display === 'flex') {
+                 closeChangelogModal(); // Assuming closeChangelogModal hides your changelog modal
+                 console.log('Escape pressed: Closed Changelog Modal.');
+                  return;
+             }
+
+            // Hide the sliding notification if it's visible
+            const slidingNotification = document.getElementById('slidingNotification'); // Ensure this exists
+             if (slidingNotification && slidingNotification.classList.contains('show')) {
+                 hideSlidingNotification(); // Call the function to hide the sliding notification
+                  console.log('Escape pressed: Hid Sliding Notification.');
+                  return; // Consume the event
+             }
+
+
+            // Hide the update overlay if it's visible
+             const updateOverlay = document.getElementById("updateOverlay"); // Ensure this exists
+             if (updateOverlay && updateOverlay.style.display === 'flex') {
+                hideUpdateOverlay(); // Assuming hideUpdateOverlay hides the update overlay
+                 console.log('Escape pressed: Hid Update Overlay.');
+                 return; // Consume the event
+             }
+
+            // Add checks for other full-screen elements you might want Escape to close
+
+             console.log('Escape pressed: No modals/overlays were open.'); // Log if no relevant element was closed
+
+        } // End of Escape key handling
+
+        // Check for panic key on any keydown event (keep this if you have panic key logic)
+         // Make sure checkPanicKey is defined elsewhere
+         if (typeof checkPanicKey === 'function') {
             checkPanicKey(e);
-          });
-    
-           // Add event listener for the initial Update Now button
-           const updateNowButton = document.getElementById('updateNowButton');
-           if (updateNowButton) {
-               updateNowButton.addEventListener('click', handleUpdateNowClick);
-               console.log('Initial Update Now button event listener added.');
-           } else {
-                console.warn('Initial Update Now button not found.');
-           }
-    
-           // Add event listeners for the new option buttons (need to get them after they are potentially added to the DOM)
-           // A safer way is to add listeners after the HTML is rendered or use event delegation on the overlay.
-           // For simplicity and to match the snippet style, let's add them here, but they might need adjustments
-           // if the buttons are not immediately present when setupEventListeners runs initially.
-           // An alternative is to add these listeners *after* handleUpdateNowClick reveals the buttons.
-           // Let's add them here for now and make sure the elements are retrieved correctly.
-    
-           const reloadSiteButton = document.getElementById('reloadSiteButton');
-           const downloadOfflineButton = document.getElementById('downloadOfflineButton');
-           const updateCloseButton = document.getElementById('updateCloseButton');
-    
-           if (reloadSiteButton) {
+         } else {
+             // console.warn('checkPanicKey function not found.'); // Avoid excessive warnings
+         }
+      });
+       console.log('Global keydown listener set up (Escape, Panic Key).');
+
+
+       // Update Overlay Button Listeners
+       // These buttons exist in the HTML from the start, so listeners can be added here.
+       const reloadSiteButton = document.getElementById('reloadSiteButton'); // Ensure exists
+       const downloadOfflineButton = document.getElementById('downloadOfflineButton'); // Ensure exists
+       const updateCloseButton = document.getElementById('updateCloseButton'); // Ensure exists
+
+       if (reloadSiteButton) {
+           // handleReloadSiteClick() should be defined elsewhere
+            if (typeof handleReloadSiteClick === 'function') {
                reloadSiteButton.addEventListener('click', handleReloadSiteClick);
-                console.log('Reload Site button event listener added.');
-           } else {
-                console.warn('Reload Site button not found during setup.');
-           }
-    
-           if (downloadOfflineButton) {
-               downloadOfflineButton.addEventListener('click', handleDownloadOfflineClick);
+               console.log('Reload Site button event listener added.');
+            } else {
+               console.warn('handleReloadSiteClick function not found.');
+            }
+       } else {
+            console.warn('Reload Site button not found during setup.');
+       }
+
+       if (downloadOfflineButton) {
+            // handleDownloadOfflineClick() should be defined elsewhere
+             if (typeof handleDownloadOfflineClick === 'function') {
+                downloadOfflineButton.addEventListener('click', handleDownloadOfflineClick);
                 console.log('Download Offline button event listener added.');
-           } else {
-                console.warn('Download Offline button not found during setup.');
-           }
-    
-            if (updateCloseButton) {
+             } else {
+                 console.warn('handleDownloadOfflineClick function not found.');
+             }
+       } else {
+            console.warn('Download Offline button not found during setup.');
+       }
+
+        if (updateCloseButton) {
+             // hideUpdateOverlay() should be defined elsewhere
+             if (typeof hideUpdateOverlay === 'function') {
                 updateCloseButton.addEventListener('click', hideUpdateOverlay);
                 console.log('Update Close button event listener added.');
-            } else {
-                 console.warn('Update Close button not found.');
-            }
-    
-    
-           const sidebar = document.querySelector('.sidebar');
-           document.addEventListener('mousemove', (e) => {
-               if (e.clientX < 10 && !sidebar.classList.contains('open')) {
-                   sidebar.classList.add('open');
-               } else if (e.clientX > 70 && sidebar.classList.contains('open')) {
-                   sidebar.classList.remove('open');
-               }
-           });
-           document.documentElement.addEventListener('mouseleave', (e) => {
-              if (sidebar.classList.contains('open')) {
-                sidebar.classList.remove('open');
-              }
-           });
-          console.log('Core event listeners set up.');
-        }
-
-     // --- Modify window.addEventListener('DOMContentLoaded') ---
-window.addEventListener('DOMContentLoaded', async () => {
-      console.log('DOMContentLoaded fired.');
-      loadData(); // Load theme, app settings, games, library, favorites
-      loadPanicKeySettings(); // Load panic key settings after other data
-      console.log('Theme, app, game, library, favorite, panic key data loaded.');
-
-      setTimeout(() => {
-          console.log('Attempting to initialize Vanta.js...');
-          initializeVanta();
-          console.log('initializeVanta() called. Vanta effect:', vantaEffect);
-          if (vantaEffect) {
-              console.log('Calling setTheme with currentTheme after Vanta initialization.');
-              // Fix: Use currentThemeName here, not currentTheme
-              setTheme(currentThemeName); // Ensure Vanta uses the correct initial theme colors
-          } else {
-              console.warn('Vanta effect is null after initialization, cannot call setTheme to update options.');
-          }
-      }, 50);
-
-      setupEventListeners(); // Setup listeners including the panic key listener
-      console.log('Event listeners set up.');
-      updateGamesPage();
-      setupDragAndDrop();
-      console.log('Games page updated and drag/drop setup.');
-      switchPage('Home'); // Initial page load and triggers the first checkVersion call for Home page
-      console.log('Switched to Home page.');
-
-      // --- ADD THIS SECTION ---
-      // Set up periodic update check (every 5 seconds for debugging)
-      // This will call checkVersion() every 5000 milliseconds.
-      setInterval(checkVersion, 60000);
-      console.log("Periodic update check started (every 5 seconds).");
-      // --- END OF SECTION TO ADD ---
-    });
-
-     // --- Modify switchPage function ---
-     function switchPage(pageKey) {
-        console.log('Switching to page:', pageKey);
-
-        // Handle page-specific logic before fading out
-        if (pageKey === 'Games') {
-            showingFavorites = false;
-            pageTitle.textContent = 'Games';
-            pageTitle.style.display = 'block';
-            console.log('Switched to Games page. Resetting favorites view state.');
-        } else if (pageKey === 'Home') {
-            pageTitle.style.display = 'none';
-            console.log('Switched to Home page. Hiding page title.');
-            if (showingFavorites) {
-                showingFavorites = false;
-                console.log('Came from favorites view, resetting showingFavorites state.');
-            }
-        } else {
-            pageTitle.style.display = 'block';
-            pageTitle.textContent = pageKey;
-            console.log('Switched to page:', pageKey, 'Showing page title.');
-             if (showingFavorites) {
-                  showingFavorites = false;
-                   console.log('Came from favorites view on another page, resetting showingFavorites state.');
+             } else {
+                 console.warn('hideUpdateOverlay function not found.');
              }
+        } else {
+             console.warn('Update Close button not found during setup.');
         }
+         console.log('Update Overlay button listeners set up.');
 
-        pageContent.classList.add('fade-out');
-        console.log('Adding fade-out class to content.');
 
-        localStorage.setItem('lastActivePage', pageKey);
-        localStorage.setItem('lastActivePageTitle', pageTitle.textContent);
-        console.log('Saved last active page:', pageKey);
-
-        setTimeout(() => {
-            console.log('Timeout before content switch complete.');
-            pageContent.innerHTML = pages[pageKey] || `<p>Content for ${pageKey} not found.</p>`;
-            console.log(`Content set for page: ${pageKey}. Content found: ${!!pages[pageKey]}`);
-
-            // Specific actions after loading content
-            if (pageKey === 'Games') {
-                updateGamesPage();
-            } else if (pageKey === 'Library') {
-                updateLibraryPage();
-            } else if (pageKey === 'Home') {
-                checkVersion();
-                fetchNews();
-                console.log('Home page specific actions (checkVersion, fetchNews) triggered.');
-            } else if (pageKey === 'Settings') {
-                setTheme(currentThemeName); // Ensure theme selector visually matches
-                loadPanicKeySettings(); // Ensure panic key inputs show saved values
-                // Load App Settings into inputs
-                const savedAppSettings = localStorage.getItem('appSettings');
-                 if (savedAppSettings) {
-                     applyAppSettings(JSON.parse(savedAppSettings)); // Reloads settings into inputs
-                 }
-                 // Load Tab Cloaker state
-                 loadTabCloakSettings(); // Ensure dropdown/button state is correct
-                // Load About:Blank toggle state
-                const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
-                const shouldOpenInAboutBlank = aboutBlankPref !== 'false';
-                const toggle = document.getElementById('aboutBlankToggle');
-                if (toggle) {
-                    toggle.checked = shouldOpenInAboutBlank;
+       // Sidebar Auto-open/close on mouse movement near left edge
+       if (sidebar) { // Check if sidebar element was found at the beginning
+            document.addEventListener('mousemove', (e) => {
+                // Open sidebar if mouse is near the left edge and sidebar is closed
+                if (e.clientX < 10 && !sidebar.classList.contains('open')) {
+                    sidebar.classList.add('open');
                 }
-
-                console.log('Settings page loaded, UI updated for theme, panic key, app settings, cloaker, and about:blank.');
-            } else if (pageKey === 'About') {
-                const aboutVersionEl = document.getElementById('about-version');
-                if (aboutVersionEl) aboutVersionEl.textContent = "1.0.0";
-                console.log('About page loaded, version updated.');
-            }
-
-            pageContent.classList.remove('fade-out');
-            console.log('Removing fade-out class, content should fade in.');
-
-            icons.forEach(i => {
-                i.classList.remove('active');
-                if (i.getAttribute('data-page') === pageKey && pageKey !== 'Viewer') {
-                    i.classList.add('active');
+                // Close sidebar if mouse moves away from the left edge and sidebar is open
+                else if (e.clientX > 70 && sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
                 }
             });
-            console.log('Active sidebar icon updated.');
+             // Close sidebar if mouse leaves the entire document area while sidebar is open
+            document.documentElement.addEventListener('mouseleave', (e) => {
+               if (sidebar.classList.contains('open')) {
+                 sidebar.classList.remove('open');
+               }
+            });
+            console.log('Sidebar auto-open/close listeners set up.');
+       } else {
+            console.warn('Sidebar element not found, auto-open/close listeners not set up.');
+       }
 
-        }, 150);
-     }
+
+      console.log('All event listeners setup function completed.');
+    }
+
+// This event fires when the initial HTML document has been completely loaded and parsed.
+    // It does not wait for stylesheets, images, and subframes to finish loading.
+    window.addEventListener('DOMContentLoaded', async () => {
+      console.log('DOMContentLoaded fired. Starting application initialization...');
+
+      // Load saved data from localStorage (theme, app settings, games, library, favorites)
+      loadData();
+      console.log('Data loaded from localStorage (theme, app, games, library, favorites).');
+
+      // Load panic key settings from localStorage
+      loadPanicKeySettings();
+      console.log('Panic key settings loaded.');
+
+      // Initialize Vanta.js background effect
+      // Using a setTimeout here to give the DOM/CSS a moment to settle before Vanta initializes
+      // This can sometimes help prevent issues with canvas rendering.
+      setTimeout(() => {
+          console.log('Attempting to initialize Vanta.js...');
+          initializeVanta(); // Your function to initialize Vanta
+          console.log('initializeVanta() called. Vanta effect:', vantaEffect); // Log the result
+
+          // If Vanta.js initialized successfully, apply the current theme colors to it
+          if (vantaEffect) {
+              console.log('Calling setTheme with currentThemeName after Vanta initialization.');
+               // Ensure you are passing the theme name, not the theme object
+              setTheme(currentThemeName); // Apply colors based on the saved or default theme
+          } else {
+              console.warn('Vanta effect is null after initialization, cannot call setTheme to update Vanta options.');
+          }
+      }, 50); // A short delay (e.g., 50ms)
+
+
+      // Set up all event listeners for user interactions
+      setupEventListeners();
+      console.log('Event listeners set up.');
+
+      // Update the games page UI based on loaded data
+      updateGamesPage();
+      console.log('Games page UI updated.');
+
+      // Setup drag and drop functionality for games
+      setupDragAndDrop(); // Your function for drag/drop
+      console.log('Drag and drop setup.');
+
+
+      // Switch to the initial page (usually Home)
+      // This also triggers the first call to checkVersion() specifically for the Home page status display
+      switchPage('Home');
+      console.log('Initial page switched to Home.');
+
+      // --- Setup Periodic Checks ---
+
+      // Set up periodic update check (e.g., every 1 minute)
+      // This will call checkVersion() function repeatedly at the specified interval (milliseconds).
+      // Use a shorter interval (like 5000ms for 5 seconds) for debugging if needed,
+      // but remember to set it back to a longer duration (like 60000ms for 1 minute) for production.
+      setInterval(checkVersion, 60000); // Check every 60 seconds
+      console.log("Periodic update check started (every 60 seconds).");
+      // The initial checkVersion for the Home page status is done by switchPage('Home').
+
+      // Set up periodic notification check (e.g., every 15 seconds)
+      // This will call checkNotifications() function repeatedly.
+      setInterval(checkNotifications, 15000); // Check every 15 seconds (adjust as needed)
+      console.log("Periodic notification check started (every 15 seconds).");
+      // Run an initial notification check immediately when the app loads
+      checkNotifications();
+
+      // If you have a function to display the current time, start its interval here
+      // Example:
+      // setInterval(updateTime, 1000); // Update time every second
+      // updateTime(); // Initial time display
+
+
+      console.log('Application initialization completed.');
+    });
 
     // --- Individual Settings Reset Functions ---
 
@@ -3807,6 +3881,246 @@ window.addEventListener('DOMContentLoaded', async () => {
         });
         alert("App Appearance reset to default.");
     }
+
+// Function to display the sliding notification
+    function showSlidingNotification(title, body) {
+        const notificationElement = document.getElementById('slidingNotification');
+        const titleElement = document.getElementById('slidingNotificationTitle');
+        const bodyElement = document.getElementById('slidingNotificationBody');
+
+        // Ensure all required elements exist
+        if (!notificationElement || !titleElement || !bodyElement) {
+            console.error("Sliding notification elements not found in the DOM.");
+            return;
+        }
+
+        // Set the title and body content
+        titleElement.textContent = title; // Use textContent to prevent HTML injection
+        bodyElement.textContent = body;
+
+        // Calculate display duration based on word count (0.5 seconds per word)
+        // Split the body text by whitespace and filter out any empty strings
+        const wordCount = body.split(/\s+/).filter(word => word.length > 0).length;
+        // Set a minimum display duration (e.g., 3 seconds) and add 0.5 seconds per word
+        const displayDuration = Math.max(3000, wordCount * 500);
+
+        console.log(`Showing notification for ${displayDuration}ms (${wordCount} words).`);
+
+        // Clear any existing timeout that might hide the notification prematurely
+        if (hideNotificationTimeout) {
+            clearTimeout(hideNotificationTimeout);
+            hideNotificationTimeout = null;
+        }
+
+        // Make the notification element visible (but still off-screen initially due to CSS transform)
+        notificationElement.style.display = 'block'; // Use 'block' or 'flex' based on your layout needs
+
+        // Use a small delay before adding the 'show' class
+        // This allows the browser to render the element with display: block
+        // BEFORE the CSS transition is triggered by adding the 'show' class.
+        // Without this delay, the transition might not run.
+        setTimeout(() => {
+             notificationElement.classList.add('show'); // Add class to trigger CSS transition into view
+        }, 50); // A small delay of 50 milliseconds is usually sufficient
+
+        // Set a new timeout to hide the notification after the calculated display duration
+        hideNotificationTimeout = setTimeout(() => {
+            hideSlidingNotification(); // Call the hide function
+        }, displayDuration);
+    }
+
+    // Function to hide the sliding notification
+    // immediate = true will hide it instantly (useful when new content arrives)
+    function hideSlidingNotification(immediate = false) {
+        const notificationElement = document.getElementById('slidingNotification');
+
+        // Ensure the element exists
+        if (!notificationElement) {
+            // console.warn("Sliding notification element not found during hide attempt.");
+            return; // Cannot hide if the element doesn't exist
+        }
+
+        console.log(`Hiding notification (immediate: ${immediate}).`);
+
+        // Clear any pending hide timeout, regardless of whether it's immediate or not
+        if (hideNotificationTimeout) {
+            clearTimeout(hideNotificationTimeout);
+            hideNotificationTimeout = null;
+        }
+
+        // Trigger the slide-out transition by removing the 'show' class
+        notificationElement.classList.remove('show');
+
+        // Determine the delay before setting display to 'none'
+        // If immediate is true, delay is 0. Otherwise, wait for the CSS transition duration (0.5s).
+        const transitionDuration = 500; // This must match the transition duration in the CSS
+        const delay = immediate ? 0 : transitionDuration;
+
+        // Use a timeout to wait for the slide-out transition to visually complete
+        setTimeout(() => {
+             // Only set display to 'none' if the element is NOT currently in the process of transitioning IN.
+             // This prevents setting display: none if hide() is called immediately after show() was called,
+             // which could cause a flicker or prevent the show animation from finishing.
+             if (!notificationElement.classList.contains('show')) {
+                 notificationElement.style.display = 'none';
+                 console.log('Sliding notification display set to none.');
+             } else {
+                 console.log('Sliding notification is transitioning in, delaying setting display to none.');
+             }
+        }, delay);
+    }
+
+async function checkNotifications() {
+        console.log("Checking for static notifications (based on ~true~)...");
+
+        // The URL to fetch notification text from
+        const notificationURL = "https://hostfilez.glitch.me/notification.txt";
+
+        try {
+            // Fetch the content of the notification file
+            const response = await fetch(notificationURL, { cache: "no-store" });
+
+             // If the file doesn't exist, or a network error occurs,
+             // assume there's no notification and hide any existing one.
+            if (!response.ok) {
+                console.warn(`Notification file fetch failed (status: ${response.status}). Hiding notification.`);
+                 hideSlidingNotification(); // Ensure notification is hidden
+                 clearLastShownNotificationContent(); // Clear state in localStorage
+                 return; // Stop processing
+            }
+
+            // Get the text content from the response
+            const notificationText = (await response.text()).trim();
+
+            // If the fetched text is empty, assume no notification
+            if (!notificationText) {
+                console.log("Notification file is empty. Hiding notification.");
+                 hideSlidingNotification(); // Ensure notification is hidden
+                 clearLastShownNotificationContent(); // Clear state in localStorage
+                 return; // Stop processing
+            }
+
+            console.log("Fetched notification text:", notificationText);
+
+            // Retrieve the content of the last notification that was successfully shown
+            // This is used to avoid showing the exact same notification repeatedly.
+            const lastShownContent = getLastShownNotificationContent();
+
+            // Check for the presence of the ~true~ or ~false~ triggers
+            const hasTrueTrigger = notificationText.includes('~true~');
+            const hasFalseTrigger = notificationText.includes('~false~');
+
+            console.log("Text contains ~true~:", hasTrueTrigger, "~false~:", hasFalseTrigger);
+
+            // --- Determine Notification State and Content ---
+            let notificationTitle = "Notification"; // Default title if none is found
+            let notificationBody = notificationText; // Default body is the whole text initially
+
+            // If ~true~ is present, attempt to parse title and body
+            if (hasTrueTrigger) {
+                 // Regex to find content between the first pair of backticks after ~true~
+                 const titleRegex = /`([^`]+)`/; // Non-greedy match for content inside backticks
+                 const titleMatch = notificationText.match(titleRegex);
+
+                if (titleMatch && titleMatch[1]) {
+                    notificationTitle = titleMatch[1].trim(); // Extracted title
+                    // Get the text *after* the matched title block (including backticks)
+                    notificationBody = notificationText.substring(notificationText.indexOf(titleMatch[0]) + titleMatch[0].length).trim();
+                } else {
+                     // If no title found in backticks, the body is the text after ~true~
+                     notificationBody = notificationText.substring(notificationText.indexOf('~true~') + '~true~'.length).trim();
+                }
+
+                 // Clean up the body just in case it still contains triggers or backticks from edge cases
+                notificationBody = notificationBody.replace('~true~', '').replace('~false~', '').trim();
+                 // Re-check for backticks in the remaining body and remove if found (shouldn't happen with correct format but for robustness)
+                 const bodyBacktickMatch = notificationBody.match(titleRegex);
+                 if (bodyBacktickMatch && bodyBacktickMatch[0]) {
+                     notificationBody = notificationBody.replace(bodyBacktickMatch[0], '').trim();
+                 }
+
+
+                 // If after parsing and cleanup, the body is empty, set a default message
+                 if (!notificationBody) {
+                      notificationBody = "No message provided.";
+                 }
+            }
+
+
+            // --- Decide Whether to Show/Hide ---
+
+            // The state to track for uniqueness is the raw fetched text.
+            // If the raw text changes while ~true~ is present, it's a new notification.
+            const currentNotificationState = notificationText;
+
+
+            console.log("Parsed Notification - Title:", notificationTitle, "Body:", notificationBody);
+            console.log("Current notification state for tracking:", currentNotificationState);
+            console.log("Last shown state from localStorage:", lastShownContent);
+
+
+            // If ~false~ is explicitly present OR ~true~ is absent, hide the notification and clear state
+            if (hasFalseTrigger || !hasTrueTrigger) {
+                console.log("~false~ found or ~true~ absent. Hiding notification.");
+                hideSlidingNotification(); // Ensure notification is hidden
+                clearLastShownNotificationContent(); // Clear localStorage state
+                return; // Stop processing
+            }
+
+            // If ~true~ is present, check if the content/state is different from the last shown one
+            if (hasTrueTrigger) { // This is already true from the previous check, but for clarity
+                 if (currentNotificationState !== lastShownContent) {
+                     console.log("Notification state is new or changed (~true~ present). Displaying notification.");
+
+                     // Hide any currently visible notification immediately for a cleaner transition to the new one
+                     if (document.getElementById('slidingNotification').classList.contains('show')) {
+                          console.log("Hiding existing notification immediately for new content.");
+                          hideSlidingNotification(true); // Hide immediately (delay = 0)
+                           // Add a small delay before showing the new one to allow the hide transition to start
+                           setTimeout(() => {
+                              showSlidingNotification(notificationTitle, notificationBody);
+                               // Update localStorage AFTER the new notification is shown
+                              setLastShownNotificationContent(currentNotificationState);
+                           }, 600); // Delay slightly longer than hide transition (500ms)
+                     } else {
+                         // If not already showing, just show the new one directly
+                         showSlidingNotification(notificationTitle, notificationBody);
+                          // Update localStorage AFTER the new notification is shown
+                         setLastShownNotificationContent(currentNotificationState);
+                     }
+
+
+                } else {
+                    console.log("Notification state is the same as last shown (~true~ present). Skipping re-display.");
+                     // If the content is the same and ~true~ is still there,
+                     // ensure the notification remains visible and its hide timer is potentially reset.
+                      const notificationElement = document.getElementById('slidingNotification');
+                      if (notificationElement && !notificationElement.classList.contains('show')) {
+                           console.log("Notification was hidden but state is the same and ~true~ is present. Reshowing.");
+                           // Reshow if it was somehow hidden (e.g., by Escape key) without the content changing
+                           showSlidingNotification(notificationTitle, notificationBody); // This will also reset the timer
+                      } else if (notificationElement && notificationElement.classList.contains('show')) {
+                          console.log("Notification already visible with same state and ~true~ present. Timer should be running.");
+                           // Optionally reset the hide timer here if you want it to stay visible
+                           // as long as ~true~ is continuously present in the file on checks.
+                           // clearTimeout(hideNotificationTimeout);
+                           // const wordCount = notificationBody.split(/\s+/).filter(word => word.length > 0).length;
+                           // const displayDuration = Math.max(3000, wordCount * 500);
+                           // hideNotificationTimeout = setTimeout(() => hideSlidingNotification(), displayDuration);
+                      }
+                }
+
+            } // End of if (hasTrueTrigger)
+
+
+        } catch (err) {
+            console.error("Failed to check or parse notifications:", err);
+            // On any error during fetch or parsing, hide the notification and clear state
+            hideSlidingNotification();
+            clearLastShownNotificationContent();
+        }
+    }
+      
   </script>
 </body>
 </html>
