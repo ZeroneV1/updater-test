@@ -18,24 +18,12 @@
       --search-height: 40px; /* Added for consistent search bar height */
     }
 
-    /* Individual theme classes removed as variables are applied to :root by JS */
-    /* .theme-default { ... } */
-    /* .theme-ocean { ... } */
-    /* .theme-forest { ... } */
-    /* .theme-purple { ... } */
-    /* .theme-red { ... } */
-    /* .theme-cyberpunk { ... } */
-
 
     .reset-button {
         background-color: #ff4444;
         color: white;
-        /* Remove or override the existing margin-top */
-        /* margin-top: 1rem; */
         width: 100%;
-        /* Add this line to push it to the bottom in a flex column */
-        margin-top: auto !important; /* Use auto to push it down */
-        /* The parent's text-align: center or align-items: center handles horizontal alignment for 100% width */
+        margin-top: auto !important;
     }
 
     .reset-button:hover {
@@ -452,18 +440,18 @@
       margin-top: 1rem;
     }
 
-     /* Added theme previews (These should remain with specific colors for the swatch) */
     .theme-default-preview { background: linear-gradient(135deg, #1c1c1e 50%, #2c2c2e 50%); }
-    .theme-ocean-preview { background: linear-gradient(135deg, #0f172a 50%, #1e293b 50%); }
-    .theme-forest-preview { background: linear-gradient(135deg, #1a2e05 50%, #2b3e0f 50%); }
-    .theme-purple-preview { background: linear-gradient(135deg, #1e1b4b 50%, #312e81 50%); }
-    .theme-red-preview { background: linear-gradient(135deg, #450a0a 50%, #7f1d1d 50%); }
     .theme-cyberpunk-preview { background: linear-gradient(135deg, #0f0f1a 50%, #1a1a2e 50%); }
     .theme-sunset-preview { background: linear-gradient(135deg, #2c1a1a 50%, #4a2c2c 50%); }
     .theme-forest-night-preview { background: linear-gradient(135deg, #0d1a0b 50%, #1a2e17 50%); }
     .theme-midnight-sky-preview { background: linear-gradient(135deg, #1a1c2e 50%, #2b2e4a 50%); }
-
-
+    .theme-volcano-preview { background: linear-gradient(135deg, #3a0d0d 50%, #5f1c1c 50%); }
+    .theme-arctic-preview { background: linear-gradient(135deg, #0a1a1c 50%, #1c3a3d 50%); }
+    .theme-grayscale-preview { background: linear-gradient(135deg, #1c1c1c 50%, #2c2c2c 50%); }
+    .theme-sunny-preview { background: linear-gradient(135deg, #4a3a1a 50%, #6a4a1a 50%); }
+    .theme-marine-preview { background: linear-gradient(135deg, #0f2a3a 50%, #1a3c4a 50%); }
+    .theme-swamp-preview { background: linear-gradient(135deg, #2b2b1c 50%, #3a3a2a 50%); }
+      
     .favorite-button {
       background-color: transparent;
       color: var(--text-muted); /* Use muted text color variable */
@@ -923,6 +911,97 @@
      }
 
 
+    /* --- Update Overlay Styles --- */
+    .update-overlay {
+        display: none; /* Hidden by default */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent dark background */
+        z-index: 200; /* Ensure it's above other elements like modals */
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(5px); /* Optional: Add a blur effect */
+    }
+    
+    .update-message-box {
+        background-color: var(--card-bg);
+        padding: 2rem;
+        border-radius: var(--border-radius);
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+        /* Keep the increased max-width to help with horizontal text flow */
+        max-width: 350px; /* Or your preferred wider value */
+        width: 90%;
+        color: var(--text-light);
+    }
+    
+    .update-message-box h2 {
+        margin-top: 0;
+        color: var(--accent);
+        margin-bottom: 1rem;
+    }
+    
+    .update-message-box button {
+        margin-top: 0.5rem;
+        padding: 0.5rem 1rem; /* Button size adjustments */
+        font-size: 1rem;
+         margin-right: 0 !important; /* Ensure no extra margin on buttons */
+         margin-top: 0;
+    }
+    
+    /* Optional: Style for disabled download button */
+    .update-message-box button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+      
+    .update-options-container {
+        margin-top: 1.5rem;
+        display: flex;
+        flex-direction: column; /* Stack the options vertically */
+        /* Increase the gap to add more vertical space between options */
+        gap: 20px; /* Increased gap */
+        align-items: center; /* Center items horizontally */
+    }
+    
+    .update-option {
+        display: flex;
+        /* Change direction to stack items vertically */
+        flex-direction: column;
+        /* Center items horizontally within the column */
+        align-items: center;
+        gap: 5px; /* Reduce gap since items are now stacked */
+        /* Remove flex-wrap as items are explicitly stacked */
+        /* flex-wrap: wrap; */
+        /* Ensure the whole option is centered or takes appropriate width */
+        width: 100%; /* Allow the option container to take full width within its parent */
+    }
+
+    
+    .update-option button {
+        /* Keep button size adjustments */
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        margin: 0 !important; /* Remove all margins to control spacing with gap */
+         width: auto; /* Ensure button doesn't stretch to full width */
+    }
+    
+    .update-option p {
+        margin: 0; /* Remove default paragraph margin */
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        /* Remove flex-grow as text is now below the button */
+        /* flex-grow: 1; */
+        /* Center the text itself */
+        text-align: center;
+         max-width: 100%; /* Ensure text doesn't overflow if very long */
+         box-sizing: border-box; /* Include padding/border in width */
+    }
+
+
   </style>
 </head>
 <body class="theme-default"> <div class="tooltip" id="tooltip"></div>
@@ -940,6 +1019,24 @@
       </div>
     </div>
   </div>
+    
+    <div class="update-overlay" id="updateOverlay">
+        <div class="update-message-box">
+            <h2 id="updateTitle">New Update Available!</h2>
+            <p id="updateMessage">A new version (vX.Y.Z) is available.</p> <div class="update-options-container">
+                <div class="update-option">
+                    <button id="reloadSiteButton">Reload Site</button>
+                    <p>if you are on the website</p>
+                </div>
+                <div class="update-option">
+                     <button id="downloadOfflineButton">Download Offline Version</button>
+                     <p>if you are on a local version</p>
+                </div>
+            </div>
+    
+             <button id="updateCloseButton" style="margin-top: 1.5rem; background-color: #555; color: white;">Dismiss</button>
+        </div>
+    </div>
 
   <div class="modal" id="changelogModal">
     <div class="modal-content" style="max-width: 900px; max-height: 80vh;">
@@ -1006,54 +1103,6 @@
         }
       },
       {
-        name: 'ocean',
-         previewClass: 'theme-ocean-preview',
-        variables: {
-          '--bg-dark': '#0f172a',
-          '--sidebar-dark': '#1e293b',
-          '--text-light': '#f8fafc',
-          '--text-muted': '#94a3b8',
-          '--card-bg': '#1e293b',
-          '--accent': '#0ea5e9',
-        }
-      },
-       {
-          name: 'forest',
-          previewClass: 'theme-forest-preview',
-          variables: {
-            '--bg-dark': '#1a2e05',
-            '--sidebar-dark': '#2b3e0f',
-            '--text-light': '#f0fdf4',
-            '--text-muted': '#86efac',
-            '--card-bg': '#2b3e0f',
-            '--accent': '#22c55e',
-          }
-        },
-         {
-          name: 'purple',
-           previewClass: 'theme-purple-preview',
-          variables: {
-            '--bg-dark': '#1e1b4b',
-            '--sidebar-dark': '#312e81',
-            '--text-light': '#f5f3ff',
-            '--text-muted': '#c4b5fd',
-            '--card-bg': '#312e81',
-            '--accent': '#a855f7',
-          }
-        },
-         {
-          name: 'red',
-           previewClass: 'theme-red-preview',
-          variables: {
-            '--bg-dark': '#450a0a',
-            '--sidebar-dark': '#7f1d1d',
-            '--text-light': '#fef2f2',
-            '--text-muted': '#fca5a5',
-            '--card-bg': '#7f1d1d',
-            '--accent': '#ef4444',
-          }
-        },
-         {
           name: 'cyberpunk',
            previewClass: 'theme-cyberpunk-preview',
           variables: {
@@ -1066,17 +1115,17 @@
           }
         },
          {
-           name: 'sunset',
-           previewClass: 'theme-sunset-preview',
-           variables: {
-             '--bg-dark': '#2c1a1a',
-             '--sidebar-dark': '#4a2c2c',
-             '--text-light': '#fff0e0',
-             '--text-muted': '#e0b0a0',
-             '--card-bg': '#3a2222',
-             '--accent': '#ff8844',
-           }
-         },
+          name: 'sunset', // <--- Sunset theme is now kept
+          previewClass: 'theme-sunset-preview',
+          variables: {
+            '--bg-dark': '#2c1a1a',
+            '--sidebar-dark': '#4a2c2c',
+            '--text-light': '#fff0e0',
+            '--text-muted': '#e0b0a0',
+            '--card-bg': '#3a2222',
+            '--accent': '#ff8844',
+          }
+        },
          {
            name: 'forest-night',
            previewClass: 'theme-forest-night-preview',
@@ -1086,20 +1135,92 @@
              '--text-light': '#e0f2f1',
              '--text-muted': '#a7ffeb',
              '--card-bg': '#132611',
-             '--accent': '#64ffda',
+             '--accent': '#11661f',
            }
          },
-         // --- New Theme: Midnight Sky ---
          {
             name: 'midnight-sky',
             previewClass: 'theme-midnight-sky-preview',
             variables: {
-                '--bg-dark': '#1a1c2e',      // Deep blue-black
-                '--sidebar-dark': '#2b2e4a', // Darker blue
-                '--text-light': '#e0e0ff',   // Pale lavender text
-                '--text-muted': '#a0a0c0',   // Muted gray-blue
-                '--card-bg': '#20233d',      // Dark blue for cards
-                '--accent': '#7b68ee',       // Medium purple accent
+                '--bg-dark': '#1a1c2e',
+                '--sidebar-dark': '#2b2e4a',
+                '--text-light': '#e0e0ff',
+                '--text-muted': '#a0a0c0',
+                '--card-bg': '#20233d',
+                '--accent': '#7b68ee',
+            }
+         },
+         // --- New Themes (Plum removed) ---
+        {
+           name: 'volcano',
+           previewClass: 'theme-volcano-preview',
+           variables: {
+               '--bg-dark': '#3a0d0d',
+               '--sidebar-dark': '#5f1c1c',
+               '--text-light': '#fff0e0',
+               '--text-muted': '#e0b0a0',
+               '--card-bg': '#4a1414',
+               '--accent': '#ff4500',
+           }
+        },
+        {
+           name: 'arctic',
+           previewClass: 'theme-arctic-preview',
+           variables: {
+               '--bg-dark': '#0a1a1c',
+               '--sidebar-dark': '#1c3a3d',
+               '--text-light': '#e0ffff',
+               '--text-muted': '#a0e0e0',
+               '--card-bg': '#152a2c',
+               '--accent': '#00ffff',
+           }
+        },
+         {
+            name: 'grayscale',
+            previewClass: 'theme-grayscale-preview',
+            variables: {
+                '--bg-dark': '#1c1c1c',
+                '--sidebar-dark': '#2c2c2c',
+                '--text-light': '#ffffff',
+                '--text-muted': '#cccccc',
+                '--card-bg': '#202020',
+                '--accent': '#808080',
+            }
+         },
+         {
+            name: 'sunny',
+            previewClass: 'theme-sunny-preview',
+            variables: {
+                '--bg-dark': '#4a3a1a',
+                '--sidebar-dark': '#6a4a1a',
+                '--text-light': '#fffacd',
+                '--text-muted': '#f0d8a0',
+                '--card-bg': '#5a4a1a',
+                '--accent': '#ffcc00',
+            }
+         },
+        {
+            name: 'marine', // <--- New Marine theme
+            previewClass: 'theme-marine-preview',
+            variables: {
+                '--bg-dark': '#0f2a3a',      // Dark blue-green
+                '--sidebar-dark': '#1a3c4a', // Darker blue-green
+                '--text-light': '#e0f0ff',   // Pale blue
+                '--text-muted': '#a0c0d0',   // Muted blue-gray
+                '--card-bg': '#15303a',      // Dark blue-green for cards
+                '--accent': '#00bfff',       // Deep sky blue
+            }
+         },
+        {
+            name: 'swamp',
+            previewClass: 'theme-swamp-preview',
+            variables: {
+                '--bg-dark': '#2b2b1c',      // Dark greenish-brown
+                '--sidebar-dark': '#3a3a2a', // Slightly lighter greenish-brown
+                '--text-light': '#e0e6d8',   // Pale green-gray
+                '--text-muted': '#a0b390',   // Muted green-brown
+                '--card-bg': '#303020',      // Darker greenish-brown for cards
+                '--accent': '#8a9a5b',       // Dull green
             }
          }
     ];
@@ -1643,32 +1764,210 @@ function openAppInAboutBlank() {
 
     }
 
+    function handleReloadSiteClick() {
+            console.log("Reload Site button clicked. Reloading page.");
+            location.reload(); // Reload the current page
+        }
+      
+    function handleDownloadOfflineClick() {
+        if (updateDownloadUrl) {
+            console.log("Download Offline button clicked. Downloading from:", updateDownloadUrl);
+            // Create a temporary anchor element
+            const link = document.createElement('a');
+            link.href = updateDownloadUrl;
+            // Set the download attribute with an optional filename
+            link.setAttribute('download', 'Underground_Update.html'); // You can change the filename
+            // Append to the body, trigger click, and remove
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Optionally close the update overlay after initiating download
+            // document.getElementById("updateOverlay").style.display = 'none';
+
+        } else {
+            console.warn("Download Offline button clicked, but no download URL is available.");
+            alert("Download link not found. Please try again or reload.");
+        }
+    }
+
+    function hideUpdateOverlay() {
+        const updateOverlay = document.getElementById("updateOverlay");
+         if (updateOverlay) {
+             updateOverlay.style.display = 'none';
+             // Optionally reset the overlay content back to its initial state
+             // (Less critical with the single overlay structure, but good practice)
+             // document.getElementById("updateTitle").textContent = "New Update Available!";
+             // document.getElementById("updateMessage").textContent = "A new version (vX.Y.Z) is available.";
+             // const downloadButton = document.getElementById("downloadOfflineButton");
+             // if (downloadButton) {
+             //     downloadButton.disabled = false; // Reset disabled state
+             //     downloadButton.title = ""; // Clear title
+             // }
+             updateDownloadUrl = null; // Clear the stored URL
+             console.log("Update overlay hidden.");
+         }
+    }
+
+let updateDownloadUrl = null; // Variable to store the fetched download URL
+
+    async function handleUpdateNowClick() {
+        const updateInitialButtonDiv = document.getElementById("updateInitialButton");
+        const updateOptionsDiv = document.getElementById("updateOptions");
+        const updateNowButton = document.getElementById("updateNowButton");
+        const updateTitle = document.getElementById("updateTitle");
+        const updateMessage = document.getElementById("updateMessage");
+
+
+        if (!updateInitialButtonDiv || !updateOptionsDiv || !updateNowButton || !updateTitle || !updateMessage) {
+             console.error("Update overlay elements not found for handling click.");
+             return;
+        }
+
+        updateNowButton.textContent = "Fetching link...";
+        updateNowButton.disabled = true;
+
+        const versionURL = "https://hostfilez.glitch.me/version.txt";
+        console.log("Fetching update link from:", versionURL);
+
+        try {
+            const versionResponse = await fetch(versionURL, { cache: "no-store" });
+            if (!versionResponse.ok) throw new Error(`HTTP error! status: ${versionResponse.status}`);
+            const latestVersionText = (await versionResponse.text()).trim();
+
+            // Use regex to find the URL within parentheses ()
+            const urlMatch = latestVersionText.match(/\((.*?)\)/);
+
+            if (urlMatch && urlMatch[1]) {
+                updateDownloadUrl = urlMatch[1].trim(); // Store the fetched URL
+                console.log("Found update download URL:", updateDownloadUrl);
+
+                // Hide the initial button and show the options
+                updateInitialButtonDiv.style.display = 'none';
+                updateOptionsDiv.style.display = 'block';
+                updateTitle.textContent = "Update Options";
+                updateMessage.textContent = "Choose how to update:";
+
+
+            } else {
+                alert("Update link not found in version file. Cannot provide download option.");
+                console.warn("No URL found in parentheses in version file.");
+                 // Optionally revert the button or provide only reload option
+                 updateNowButton.textContent = "Update Now"; // Reset button text
+                 updateNowButton.disabled = false;
+                 // Or show only reload: updateInitialButtonDiv.style.display = 'none'; updateOptionsDiv.innerHTML = '<p style="margin-bottom: 1rem;">Cannot find download link.</p><button id="reloadSiteButton">Reload Site</button>'; setupReloadSiteListener();
+            }
+
+        } catch (err) {
+            alert("Failed to fetch update link.");
+            console.error("Error fetching update link:", err);
+            updateNowButton.textContent = "Update Now"; // Reset button text
+            updateNowButton.disabled = false;
+            // Optionally hide the overlay or show error state
+             updateTitle.textContent = "Update Error";
+             updateMessage.textContent = "Could not fetch update details.";
+             updateInitialButtonDiv.style.display = 'none'; // Hide the button div
+             updateOptionsDiv.style.display = 'none'; // Hide the options div
+        }
+    }
+
+// Variable to store the fetched download URL
 
     async function checkVersion() {
-       // Target the new status elements on the Home page
-       const homeVersionEl = document.getElementById("home-installed-version");
-       const latestVersionEl = document.getElementById("home-latest-version");
+       console.log("Checking for latest version (triggered by interval or Home page switch)...");
 
-       if (!latestVersionEl || !homeVersionEl) {
-         console.log("Version elements not found on Home page.");
-         return; // Exit if elements aren't found
-       }
+       // Define the installed version here
+       const installedVersion = "v1.0.0"; // <-- Set your installed version here
 
-       latestVersionEl.textContent = "Checking...";
-       homeVersionEl.textContent = "v1.0.0"; // Assume installed version is v1.0.0 for now
+       const versionURL = "https://hostfilez.glitch.me/version.txt";
+       let latestVersion = null;
+       let fetchedDownloadUrl = null;
+       let checkError = false;
 
-       const versionURL = "https://deluxe-obtainable-trigonometry.glitch.me/version.txt"; // Ensure CORS
-       console.log("Checking for latest version...");
+       // --- Fetch Version and Extract Data ---
        try {
          const versionResponse = await fetch(versionURL, { cache: "no-store" }); // Avoid cache
          if (!versionResponse.ok) throw new Error(`HTTP error! status: ${versionResponse.status}`);
          const latestVersionText = (await versionResponse.text()).trim();
-         latestVersionEl.textContent = latestVersionText;
-         console.log("Latest version fetched:", latestVersionText);
+
+         // Extract just the version string (assuming it's the first part before any '(' or whitespace)
+         const latestVersionMatch = latestVersionText.match(/^([^(\s]+)/);
+         latestVersion = latestVersionMatch ? latestVersionMatch[1] : latestVersionText;
+
+         // Extract the URL within parentheses
+         const urlMatch = latestVersionText.match(/\((.*?)\)/);
+         fetchedDownloadUrl = urlMatch && urlMatch[1] ? urlMatch[1].trim() : null;
+
+         console.log("Fetched latest version text:", latestVersionText);
+         console.log("Extracted latest version:", latestVersion);
+         console.log("Extracted download URL:", fetchedDownloadUrl);
+
+         updateDownloadUrl = fetchedDownloadUrl; // Store in the global variable
 
        } catch (err) {
-         latestVersionEl.textContent = "Error";
-         console.error("Failed to check version:", err);
+         console.error("Failed to fetch or parse version:", err);
+         checkError = true;
+         latestVersion = "Error"; // Indicate error in UI if elements exist
+         updateDownloadUrl = null; // Clear URL on error
+       }
+
+       // --- Update Home Page Elements (Only if they exist) ---
+       // Do this AFTER fetching the version to minimize impact on fetch
+       const homeVersionEl = document.getElementById("home-installed-version");
+       const latestVersionEl = document.getElementById("home-latest-version");
+
+       if (homeVersionEl) {
+           homeVersionEl.textContent = installedVersion;
+       }
+       if (latestVersionEl) {
+           latestVersionEl.textContent = latestVersion; // Will show version or "Error"
+       }
+
+
+       // --- Display/Hide Update Overlay (Independent of Home Page) ---
+       // Get the update overlay elements
+       const updateOverlay = document.getElementById("updateOverlay");
+       const updateMessageEl = document.getElementById("updateMessage");
+       const updateTitleEl = document.getElementById("updateTitle");
+       const downloadButton = document.getElementById('downloadOfflineButton');
+
+       // Check if overlay elements were successfully found before trying to manipulate them
+       const canDisplayOverlay = updateOverlay && updateMessageEl && updateTitleEl && downloadButton;
+
+       if (!canDisplayOverlay) {
+            console.warn("Update overlay elements not found. Cannot display update notification.");
+            // We can stop here if the overlay itself can't be shown
+            return;
+       }
+
+       // Now that we know overlay elements exist, proceed with display logic
+       if (latestVersion && latestVersion !== "Error" && latestVersion !== installedVersion) {
+            console.log("New update available detected:", latestVersion);
+            updateOverlay.style.display = 'flex'; // Show the update overlay
+            updateTitleEl.textContent = "New Update Available!";
+            updateMessageEl.textContent = `A new version (${latestVersion}) is available.`;
+
+            // Enable or disable download button based on whether a URL was found
+            downloadButton.disabled = !updateDownloadUrl;
+            if (!updateDownloadUrl) {
+                downloadButton.title = "Download link not found in version file.";
+            } else {
+                downloadButton.title = "";
+            }
+
+       } else {
+           console.log("App is up to date or check failed, ensuring overlay is hidden.");
+           updateOverlay.style.display = 'none'; // Ensure overlay is hidden
+       }
+
+       // If there was a fetch/parse error, the overlay will be hidden,
+       // and the Home page status will show "Error".
+       if (checkError) {
+            console.log("Update check finished with errors.");
+       } else if (latestVersion === installedVersion) {
+            console.log("Update check finished: App is up to date.");
+       } else if (latestVersion !== installedVersion && latestVersion !== "Error") {
+            console.log("Update check finished: Update available.");
        }
      }
 
@@ -3239,47 +3538,94 @@ function checkPanicKey(event) {
 
     // --- Modify setupEventListeners to add panic key listener ---
     function setupEventListeners() {
-      icons.forEach(icon => {
-        icon.addEventListener('click', handleIconClick);
-        icon.addEventListener('mousemove', handleTooltipShow);
-        icon.addEventListener('mouseleave', handleTooltipHide);
-      });
-
-      addGameModal.addEventListener('click', (e) => {
-        if (e.target === addGameModal) closeModal();
-      });
-
-      changelogModal.addEventListener('click', (e) => {
-          if (e.target === changelogModal) closeChangelogModal();
-      });
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            if (addGameModal.style.display === 'flex') closeModal();
-            if (changelogModal.style.display === 'flex') closeChangelogModal();
-        }
-        // Check for panic key on any keydown event
-        checkPanicKey(e);
-      });
-
-       const sidebar = document.querySelector('.sidebar');
-       document.addEventListener('mousemove', (e) => {
-           if (e.clientX < 10 && !sidebar.classList.contains('open')) {
-               sidebar.classList.add('open');
-           } else if (e.clientX > 70 && sidebar.classList.contains('open')) {
-               sidebar.classList.remove('open');
+          icons.forEach(icon => {
+            icon.addEventListener('click', handleIconClick);
+            icon.addEventListener('mousemove', handleTooltipShow);
+            icon.addEventListener('mouseleave', handleTooltipHide);
+          });
+    
+          addGameModal.addEventListener('click', (e) => {
+            if (e.target === addGameModal) closeModal();
+          });
+    
+          changelogModal.addEventListener('click', (e) => {
+              if (e.target === changelogModal) closeChangelogModal();
+          });
+    
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (addGameModal.style.display === 'flex') closeModal();
+                if (changelogModal.style.display === 'flex') closeChangelogModal();
+                // Allow Escape key to dismiss the update overlay if it's visible
+                 const updateOverlay = document.getElementById("updateOverlay");
+                 if (updateOverlay && updateOverlay.style.display === 'flex') {
+                    hideUpdateOverlay();
+                 }
+            }
+            // Check for panic key on any keydown event
+            checkPanicKey(e);
+          });
+    
+           // Add event listener for the initial Update Now button
+           const updateNowButton = document.getElementById('updateNowButton');
+           if (updateNowButton) {
+               updateNowButton.addEventListener('click', handleUpdateNowClick);
+               console.log('Initial Update Now button event listener added.');
+           } else {
+                console.warn('Initial Update Now button not found.');
            }
-       });
-       document.documentElement.addEventListener('mouseleave', (e) => {
-          if (sidebar.classList.contains('open')) {
-            sidebar.classList.remove('open');
-          }
-       });
-      console.log('Core event listeners set up.');
-    }
+    
+           // Add event listeners for the new option buttons (need to get them after they are potentially added to the DOM)
+           // A safer way is to add listeners after the HTML is rendered or use event delegation on the overlay.
+           // For simplicity and to match the snippet style, let's add them here, but they might need adjustments
+           // if the buttons are not immediately present when setupEventListeners runs initially.
+           // An alternative is to add these listeners *after* handleUpdateNowClick reveals the buttons.
+           // Let's add them here for now and make sure the elements are retrieved correctly.
+    
+           const reloadSiteButton = document.getElementById('reloadSiteButton');
+           const downloadOfflineButton = document.getElementById('downloadOfflineButton');
+           const updateCloseButton = document.getElementById('updateCloseButton');
+    
+           if (reloadSiteButton) {
+               reloadSiteButton.addEventListener('click', handleReloadSiteClick);
+                console.log('Reload Site button event listener added.');
+           } else {
+                console.warn('Reload Site button not found during setup.');
+           }
+    
+           if (downloadOfflineButton) {
+               downloadOfflineButton.addEventListener('click', handleDownloadOfflineClick);
+                console.log('Download Offline button event listener added.');
+           } else {
+                console.warn('Download Offline button not found during setup.');
+           }
+    
+            if (updateCloseButton) {
+                updateCloseButton.addEventListener('click', hideUpdateOverlay);
+                console.log('Update Close button event listener added.');
+            } else {
+                 console.warn('Update Close button not found.');
+            }
+    
+    
+           const sidebar = document.querySelector('.sidebar');
+           document.addEventListener('mousemove', (e) => {
+               if (e.clientX < 10 && !sidebar.classList.contains('open')) {
+                   sidebar.classList.add('open');
+               } else if (e.clientX > 70 && sidebar.classList.contains('open')) {
+                   sidebar.classList.remove('open');
+               }
+           });
+           document.documentElement.addEventListener('mouseleave', (e) => {
+              if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+              }
+           });
+          console.log('Core event listeners set up.');
+        }
 
      // --- Modify window.addEventListener('DOMContentLoaded') ---
-    window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener('DOMContentLoaded', async () => {
       console.log('DOMContentLoaded fired.');
       loadData(); // Load theme, app settings, games, library, favorites
       loadPanicKeySettings(); // Load panic key settings after other data
@@ -3291,7 +3637,8 @@ function checkPanicKey(event) {
           console.log('initializeVanta() called. Vanta effect:', vantaEffect);
           if (vantaEffect) {
               console.log('Calling setTheme with currentTheme after Vanta initialization.');
-              setTheme(currentTheme); // Ensure Vanta uses the correct initial theme colors
+              // Fix: Use currentThemeName here, not currentTheme
+              setTheme(currentThemeName); // Ensure Vanta uses the correct initial theme colors
           } else {
               console.warn('Vanta effect is null after initialization, cannot call setTheme to update options.');
           }
@@ -3302,8 +3649,15 @@ function checkPanicKey(event) {
       updateGamesPage();
       setupDragAndDrop();
       console.log('Games page updated and drag/drop setup.');
-      switchPage('Home');
+      switchPage('Home'); // Initial page load and triggers the first checkVersion call for Home page
       console.log('Switched to Home page.');
+
+      // --- ADD THIS SECTION ---
+      // Set up periodic update check (every 5 seconds for debugging)
+      // This will call checkVersion() every 5000 milliseconds.
+      setInterval(checkVersion, 60000);
+      console.log("Periodic update check started (every 5 seconds).");
+      // --- END OF SECTION TO ADD ---
     });
 
      // --- Modify switchPage function ---
