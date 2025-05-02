@@ -1052,6 +1052,22 @@
          /* font-weight: normal; */
          /* text-decoration: none; */
     }
+      
+    .notification-progress-bar {
+        position: absolute;
+        bottom: 0; /* Position at the bottom edge */
+        left: 0; /* Start from the left edge */
+        width: 100%; /* Start with the bar fully visible */
+        height: 4px; /* Set the height of the progress line */
+        background-color: var(--accent); /* Use the theme's accent color */
+        /* Define the transition for the width property */
+        transition-property: width;
+        /* Use linear timing for steady progress. Duration set by JS. */
+        transition-timing-function: linear;
+        /* Ensure the border radius doesn't clip the corners if parent has one */
+        border-bottom-left-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
+    }
 
 
   </style>
@@ -1098,10 +1114,11 @@
     </div>
   </div>
 
-    <div class="sliding-notification" id="slidingNotification">
-        <h3 id="slidingNotificationTitle">Notification Title</h3>
-        <div id="slidingNotificationBody">Notification body text...</div>
-      </div>
+<div class="sliding-notification" id="slidingNotification">
+    <h3 id="slidingNotificationTitle">Notification Title</h3>
+    <div id="slidingNotificationBody">Notification body text...</div>
+    <div class="notification-progress-bar" id="notificationProgressBar"></div>
+</div>
     
   <div class="sidebar">
     <div class="icon active" data-page="Home" title="Home"><i class="fas fa-home"></i></div>
@@ -3882,91 +3899,154 @@ function setupEventListeners() {
         alert("App Appearance reset to default.");
     }
 
-// Function to display the sliding notification
+    // Function to display the sliding notification
     function showSlidingNotification(title, body) {
+        // --- Get Element References ---
         const notificationElement = document.getElementById('slidingNotification');
         const titleElement = document.getElementById('slidingNotificationTitle');
         const bodyElement = document.getElementById('slidingNotificationBody');
-
-        // Ensure all required elements exist
-        if (!notificationElement || !titleElement || !bodyElement) {
-            console.error("Sliding notification elements not found in the DOM.");
-            return;
+        const progressBarElement = document.getElementById('notificationProgressBar');
+    
+        // --- Detailed Element Check ---
+        // Check if any required elements are missing
+        let missingElement = null;
+        if (!notificationElement) missingElement = 'slidingNotification';
+        else if (!titleElement) missingElement = 'slidingNotificationTitle';
+        else if (!bodyElement) missingElement = 'slidingNotificationBody';
+        else if (!progressBarElement) missingElement = 'notificationProgressBar';
+    
+        // If an element is missing, log the specific ID and stop execution
+        if (missingElement) {
+            // This is the line (~3910) generating the error
+            console.error(`Sliding notification element with ID '${missingElement}' not found. Cannot show notification.`);
+            return; // Stop the function here
         }
-
-        // Set the title and body content
-        titleElement.textContent = title; // Use textContent to prevent HTML injection
-        bodyElement.textContent = body;
-
-        // Calculate display duration based on word count (0.5 seconds per word)
-        // Split the body text by whitespace and filter out any empty strings
+    
+        // --- Set Content ---
+        // Set the title text
+        titleElement.textContent = title;
+        // Process the body text for any links or formatting and set it
+        bodyElement.innerHTML = processLinkedText(body);
+    
+        // --- Calculate Display Duration ---
+        // Example: Based on word count, with a minimum duration
         const wordCount = body.split(/\s+/).filter(word => word.length > 0).length;
-        // Set a minimum display duration (e.g., 3 seconds) and add 0.5 seconds per word
-        const displayDuration = Math.max(3000, wordCount * 500);
-
-        console.log(`Showing notification for ${displayDuration}ms (${wordCount} words).`);
-
-        // Clear any existing timeout that might hide the notification prematurely
+        const displayDuration = Math.max(4000, wordCount * 500); // Minimum 4 seconds
+    
+        console.log(`Attempting to show notification for ${displayDuration}ms.`);
+    
+        // --- Clear Existing Timers ---
+        // Clear any pending timeout that would hide the notification prematurely
         if (hideNotificationTimeout) {
             clearTimeout(hideNotificationTimeout);
-            hideNotificationTimeout = null;
+            hideNotificationTimeout = null; // Reset the global variable
+            console.log("Cleared previous hide timeout.");
         }
-
-        // Make the notification element visible (but still off-screen initially due to CSS transform)
-        notificationElement.style.display = 'block'; // Use 'block' or 'flex' based on your layout needs
-
-        // Use a small delay before adding the 'show' class
-        // This allows the browser to render the element with display: block
-        // BEFORE the CSS transition is triggered by adding the 'show' class.
-        // Without this delay, the transition might not run.
+        // Clear any pending timeout specifically for setting display:none (used in hide function)
+        if (notificationElement.hideDisplayTimeout) {
+            clearTimeout(notificationElement.hideDisplayTimeout);
+            notificationElement.hideDisplayTimeout = null;
+            console.log("Cleared previous display:none timeout.");
+        }
+    
+    
+        // --- Reset State Before Showing ---
+        // 1. Remove 'show' class to ensure animation starts correctly if it was somehow stuck
+        notificationElement.classList.remove('show');
+        // 2. Reset progress bar style instantly (remove any transition duration, set width to 100%)
+        progressBarElement.style.transitionDuration = '0ms';
+        progressBarElement.style.width = '100%';
+        // 3. Make the notification element part of the layout (visible but potentially off-screen)
+        //    This is necessary *before* transitions are applied.
+        notificationElement.style.display = 'block'; // Or 'flex' depending on your CSS layout
+    
+        // --- Start Animations and Set Hide Timer ---
+        // Use a minimal timeout (e.g., 20ms) to allow the browser to process the style resets
+        // and display change before applying transitions. This helps ensure animations run smoothly.
         setTimeout(() => {
-             notificationElement.classList.add('show'); // Add class to trigger CSS transition into view
-        }, 50); // A small delay of 50 milliseconds is usually sufficient
+            console.log("Starting show transition and progress bar animation...");
+            try {
+                // 1. Set the correct transition duration for the progress bar *before* changing its width
+                progressBarElement.style.transitionDuration = `${displayDuration}ms`;
+                // 2. Animate the progress bar width to 0% (triggers the CSS transition)
+                progressBarElement.style.width = '0%';
+                // 3. Add the 'show' class to the main notification element to trigger its slide-in animation
+                notificationElement.classList.add('show');
+    
+                // 4. Set the main timeout to automatically hide the notification after the calculated duration
+                console.log(`Setting hide timeout for ${displayDuration}ms`);
+                hideNotificationTimeout = setTimeout(() => {
+                    console.log("Hide timeout triggered.");
+                    hideSlidingNotification(); // Call the function to hide the notification
+                }, displayDuration);
+    
+            } catch (error) {
+                // Catch any unexpected errors during the animation setup
+                 console.error("Error during show animation sequence:", error);
+            }
+    
+        }, 20); // Small delay (20 milliseconds) is typically sufficient
+    
+    } // End of showSlidingNotification function
 
-        // Set a new timeout to hide the notification after the calculated display duration
-        hideNotificationTimeout = setTimeout(() => {
-            hideSlidingNotification(); // Call the hide function
-        }, displayDuration);
-    }
-
-    // Function to hide the sliding notification
-    // immediate = true will hide it instantly (useful when new content arrives)
+        // Function to hide the sliding notification
+        // immediate = true will hide it instantly (useful when new content arrives)
     function hideSlidingNotification(immediate = false) {
         const notificationElement = document.getElementById('slidingNotification');
-
-        // Ensure the element exists
+        const progressBarElement = document.getElementById('notificationProgressBar');
+    
+        // Stop if element doesn't exist
         if (!notificationElement) {
-            // console.warn("Sliding notification element not found during hide attempt.");
-            return; // Cannot hide if the element doesn't exist
+            return;
         }
-
-        console.log(`Hiding notification (immediate: ${immediate}).`);
-
-        // Clear any pending hide timeout, regardless of whether it's immediate or not
+    
+        // Check if it's already hidden or not displayed
+        const isDisplayed = notificationElement.style.display !== 'none';
+        const isShowing = notificationElement.classList.contains('show');
+    
+        // Only proceed if it's currently displayed or in the process of showing/hiding
+        if (!isDisplayed && !isShowing) {
+             // If already hidden, just ensure timeout is cleared
+             if (hideNotificationTimeout) {
+                 clearTimeout(hideNotificationTimeout);
+                 hideNotificationTimeout = null;
+             }
+             return;
+        }
+    
+        console.log(`Attempting to hide notification (immediate: ${immediate}).`);
+    
+        // Clear any master hide timeout
         if (hideNotificationTimeout) {
             clearTimeout(hideNotificationTimeout);
             hideNotificationTimeout = null;
         }
-
-        // Trigger the slide-out transition by removing the 'show' class
+    
+        // Start the slide-out animation
         notificationElement.classList.remove('show');
-
-        // Determine the delay before setting display to 'none'
-        // If immediate is true, delay is 0. Otherwise, wait for the CSS transition duration (0.5s).
-        const transitionDuration = 500; // This must match the transition duration in the CSS
+    
+        const transitionDuration = 500; // Must match your CSS transition duration
         const delay = immediate ? 0 : transitionDuration;
-
-        // Use a timeout to wait for the slide-out transition to visually complete
-        setTimeout(() => {
-             // Only set display to 'none' if the element is NOT currently in the process of transitioning IN.
-             // This prevents setting display: none if hide() is called immediately after show() was called,
-             // which could cause a flicker or prevent the show animation from finishing.
-             if (!notificationElement.classList.contains('show')) {
-                 notificationElement.style.display = 'none';
-                 console.log('Sliding notification display set to none.');
-             } else {
-                 console.log('Sliding notification is transitioning in, delaying setting display to none.');
-             }
+    
+        // Clear any pending timeout specifically for setting display:none
+        // (Using a property on the element itself to store the timeout ID)
+        if (notificationElement.hideDisplayTimeout) {
+            clearTimeout(notificationElement.hideDisplayTimeout);
+        }
+    
+        // Set a timeout to set display:none *after* the CSS transition completes
+        notificationElement.hideDisplayTimeout = setTimeout(() => {
+            // Check again if it should be hidden (in case show was called again quickly)
+            if (!notificationElement.classList.contains('show')) {
+                notificationElement.style.display = 'none';
+                // Reset progress bar style for the next use
+                if (progressBarElement) {
+                    progressBarElement.style.transitionDuration = '0ms';
+                    progressBarElement.style.width = '100%';
+                }
+                console.log('Sliding notification display set to none and progress bar reset.');
+            }
+            notificationElement.hideDisplayTimeout = null; // Clear the stored ID
         }, delay);
     }
 
