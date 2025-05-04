@@ -1003,42 +1003,34 @@
 
     /* --- Sliding Notification Styles --- */
     .sliding-notification {
-        position: fixed;
-        top: 20px; /* Distance from the top */
-        right: 20px; /* Distance from the right */
-        /* Initially position it off-screen to the right */
-        transform: translateX(120%); /* 120% ensures it's fully off-screen */
-        opacity: 0; /* Start hidden */
-        visibility: hidden; /* Hide from screen readers and clicks when off-screen */
-    
         background-color: var(--card-bg); /* Use theme card background */
         color: var(--text-light); /* Use theme text color */
         padding: 1rem 1.5rem; /* Adjust padding as needed */
         border-radius: var(--border-radius);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        z-index: 150; /* Ensure it's above content but below main overlays like update */
-        max-width: 300px; /* Limit the width */
         word-wrap: break-word; /* Prevent long words from overflowing */
         overflow-wrap: break-word; /* Standard property */
-    
-        /* Add transition for smooth sliding and fading */
-        transition: transform 0.5s ease-out, opacity 0.5s ease-out, visibility 0.5s ease-out;
+        opacity: 0; /* Start hidden */
+        transform: translateX(120%); /* Start off-screen to the right */
+        transition: transform 0.5s ease-out, opacity 0.5s ease-out; /* Animation */
+        pointer-events: auto; /* Allow clicks on the notification itself */
+        position: relative; /* Needed for progress bar positioning */
+        /* Initial display state will be handled by JS setting display: block/none */
+        display: none;
     }
     
     .sliding-notification.show {
-        /* Position it on-screen */
-        transform: translateX(0);
         opacity: 1; /* Fade in */
-        visibility: visible; /* Make visible */
+        transform: translateX(0); /* Slide in to position */
     }
-    
+
     .sliding-notification h3 {
         margin-top: 0;
         margin-bottom: 0.5rem; /* Space below the title */
         color: var(--accent); /* Use theme accent color for title */
         font-size: 1.1rem;
     }
-    
+
     .sliding-notification div { /* Styling for the body content */
         font-size: 0.9rem;
         line-height: 1.4;
@@ -1048,11 +1040,8 @@
         font-family: inherit; /* Use the same font as the rest of the body */
         text-align: left; /* Left-align the text */
          margin-top: 0.5rem; /* Add some space above the body */
-         /* Add any other specific text styles from your news section here, e.g., font-weight, text-decoration */
-         /* font-weight: normal; */
-         /* text-decoration: none; */
     }
-      
+
     .notification-progress-bar {
         position: absolute;
         bottom: 0; /* Position at the bottom edge */
@@ -1068,6 +1057,45 @@
         border-bottom-left-radius: var(--border-radius);
         border-bottom-right-radius: var(--border-radius);
     }
+
+    /* Style for individual notification close button */
+     .notification-close-button {
+         position: absolute;
+         top: 5px;
+         right: 5px;
+         background: none;
+         border: none;
+         color: var(--text-muted);
+         font-size: 0.8rem; /* Smaller close button */
+         cursor: pointer;
+         z-index: 1; /* Above text/progress bar */
+         padding: 0; /* Remove padding */
+         width: 20px; /* Make it a small square clickable area */
+         height: 20px;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         border-radius: 50%; /* Make it round */
+         transition: color 0.2s, background-color 0.2s;
+     }
+
+     .notification-close-button:hover {
+         color: var(--text-light);
+         background-color: rgba(255, 255, 255, 0.1); /* Subtle hover effect */
+     }
+
+    #notificationContainer {
+        position: fixed;
+        top: 20px; /* Distance from the top */
+        right: 20px; /* Distance from the right */
+        z-index: 150; /* Ensure it's above content but below main overlays */
+        display: flex;
+        flex-direction: column; /* Stack notifications vertically */
+        gap: 10px; /* Space between stacked notifications */
+        max-width: 300px; /* Limit the width of the container */
+        pointer-events: none; /* Allow clicks to pass through the container */
+    }
+
 
 
   </style>
@@ -1114,11 +1142,8 @@
     </div>
   </div>
 
-<div class="sliding-notification" id="slidingNotification">
-    <h3 id="slidingNotificationTitle">Notification Title</h3>
-    <div id="slidingNotificationBody">Notification body text...</div>
-    <div class="notification-progress-bar" id="notificationProgressBar"></div>
-</div>
+<div id="notificationContainer">
+    </div>
     
   <div class="sidebar">
     <div class="icon active" data-page="Home" title="Home"><i class="fas fa-home"></i></div>
@@ -1161,6 +1186,10 @@
     let isSidebarOpen = false;
     let vantaEffect = null;
     let showingFavorites = false;
+    let shownNotificationContentSet = new Set();
+    let activeNotifications = {};
+    let notificationEnabled = true; // Default is enabled
+    let notificationDisplayDuration = 8000; // Default duration in milliseconds (8 seconds)
     
     // Define themes in an array
     const themes = [
@@ -1296,7 +1325,19 @@
                 '--card-bg': '#303020',      // Darker greenish-brown for cards
                 '--accent': '#8a9a5b',       // Dull green
             }
-         }
+         },
+        {
+            name: 'inverted-bw',
+            previewClass: 'theme-inverted-bw-preview',
+            variables: {
+                '--bg-dark': '#e3e3e3', // Very light grey background
+                '--sidebar-dark': '#d3d3d3', // Slightly darker light grey sidebar
+                '--text-light': '#000000', // Black text
+                '--text-muted': '#333333', // Dark grey muted text
+                '--card-bg': '#dddddd', // Light grey card background
+                '--accent': '#404040', // Dark grey accent
+            }
+        }
     ];
 
 let currentThemeName = 'default'; // Store the name of the current theme
@@ -1422,27 +1463,133 @@ let currentThemeName = 'default'; // Store the name of the current theme
         }
     }
 
-// For Update Check (keep existing variables if you have them)
-    // let updateDownloadUrl = null;
+// --- Individual Notification Management ---
+    // Store active notifications with their hide timeouts
 
-    // For Sliding Notification
-    let lastShownNotificationContent = null; // To track the content of the last shown sliding notification
-    let hideNotificationTimeout = null; // To store the timeout ID for hiding the notification
+    function showIndividualNotification(title, body, duration = 8000) { // Default duration 8 seconds
+        const container = document.getElementById('notificationContainer');
+        if (!container) {
+            console.error("Notification container not found. Cannot show notification.");
+            return;
+        }
 
-    // localStorage Helpers for Notification Content Tracking
-    function getLastShownNotificationContent() {
-        // Retrieve from localStorage, defaults to null if not found
-        return localStorage.getItem('lastShownNotificationContent');
+        // Create the notification element
+        const notificationElement = document.createElement('div');
+        notificationElement.classList.add('sliding-notification');
+        const notificationId = `notification-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        notificationElement.id = notificationId;
+        notificationElement.setAttribute('data-hide-timeout-id', ''); // Placeholder for timeout ID
+        notificationElement.style.display = 'block'; // Make it a block element to trigger layout
+
+
+        // Add content (including close button and progress bar)
+        notificationElement.innerHTML = `
+            <button class="notification-close-button" onclick="hideIndividualNotification('${notificationId}')" title="Dismiss">&times;</button>
+            <h3>${escapeHtml(title)}</h3>
+            <div>${processLinkedText(body)}</div>
+            <div class="notification-progress-bar"></div>
+        `;
+
+        // Append to the container
+        container.appendChild(notificationElement);
+        console.log(`Created and appended new notification: ${notificationId}`);
+
+        // --- Start Show Animation and Progress Bar ---
+         // Use a minimal timeout to allow the element to be added to the DOM before animating
+         setTimeout(() => {
+             notificationElement.classList.add('show');
+
+             // Start progress bar animation after a slight delay
+             const progressBarElement = notificationElement.querySelector('.notification-progress-bar');
+             if (progressBarElement) {
+                 // Ensure initial state is set before transition
+                 progressBarElement.style.transitionDuration = '0ms';
+                 progressBarElement.style.width = '100%';
+                  // Delay applying the transition and new width
+                 setTimeout(() => {
+                      progressBarElement.style.transitionDuration = `${duration}ms`;
+                      progressBarElement.style.width = '0%';
+                 }, 50); // Small delay
+             }
+
+             // Set the hide timeout
+             const hideTimeoutId = setTimeout(() => {
+                 hideIndividualNotification(notificationId);
+             }, duration);
+
+             // Store the timeout ID and element reference
+             notificationElement.setAttribute('data-hide-timeout-id', hideTimeoutId);
+             activeNotifications[notificationId] = hideTimeoutId;
+             console.log(`Notification ${notificationId} set to hide in ${duration}ms.`);
+
+         }, 20); // Small delay to allow element to appear in DOM
+
+        return notificationElement; // Return the created element
     }
 
-    function setLastShownNotificationContent(content) {
-        // Store the content string in localStorage
-        localStorage.setItem('lastShownNotificationContent', content);
+    function hideIndividualNotification(notificationId, immediate = false) {
+        const notificationElement = document.getElementById(notificationId);
+        if (!notificationElement) {
+            console.warn(`Notification element with ID "${notificationId}" not found or already removed.`);
+            // Clean up activeNotifications state even if element is missing
+            if (activeNotifications[notificationId]) {
+                clearTimeout(activeNotifications[notificationId]);
+                delete activeNotifications[notificationId];
+                console.log(`Cleaned up activeNotifications state for ID "${notificationId}".`);
+            }
+            return;
+        }
+
+        console.log(`Attempting to hide notification: ${notificationId} (immediate: ${immediate})`);
+
+        // Clear the hide timeout associated with this specific notification
+        const hideTimeoutId = parseInt(notificationElement.getAttribute('data-hide-timeout-id'));
+        if (!isNaN(hideTimeoutId)) {
+            clearTimeout(hideTimeoutId);
+            console.log(`Cleared hide timeout ${hideTimeoutId} for notification ${notificationId}.`);
+        }
+         // Also clear from activeNotifications state
+        if (activeNotifications[notificationId]) {
+            delete activeNotifications[notificationId];
+             console.log(`Removed notification ${notificationId} from activeNotifications state.`);
+        }
+
+
+        // Start the slide-out animation
+        notificationElement.classList.remove('show');
+
+        const transitionDuration = 500; // Must match your CSS transition duration
+        const delay = immediate ? 0 : transitionDuration;
+
+         // Clear any previously set display:none timeout for this element
+         if (notificationElement.hideDisplayTimeout) {
+             clearTimeout(notificationElement.hideDisplayTimeout);
+             notificationElement.hideDisplayTimeout = null;
+         }
+
+
+        // Set a timeout to remove the element from the DOM after the CSS transition completes
+        notificationElement.hideDisplayTimeout = setTimeout(() => {
+            // Check if the element is still attached before removing
+            if (notificationElement.parentNode) {
+                 notificationElement.parentNode.removeChild(notificationElement);
+                 console.log(`Removed notification element ${notificationId} from DOM.`);
+            }
+        }, delay);
     }
 
-    function clearLastShownNotificationContent() {
-        // Remove the item from localStorage
-        localStorage.removeItem('lastShownNotificationContent');
+    function hideAllNotifications() {
+        console.log("Hiding all active notifications.");
+        // Iterate through all currently managed notification IDs
+        for (const id in activeNotifications) {
+            if (activeNotifications.hasOwnProperty(id)) {
+                // Pass immediate=true to hide them instantly on user action
+                hideIndividualNotification(id, true);
+            }
+        }
+         // Clear the active notifications object
+        activeNotifications = {};
+        console.log("All notifications cleared from activeNotifications state.");
     }
 
 
@@ -3900,306 +4047,263 @@ function setupEventListeners() {
     }
 
     // Function to display the sliding notification
-    function showSlidingNotification(title, body) {
-        // --- Get Element References ---
-        const notificationElement = document.getElementById('slidingNotification');
-        const titleElement = document.getElementById('slidingNotificationTitle');
-        const bodyElement = document.getElementById('slidingNotificationBody');
-        const progressBarElement = document.getElementById('notificationProgressBar');
-    
-        // --- Detailed Element Check ---
-        // Check if any required elements are missing
-        let missingElement = null;
-        if (!notificationElement) missingElement = 'slidingNotification';
-        else if (!titleElement) missingElement = 'slidingNotificationTitle';
-        else if (!bodyElement) missingElement = 'slidingNotificationBody';
-        else if (!progressBarElement) missingElement = 'notificationProgressBar';
-    
-        // If an element is missing, log the specific ID and stop execution
-        if (missingElement) {
-            // This is the line (~3910) generating the error
-            console.error(`Sliding notification element with ID '${missingElement}' not found. Cannot show notification.`);
-            return; // Stop the function here
-        }
-    
-        // --- Set Content ---
-        // Set the title text
-        titleElement.textContent = title;
-        // Process the body text for any links or formatting and set it
-        bodyElement.innerHTML = processLinkedText(body);
-    
-        // --- Calculate Display Duration ---
-        // Example: Based on word count, with a minimum duration
-        const wordCount = body.split(/\s+/).filter(word => word.length > 0).length;
-        const displayDuration = Math.max(4000, wordCount * 500); // Minimum 4 seconds
-    
-        console.log(`Attempting to show notification for ${displayDuration}ms.`);
-    
-        // --- Clear Existing Timers ---
-        // Clear any pending timeout that would hide the notification prematurely
-        if (hideNotificationTimeout) {
-            clearTimeout(hideNotificationTimeout);
-            hideNotificationTimeout = null; // Reset the global variable
-            console.log("Cleared previous hide timeout.");
-        }
-        // Clear any pending timeout specifically for setting display:none (used in hide function)
-        if (notificationElement.hideDisplayTimeout) {
-            clearTimeout(notificationElement.hideDisplayTimeout);
-            notificationElement.hideDisplayTimeout = null;
-            console.log("Cleared previous display:none timeout.");
-        }
-    
-    
-        // --- Reset State Before Showing ---
-        // 1. Remove 'show' class to ensure animation starts correctly if it was somehow stuck
-        notificationElement.classList.remove('show');
-        // 2. Reset progress bar style instantly (remove any transition duration, set width to 100%)
-        progressBarElement.style.transitionDuration = '0ms';
-        progressBarElement.style.width = '100%';
-        // 3. Make the notification element part of the layout (visible but potentially off-screen)
-        //    This is necessary *before* transitions are applied.
-        notificationElement.style.display = 'block'; // Or 'flex' depending on your CSS layout
-    
-        // --- Start Animations and Set Hide Timer ---
-        // Use a minimal timeout (e.g., 20ms) to allow the browser to process the style resets
-        // and display change before applying transitions. This helps ensure animations run smoothly.
-        setTimeout(() => {
-            console.log("Starting show transition and progress bar animation...");
-            try {
-                // 1. Set the correct transition duration for the progress bar *before* changing its width
-                progressBarElement.style.transitionDuration = `${displayDuration}ms`;
-                // 2. Animate the progress bar width to 0% (triggers the CSS transition)
-                progressBarElement.style.width = '0%';
-                // 3. Add the 'show' class to the main notification element to trigger its slide-in animation
-                notificationElement.classList.add('show');
-    
-                // 4. Set the main timeout to automatically hide the notification after the calculated duration
-                console.log(`Setting hide timeout for ${displayDuration}ms`);
-                hideNotificationTimeout = setTimeout(() => {
-                    console.log("Hide timeout triggered.");
-                    hideSlidingNotification(); // Call the function to hide the notification
-                }, displayDuration);
-    
-            } catch (error) {
-                // Catch any unexpected errors during the animation setup
-                 console.error("Error during show animation sequence:", error);
-            }
-    
-        }, 20); // Small delay (20 milliseconds) is typically sufficient
-    
-    } // End of showSlidingNotification function
-
-        // Function to hide the sliding notification
-        // immediate = true will hide it instantly (useful when new content arrives)
-    function hideSlidingNotification(immediate = false) {
-        const notificationElement = document.getElementById('slidingNotification');
-        const progressBarElement = document.getElementById('notificationProgressBar');
-    
-        // Stop if element doesn't exist
-        if (!notificationElement) {
+// --- Individual Notification Management ---
+    function showIndividualNotification(title, body, duration = 8000) { // Default duration 8 seconds
+        const container = document.getElementById('notificationContainer');
+        if (!container) {
+            console.error("Notification container not found. Cannot show notification.");
             return;
         }
-    
-        // Check if it's already hidden or not displayed
-        const isDisplayed = notificationElement.style.display !== 'none';
-        const isShowing = notificationElement.classList.contains('show');
-    
-        // Only proceed if it's currently displayed or in the process of showing/hiding
-        if (!isDisplayed && !isShowing) {
-             // If already hidden, just ensure timeout is cleared
-             if (hideNotificationTimeout) {
-                 clearTimeout(hideNotificationTimeout);
-                 hideNotificationTimeout = null;
+
+        // Create the notification element
+        const notificationElement = document.createElement('div');
+        notificationElement.classList.add('sliding-notification');
+        const notificationId = `notification-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        notificationElement.id = notificationId;
+        notificationElement.setAttribute('data-hide-timeout-id', ''); // Placeholder for timeout ID
+        notificationElement.style.display = 'block'; // Make it a block element to trigger layout
+
+
+        // Add content (including close button and progress bar)
+        notificationElement.innerHTML = `
+            <button class="notification-close-button" onclick="hideIndividualNotification('${notificationId}')" title="Dismiss">&times;</button>
+            <h3>${escapeHtml(title)}</h3>
+            <div>${processLinkedText(body)}</div>
+            <div class="notification-progress-bar"></div>
+        `;
+
+        // Append to the container
+        container.appendChild(notificationElement);
+        console.log(`Created and appended new notification: ${notificationId}`);
+
+        // --- Start Show Animation and Progress Bar ---
+         // Use a minimal timeout to allow the element to be added to the DOM before animating
+         setTimeout(() => {
+             notificationElement.classList.add('show');
+
+             // Start progress bar animation after a slight delay
+             const progressBarElement = notificationElement.querySelector('.notification-progress-bar');
+             if (progressBarElement) {
+                 // Ensure initial state is set before transition
+                 progressBarElement.style.transitionDuration = '0ms';
+                 progressBarElement.style.width = '100%';
+                  // Delay applying the transition and new width
+                 setTimeout(() => {
+                      progressBarElement.style.transitionDuration = `${duration}ms`;
+                      progressBarElement.style.width = '0%';
+                 }, 50); // Small delay
              }
-             return;
+
+             // Set the hide timeout
+             const hideTimeoutId = setTimeout(() => {
+                 hideIndividualNotification(notificationId);
+             }, duration);
+
+             // Store the timeout ID and element reference
+             notificationElement.setAttribute('data-hide-timeout-id', hideTimeoutId);
+             activeNotifications[notificationId] = hideTimeoutId;
+             console.log(`Notification ${notificationId} set to hide in ${duration}ms.`);
+
+         }, 20); // Small delay to allow element to appear in DOM
+
+        return notificationElement; // Return the created element
+    }
+
+    function hideIndividualNotification(notificationId, immediate = false) {
+        const notificationElement = document.getElementById(notificationId);
+        if (!notificationElement) {
+            console.warn(`Notification element with ID "${notificationId}" not found or already removed.`);
+            // Clean up activeNotifications state even if element is missing
+            if (activeNotifications[notificationId]) {
+                clearTimeout(activeNotifications[notificationId]);
+                delete activeNotifications[notificationId];
+                console.log(`Cleaned up activeNotifications state for ID "${notificationId}".`);
+            }
+            return;
         }
-    
-        console.log(`Attempting to hide notification (immediate: ${immediate}).`);
-    
-        // Clear any master hide timeout
-        if (hideNotificationTimeout) {
-            clearTimeout(hideNotificationTimeout);
-            hideNotificationTimeout = null;
+
+        console.log(`Attempting to hide notification: ${notificationId} (immediate: ${immediate})`);
+
+        // Clear the hide timeout associated with this specific notification
+        const hideTimeoutId = parseInt(notificationElement.getAttribute('data-hide-timeout-id'));
+        if (!isNaN(hideTimeoutId)) {
+            clearTimeout(hideTimeoutId);
+            console.log(`Cleared hide timeout ${hideTimeoutId} for notification ${notificationId}.`);
         }
-    
+         // Also clear from activeNotifications state
+        if (activeNotifications[notificationId]) {
+            delete activeNotifications[notificationId];
+             console.log(`Removed notification ${notificationId} from activeNotifications state.`);
+        }
+
+
         // Start the slide-out animation
         notificationElement.classList.remove('show');
-    
+
         const transitionDuration = 500; // Must match your CSS transition duration
         const delay = immediate ? 0 : transitionDuration;
-    
-        // Clear any pending timeout specifically for setting display:none
-        // (Using a property on the element itself to store the timeout ID)
-        if (notificationElement.hideDisplayTimeout) {
-            clearTimeout(notificationElement.hideDisplayTimeout);
-        }
-    
-        // Set a timeout to set display:none *after* the CSS transition completes
+
+         // Clear any previously set display:none timeout for this element
+         if (notificationElement.hideDisplayTimeout) {
+             clearTimeout(notificationElement.hideDisplayTimeout);
+             notificationElement.hideDisplayTimeout = null;
+         }
+
+
+        // Set a timeout to remove the element from the DOM after the CSS transition completes
         notificationElement.hideDisplayTimeout = setTimeout(() => {
-            // Check again if it should be hidden (in case show was called again quickly)
-            if (!notificationElement.classList.contains('show')) {
-                notificationElement.style.display = 'none';
-                // Reset progress bar style for the next use
-                if (progressBarElement) {
-                    progressBarElement.style.transitionDuration = '0ms';
-                    progressBarElement.style.width = '100%';
-                }
-                console.log('Sliding notification display set to none and progress bar reset.');
+            // Check if the element is still attached before removing
+            if (notificationElement.parentNode) {
+                 notificationElement.parentNode.removeChild(notificationElement);
+                 console.log(`Removed notification element ${notificationId} from DOM.`);
             }
-            notificationElement.hideDisplayTimeout = null; // Clear the stored ID
         }, delay);
     }
 
-async function checkNotifications() {
-        console.log("Checking for static notifications (based on ~true~)...");
-
-        // The URL to fetch notification text from
-        const notificationURL = "https://hostfilez.glitch.me/notification.txt";
-
-        try {
-            // Fetch the content of the notification file
-            const response = await fetch(notificationURL, { cache: "no-store" });
-
-             // If the file doesn't exist, or a network error occurs,
-             // assume there's no notification and hide any existing one.
-            if (!response.ok) {
-                console.warn(`Notification file fetch failed (status: ${response.status}). Hiding notification.`);
-                 hideSlidingNotification(); // Ensure notification is hidden
-                 clearLastShownNotificationContent(); // Clear state in localStorage
-                 return; // Stop processing
+    function hideAllNotifications() {
+        console.log("Hiding all active notifications.");
+        // Iterate through all currently managed notification IDs
+        for (const id in activeNotifications) {
+            // Use Object.prototype.hasOwnProperty.call for safer iteration
+            if (Object.prototype.hasOwnProperty.call(activeNotifications, id)) {
+                // Pass immediate=true to hide them instantly on user action
+                hideIndividualNotification(id, true);
             }
-
-            // Get the text content from the response
-            const notificationText = (await response.text()).trim();
-
-            // If the fetched text is empty, assume no notification
-            if (!notificationText) {
-                console.log("Notification file is empty. Hiding notification.");
-                 hideSlidingNotification(); // Ensure notification is hidden
-                 clearLastShownNotificationContent(); // Clear state in localStorage
-                 return; // Stop processing
-            }
-
-            console.log("Fetched notification text:", notificationText);
-
-            // Retrieve the content of the last notification that was successfully shown
-            // This is used to avoid showing the exact same notification repeatedly.
-            const lastShownContent = getLastShownNotificationContent();
-
-            // Check for the presence of the ~true~ or ~false~ triggers
-            const hasTrueTrigger = notificationText.includes('~true~');
-            const hasFalseTrigger = notificationText.includes('~false~');
-
-            console.log("Text contains ~true~:", hasTrueTrigger, "~false~:", hasFalseTrigger);
-
-            // --- Determine Notification State and Content ---
-            let notificationTitle = "Notification"; // Default title if none is found
-            let notificationBody = notificationText; // Default body is the whole text initially
-
-            // If ~true~ is present, attempt to parse title and body
-            if (hasTrueTrigger) {
-                 // Regex to find content between the first pair of backticks after ~true~
-                 const titleRegex = /`([^`]+)`/; // Non-greedy match for content inside backticks
-                 const titleMatch = notificationText.match(titleRegex);
-
-                if (titleMatch && titleMatch[1]) {
-                    notificationTitle = titleMatch[1].trim(); // Extracted title
-                    // Get the text *after* the matched title block (including backticks)
-                    notificationBody = notificationText.substring(notificationText.indexOf(titleMatch[0]) + titleMatch[0].length).trim();
-                } else {
-                     // If no title found in backticks, the body is the text after ~true~
-                     notificationBody = notificationText.substring(notificationText.indexOf('~true~') + '~true~'.length).trim();
-                }
-
-                 // Clean up the body just in case it still contains triggers or backticks from edge cases
-                notificationBody = notificationBody.replace('~true~', '').replace('~false~', '').trim();
-                 // Re-check for backticks in the remaining body and remove if found (shouldn't happen with correct format but for robustness)
-                 const bodyBacktickMatch = notificationBody.match(titleRegex);
-                 if (bodyBacktickMatch && bodyBacktickMatch[0]) {
-                     notificationBody = notificationBody.replace(bodyBacktickMatch[0], '').trim();
-                 }
-
-
-                 // If after parsing and cleanup, the body is empty, set a default message
-                 if (!notificationBody) {
-                      notificationBody = "No message provided.";
-                 }
-            }
-
-
-            // --- Decide Whether to Show/Hide ---
-
-            // The state to track for uniqueness is the raw fetched text.
-            // If the raw text changes while ~true~ is present, it's a new notification.
-            const currentNotificationState = notificationText;
-
-
-            console.log("Parsed Notification - Title:", notificationTitle, "Body:", notificationBody);
-            console.log("Current notification state for tracking:", currentNotificationState);
-            console.log("Last shown state from localStorage:", lastShownContent);
-
-
-            // If ~false~ is explicitly present OR ~true~ is absent, hide the notification and clear state
-            if (hasFalseTrigger || !hasTrueTrigger) {
-                console.log("~false~ found or ~true~ absent. Hiding notification.");
-                hideSlidingNotification(); // Ensure notification is hidden
-                clearLastShownNotificationContent(); // Clear localStorage state
-                return; // Stop processing
-            }
-
-            // If ~true~ is present, check if the content/state is different from the last shown one
-            if (hasTrueTrigger) { // This is already true from the previous check, but for clarity
-                 if (currentNotificationState !== lastShownContent) {
-                     console.log("Notification state is new or changed (~true~ present). Displaying notification.");
-
-                     // Hide any currently visible notification immediately for a cleaner transition to the new one
-                     if (document.getElementById('slidingNotification').classList.contains('show')) {
-                          console.log("Hiding existing notification immediately for new content.");
-                          hideSlidingNotification(true); // Hide immediately (delay = 0)
-                           // Add a small delay before showing the new one to allow the hide transition to start
-                           setTimeout(() => {
-                              showSlidingNotification(notificationTitle, notificationBody);
-                               // Update localStorage AFTER the new notification is shown
-                              setLastShownNotificationContent(currentNotificationState);
-                           }, 600); // Delay slightly longer than hide transition (500ms)
-                     } else {
-                         // If not already showing, just show the new one directly
-                         showSlidingNotification(notificationTitle, notificationBody);
-                          // Update localStorage AFTER the new notification is shown
-                         setLastShownNotificationContent(currentNotificationState);
-                     }
-
-
-                } else {
-                    console.log("Notification state is the same as last shown (~true~ present). Skipping re-display.");
-                     // If the content is the same and ~true~ is still there,
-                     // ensure the notification remains visible and its hide timer is potentially reset.
-                      const notificationElement = document.getElementById('slidingNotification');
-                      if (notificationElement && !notificationElement.classList.contains('show')) {
-                           console.log("Notification was hidden but state is the same and ~true~ is present. Reshowing.");
-                           // Reshow if it was somehow hidden (e.g., by Escape key) without the content changing
-                           showSlidingNotification(notificationTitle, notificationBody); // This will also reset the timer
-                      } else if (notificationElement && notificationElement.classList.contains('show')) {
-                          console.log("Notification already visible with same state and ~true~ present. Timer should be running.");
-                           // Optionally reset the hide timer here if you want it to stay visible
-                           // as long as ~true~ is continuously present in the file on checks.
-                           // clearTimeout(hideNotificationTimeout);
-                           // const wordCount = notificationBody.split(/\s+/).filter(word => word.length > 0).length;
-                           // const displayDuration = Math.max(3000, wordCount * 500);
-                           // hideNotificationTimeout = setTimeout(() => hideSlidingNotification(), displayDuration);
-                      }
-                }
-
-            } // End of if (hasTrueTrigger)
-
-
-        } catch (err) {
-            console.error("Failed to check or parse notifications:", err);
-            // On any error during fetch or parsing, hide the notification and clear state
-            hideSlidingNotification();
-            clearLastShownNotificationContent();
         }
+         // The hideIndividualNotification function already removes from activeNotifications
+         // So, we don't need to clear the activeNotifications object here.
+        console.log("All notifications cleared from activeNotifications state.");
     }
+
+    async function checkNotifications() {
+            console.log("Checking for multiple notifications from notification.txt...");
+    
+            const notificationURL = "https://hostfilez.glitch.me/notification.txt";
+            const container = document.getElementById('notificationContainer');
+    
+            if (!container) {
+                console.error("Notification container element not found. Cannot check notifications.");
+                return; // Cannot proceed if container is missing
+            }
+    
+             // Note: We no longer clear all notifications *before* checking the file.
+             // We now hide them if they disappear from the file or if their content changes.
+             // The 'shownNotificationContentSet' prevents duplicates from the same file content.
+    
+    
+            try {
+                const response = await fetch(notificationURL, { cache: "no-store" });
+    
+                // Get the raw text, even on error, to handle cases where the file might become empty or return 404
+                const notificationText = response.ok ? (await response.text()).trim() : '';
+    
+                if (!response.ok || !notificationText) {
+                    // If file is unreachable or empty, hide all existing notifications
+                    console.log("Notification file unreachable or empty. Hiding any active notifications.");
+                    hideAllNotifications(); // Hide any notifications currently displayed
+                    // We do NOT clear shownNotificationContentSet here, so previously seen notifications don't reappear
+                    return; // Stop processing
+                }
+    
+                console.log("Fetched raw notification text:", notificationText);
+    
+                // Split the text into potential notification blocks
+                // Filter out any empty strings resulting from leading/trailing underscores or multiple underscores
+                const notificationBlocks = notificationText.split('_').map(block => block.trim()).filter(block => block.length > 0);
+                console.log(`Split into ${notificationBlocks.length} non-empty block(s).`);
+    
+                // --- Logic to remove notifications that are no longer in the file ---
+                const currentNotificationBlocksContent = new Set(notificationBlocks);
+                const activeNotificationElements = container.querySelectorAll('.sliding-notification');
+    
+                activeNotificationElements.forEach(element => {
+                    // We need to somehow link the displayed element back to the original block content
+                    // A simple way is to store the original content as a data attribute when creating the element
+                    const originalContent = element.getAttribute('data-original-content');
+                    if (originalContent && !currentNotificationBlocksContent.has(originalContent)) {
+                         console.log(`Notification with original content no longer in file. Hiding:`, originalContent);
+                         hideIndividualNotification(element.id, true); // Hide immediately
+                    }
+                     // If original content attribute is missing, we can't check if it's still in the file,
+                     // so we'll leave it unless it times out or the whole file disappears.
+                });
+                 console.log("Finished checking for notifications to remove.");
+    
+    
+                // --- Logic to add/display new notifications ---
+                notificationBlocks.forEach(trimmedBlock => {
+                    // Check for the ~true~ trigger within this block
+                    const hasTrueTrigger = trimmedBlock.includes('~true~');
+    
+                    if (hasTrueTrigger) {
+                        // Check if this specific notification block content has already been shown in this session
+                        // This prevents reappearing if the file is checked again but the content hasn't changed
+                        if (shownNotificationContentSet.has(trimmedBlock)) {
+                            console.log("Notification block already shown in this session. Skipping display:", trimmedBlock.substring(0, 50) + '...'); // Log start of content
+                            return; // Skip the rest of the forEach iteration for this block
+                        }
+    
+                        // If not already shown, add it to the set so it won't show again this session
+                        shownNotificationContentSet.add(trimmedBlock);
+                        console.log("Notification block is new or not yet shown. Proceeding to display:", trimmedBlock.substring(0, 50) + '...'); // Log start of content
+    
+    
+                        let notificationTitle = "Notification"; // Default title if not found
+                        let notificationBody = trimmedBlock; // Start with the whole block as body
+    
+                        // Remove the ~true~ trigger and any ~false~ trigger before parsing title/body
+                        let contentAfterTrigger = trimmedBlock.replace('~true~', '').replace('~false~', '').trim();
+    
+                        // Attempt to extract title between backticks after the trigger content
+                        const titleRegex = /`([^`]+)`/; // Non-greedy match for content inside backticks
+                        const titleMatch = contentAfterTrigger.match(titleRegex);
+    
+                        if (titleMatch && titleMatch[1]) {
+                            notificationTitle = titleMatch[1].trim();
+                            // Get the text * after * the matched title block (including backticks) for the body
+                            notificationBody = contentAfterTrigger.substring(contentAfterTrigger.indexOf(titleMatch[0]) + titleMatch[0].length).trim();
+                            // console.log("Extracted Title:", notificationTitle, "Extracted Body (after title block):", notificationBody); // Avoid excessive logging of full body
+    
+                        } else {
+                            // If no title found in backticks after triggers, the remaining content is the body
+                            notificationBody = contentAfterTrigger; // Use the content after removing triggers as body
+                             // console.log("No title found in backticks after triggers. Body is remaining content:", notificationBody); // Avoid excessive logging
+                        }
+    
+                        // If after parsing, the body is empty, use a default message
+                        if (!notificationBody) {
+                             notificationBody = "No message provided.";
+                             console.log("Body was empty after parsing, using default message.");
+                        }
+    
+                        // Show this individual notification
+                        const displayDuration = Math.max(6000, notificationBody.split(/\s+/).filter(word => word.length > 0).length * 400); // Minimum 6 seconds
+                        // When creating the element, store the original trimmedBlock content
+                        const newNotificationElement = showIndividualNotification(notificationTitle, notificationBody, displayDuration);
+                        if (newNotificationElement) {
+                             newNotificationElement.setAttribute('data-original-content', trimmedBlock);
+                             console.log("Set data-original-content attribute for new notification.");
+                        }
+    
+    
+                    } else {
+                        // If a block doesn't have ~true~ (e.g., has ~false~ or neither),
+                        // we already handled hiding notifications that are no longer in the file.
+                        console.log("Block does not contain ~true~ trigger. Skipping display.");
+                    }
+                });
+                 console.log("Finished checking for notifications to add/display.");
+    
+    
+            } catch (err) {
+                console.error("Failed to check or parse notifications:", err);
+                // On any error during fetch or parsing, hide the notification and clear state
+                hideAllNotifications(); // Hide existing notifications on error
+                // Again, do NOT clear shownNotificationContentSet here
+            }
+             console.log("Notification check complete.");
+        }
+      
       
   </script>
 </body>
