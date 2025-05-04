@@ -1096,6 +1096,399 @@
         pointer-events: none; /* Allow clicks to pass through the container */
     }
 
+        /* Music Player Specific Layout */
+    .music-player-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: var(--padding, 15px); /* Use app padding or default */
+        width: 100%;
+        /* Adjust height if needed, or let it grow naturally */
+        /* max-height: calc(100vh - 180px); /* Example: Limit height if needed */
+        overflow: hidden; /* Prevent grid from overflowing content area */
+        padding-bottom: 80px; /* Space for fixed controls bar if needed */
+    }
+    
+    .music-box {
+        background-color: var(--card-bg); /* Use theme card background */
+        border-radius: var(--border-radius);
+        padding: var(--padding, 15px); /* Use app padding or default */
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* Prevent content overflow */
+        color: var(--text-light); /* Ensure text color */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* Match panel shadow */
+        min-height: 200px; /* Give boxes some minimum height */
+    }
+    
+    .music-box h2 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: var(--accent); /* Use theme accent */
+        font-size: 1.2em;
+    }
+    .music-box h4 { /* Style for subsection headings in modals */
+         margin-top: 15px;
+         margin-bottom: 5px;
+         color: var(--text-light);
+         font-size: 1em;
+         border-bottom: 1px solid var(--text-muted);
+         padding-bottom: 3px;
+     }
+    
+    .music-box p {
+        font-size: 0.9em;
+        color: var(--text-muted); /* Use theme muted text */
+        margin-bottom: 15px;
+    }
+    
+    .scrollable-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        margin-top: 10px;
+        padding-right: 5px; /* Space for scrollbar */
+        min-height: 100px; /* Min height for list areas */
+    }
+    
+    /* Custom Scrollbar using Theme Variables */
+    .scrollable-list::-webkit-scrollbar {
+        width: 8px;
+    }
+    .scrollable-list::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.1);
+        border-radius: 4px;
+    }
+    .scrollable-list::-webkit-scrollbar-thumb {
+        background-color: var(--text-muted);
+        border-radius: 4px;
+    }
+    .scrollable-list::-webkit-scrollbar-thumb:hover {
+        background-color: var(--accent);
+    }
+    
+    .list-item {
+        padding: 8px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-bottom: 5px;
+        background-color: rgba(0, 0, 0, 0.1); /* Subtle dark background */
+        transition: background-color var(--transition-speed);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.95em;
+        color: var(--text-light); /* Ensure text color */
+    }
+    
+    .list-item:hover {
+        background-color: rgba(255, 255, 255, 0.1); /* Lighter on hover */
+        color: var(--accent); /* Accent text on hover */
+    }
+    
+    .list-item.playing {
+        background-color: var(--accent); /* Use theme accent */
+        color: var(--bg-dark); /* Use theme dark for contrast */
+        font-weight: bold;
+    }
+    .list-item.playing:hover {
+         color: var(--bg-dark); /* Keep text color dark on hover when playing */
+    }
+    
+    
+    .list-item .playlist-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .list-item .playlist-controls button {
+        background: none;
+        border: none;
+        color: var(--text-light);
+        cursor: pointer;
+        font-size: 1em;
+        margin-left: 8px;
+        padding: 2px 5px;
+    }
+     .list-item .playlist-controls button:hover {
+         color: var(--accent);
+     }
+    
+    /* Make Music Player buttons use theme button styles */
+    .music-box button, #mp_playback_controls button, .mp-modal-content button {
+         /* Inherit general button styles from main app */
+    }
+    /* Style secondary buttons */
+    .music-box button.secondary, .mp-modal-content button.secondary {
+         background-color: #555;
+         color: var(--text-light);
+    }
+    .music-box button.secondary:hover, .mp-modal-content button.secondary:hover {
+         background-color: #777;
+         filter: none;
+    }
+    
+    /* Style inputs to match theme */
+    .music-box input[type="text"],
+    .music-box input[type="search"],
+    .mp-modal-content input[type="text"] {
+         /* Inherit general input styles from main app */
+         /* background: var(--card-bg); Use card background */
+         /* border: 1px solid var(--accent); Accent border */
+         /* color: var(--text-light); Light text */
+         /* Add padding if not inherited */
+         padding: 0.5rem;
+    }
+    .music-box input[type="text"]:focus,
+    .music-box input[type="search"]:focus,
+    .mp-modal-content input[type="text"]:focus {
+          /* Inherit focus styles or define */
+          border-color: var(--text-light); /* Light border on focus */
+          outline: none;
+    }
+    
+    
+    /* Playback Controls Bar Styles (Adapted) */
+    #mp_playback_controls { /* Target the specific ID */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: var(--sidebar-dark); /* Use sidebar dark for contrast */
+        padding: 10px 15px; /* Use app padding or default */
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        border-top: 1px solid #444;
+        z-index: 90; /* Below modals but above content/sidebar */
+        color: var(--text-light); /* Ensure text color */
+    }
+    
+    #mp_playback_controls .song-info {
+        flex-basis: 200px;
+        flex-shrink: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.9em;
+    }
+    
+    #mp_playback_controls .controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    #mp_playback_controls .controls button,
+    #mp_playback_controls .volume-container button {
+        background: none;
+        border: none;
+        color: var(--text-light);
+        font-size: 1.3em;
+        padding: 5px;
+        cursor: pointer;
+    }
+    #mp_playback_controls .controls button:hover,
+    #mp_playback_controls .volume-container button:hover {
+        color: var(--accent); /* Use theme accent on hover */
+        filter: none;
+    }
+    #mp_playback_controls .controls button:disabled {
+         color: var(--text-muted);
+         cursor: not-allowed;
+         opacity: 0.5;
+    }
+    
+    
+    #mp_playback_controls .seek-bar-container {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    #mp_playback_controls input[type="range"] {
+        flex-grow: 1;
+        cursor: pointer;
+        height: 5px;
+        background: #555;
+        border-radius: 3px;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #mp_playback_controls input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        background: var(--accent); /* Use theme accent */
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    #mp_playback_controls input[type="range"]::-moz-range-thumb {
+         width: 14px;
+         height: 14px;
+         background: var(--accent);
+         border-radius: 50%;
+         cursor: pointer;
+         border: none;
+    }
+    
+    
+    #mp_playback_controls .time-display {
+        font-size: 0.85em;
+        color: var(--text-muted); /* Use theme muted text */
+        min-width: 45px; /* Reduced width */
+        text-align: center;
+    }
+    
+    #mp_playback_controls .volume-container {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    #mp_playback_controls .volume-container button {
+         font-size: 1.1em;
+    }
+    
+    #mp_playback_controls .volume-container input[type="range"] {
+        width: 80px;
+        height: 4px;
+    }
+     #mp_playback_controls .volume-container input[type="range"]::-webkit-slider-thumb {
+         width: 12px;
+         height: 12px;
+     }
+     #mp_playback_controls .volume-container input[type="range"]::-moz-range-thumb {
+          width: 12px;
+          height: 12px;
+     }
+    
+    #mp_playback_controls .volume-percentage {
+         font-size: 0.8em;
+         color: var(--text-muted);
+         min-width: 30px;
+         text-align: right;
+    }
+    
+    
+    /* Modal Styles (Adapted) */
+    .mp-modal { /* Use a specific class for music player modals */
+        display: none;
+        position: fixed;
+        z-index: 150; /* Above most content, maybe below update overlay */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.6);
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .mp-modal-content {
+        background-color: var(--card-bg); /* Use theme card background */
+        margin: auto;
+        padding: 20px;
+        border: 1px solid var(--sidebar-dark); /* Use theme border */
+        width: 90%;
+        max-width: 500px;
+        border-radius: var(--border-radius);
+        position: relative;
+        color: var(--text-light);
+        display: flex;
+        flex-direction: column;
+        max-height: 80vh; /* Limit height */
+    }
+    
+    .mp-modal-close {
+        color: var(--text-muted);
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .mp-modal-close:hover,
+    .mp-modal-close:focus {
+        color: var(--accent); /* Use theme accent */
+        text-decoration: none;
+    }
+    
+    .mp-modal-content h3 {
+         margin-top: 0;
+         color: var(--accent);
+    }
+    
+    .mp-modal-body {
+         flex-grow: 1;
+         overflow-y: auto;
+         margin-bottom: 15px;
+    }
+    
+    
+    .mp-modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 10px;
+        flex-shrink: 0;
+    }
+    
+    /* Styles for lists within modals */
+    #mp_removeSongsModalList .list-item,
+    #mp_viewPlaylistModalList .list-item,
+    #mp_createPlaylistSongList .list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: rgba(0,0,0,0.2); /* Slightly different background for modal lists */
+    }
+    #mp_createPlaylistSongList .list-item {
+         cursor: default !important;
+         margin-bottom: 2px !important;
+    }
+    
+    
+    #mp_removeSongsModalList .list-item label,
+    #mp_viewPlaylistModalList .list-item span,
+    #mp_createPlaylistSongList .list-item label {
+         flex-grow: 1;
+         margin-left: 10px;
+         overflow: hidden;
+         text-overflow: ellipsis;
+         white-space: nowrap;
+         cursor: pointer;
+     }
+     #mp_removeSongsModalList input[type="checkbox"],
+     #mp_createPlaylistSongList input[type="checkbox"] {
+         flex-shrink: 0;
+         margin-right: 8px;
+          vertical-align: middle;
+     }
+    
+    #mp_viewPlaylistModalList .list-item button {
+         background: none;
+         border: none;
+         color: #ff6b6b;
+         cursor: pointer;
+         font-size: 0.9em;
+         flex-shrink: 0;
+         margin-left: 5px;
+     }
+     #mp_viewPlaylistModalList .list-item button:hover {
+         color: #ff4f4f;
+     }
+    .placeholder-text {
+         color: var(--text-muted);
+         font-style: italic;
+         text-align: center;
+         margin-top: 20px;
+     }
+
 
 
   </style>
@@ -1151,12 +1544,79 @@
     <div class="icon" data-page="Viewer" title="Viewer"><i class="fas fa-globe"></i></div>
     <div class="icon" data-page="Games" title="Games"><i class="fas fa-gamepad"></i></div>
     <div class="icon" data-page="Updater" title="Updater"><i class="fas fa-sync-alt"></i></div>
+    <div class="icon" data-page="Music" title="Music"><i class="fas fa-music"></i></div>
 
     <div class="bottom-icons">
       <div class="icon" data-page="Settings" title="Settings"><i class="fas fa-cog"></i></div>
       <div class="icon" data-page="About" title="About"><i class="fas fa-info-circle"></i></div>
     </div>
   </div>
+    
+<audio id="mp_audioPlayer"></audio>
+
+<div class="playback-controls" id="mp_playback_controls" style="display: none;"> <div class="song-info" id="mp_currentSongInfo">No Song Playing</div>
+    <div class="controls">
+        <button id="mp_prevButton" title="Previous"><i class="fas fa-step-backward"></i></button>
+        <button id="mp_playPauseButton" title="Play"><i class="fas fa-play"></i></button>
+        <button id="mp_nextButton" title="Next"><i class="fas fa-step-forward"></i></button>
+    </div>
+    <div class="seek-bar-container">
+        <span class="time-display" id="mp_currentTime">0:00</span>
+        <input type="range" id="mp_seekBar" value="0" step="0.1" max="100">
+        <span class="time-display" id="mp_totalDuration">0:00</span>
+    </div>
+    <div class="volume-container">
+        <button id="mp_muteButton" title="Mute"><i class="fas fa-volume-up"></i></button>
+        <input type="range" id="mp_volumeSlider" min="0" max="1" step="0.01" value="1">
+        <span class="volume-percentage" id="mp_volumePercentage">100%</span>
+    </div>
+</div>
+
+<div id="mp_removeSongsModal" class="mp-modal"> <div class="mp-modal-content">
+        <span class="mp-modal-close" onclick="mp_closeModal('mp_removeSongsModal')">&times;</span>
+        <h3>Remove Songs</h3>
+        <div class="mp-modal-body">
+            <p>Select songs to remove permanently from the library.</p>
+            <div class="scrollable-list" id="mp_removeSongsModalList" style="max-height: 300px;">
+                </div>
+        </div>
+        <div class="mp-modal-buttons">
+             <button class="secondary" onclick="mp_closeModal('mp_removeSongsModal')">Cancel</button>
+             <button onclick="mp_removeSelectedSongs()">Remove Selected</button>
+        </div>
+    </div>
+</div>
+
+<div id="mp_createPlaylistModal" class="mp-modal"> <div class="mp-modal-content">
+         <span class="mp-modal-close" onclick="mp_closeModal('mp_createPlaylistModal')">&times;</span>
+         <h3>Create New Playlist</h3>
+         <div class="mp-modal-body">
+              <input type="text" id="mp_newPlaylistName" placeholder="Playlist Name">
+              <h4>Add Songs (Optional):</h4>
+              <div class="scrollable-list" id="mp_createPlaylistSongList" style="max-height: 200px; border: 1px solid var(--text-muted); padding: 5px;">
+                 <p class="placeholder-text">Loading library...</p>
+              </div>
+         </div>
+         <div class="mp-modal-buttons">
+             <button class="secondary" onclick="mp_closeModal('mp_createPlaylistModal')">Cancel</button>
+             <button onclick="mp_createNewPlaylist()">Create</button>
+         </div>
+     </div>
+ </div>
+
+ <div id="mp_viewPlaylistModal" class="mp-modal"> <div class="mp-modal-content">
+         <span class="mp-modal-close" onclick="mp_closeModal('mp_viewPlaylistModal')">&times;</span>
+         <h3 id="mp_viewPlaylistName">Playlist</h3>
+         <div class="mp-modal-body">
+              <div class="scrollable-list" id="mp_viewPlaylistModalList" style="max-height: 300px;">
+                  </div>
+         </div>
+          <div class="mp-modal-buttons">
+              <button class="secondary" onclick="mp_closeModal('mp_viewPlaylistModal')">Close</button>
+              <button onclick="mp_deleteCurrentPlaylist()">Delete Playlist</button>
+         </div>
+     </div>
+ </div>
 
   <div class="content">
     <h1 id="page-title" style="display: none;">UnderGr0und</h1>
@@ -1390,39 +1850,68 @@ let currentThemeName = 'default'; // Store the name of the current theme
         }
     }
 
-    // --- INITIALIZATION ---
+        // --- INITIALIZATION ---
+    // --- Replace your existing DOMContentLoaded listener with this ---
     window.addEventListener('DOMContentLoaded', async () => {
-      console.log('DOMContentLoaded fired.');
-      loadData(); // Load theme preference first
-      console.log('Theme data loaded. Initial theme:', currentTheme);
-
-      // Add a small delay before initializing Vanta
+      console.log('DOMContentLoaded fired. Starting application initialization...');
+    
+      // Load saved data from localStorage (theme, app settings, games, library, favorites)
+      loadData();
+      console.log('Data loaded from localStorage (theme, app, games, library, favorites).');
+    
+      // Load music player data (must happen before initializing playback bar)
+      mp_loadDataFromLocalStorage();
+      console.log('Music Player data loaded from localStorage.');
+    
+      // Load panic key settings from localStorage
+      loadPanicKeySettings();
+      console.log('Panic key settings loaded.');
+    
+      // Initialize Vanta.js background effect
       setTimeout(() => {
           console.log('Attempting to initialize Vanta.js...');
-          initializeVanta(); // Initialize Vanta with the loaded theme
+          initializeVanta();
           console.log('initializeVanta() called. Vanta effect:', vantaEffect);
-
-          // Explicitly call setTheme with the current theme after initialization
-          // This might help trigger the initial rendering/option update
+    
           if (vantaEffect) {
-              console.log('Calling setTheme with currentTheme after Vanta initialization.');
-              setTheme(currentTheme);
+              console.log('Calling setTheme with currentThemeName after Vanta initialization.');
+              setTheme(currentThemeName);
           } else {
-              console.warn('Vanta effect is null after initialization, cannot call setTheme to update options.');
+              console.warn('Vanta effect is null after initialization, cannot call setTheme to update Vanta options.');
           }
-
-
-      }, 50); // 50ms delay
-
+      }, 50); // Short delay
+    
+      // Initialize the Music Player Playback Bar (needs audioPlayer element)
+      mp_initializePlaybackBar(); // Initialize the music controls bar listeners
+      console.log('Music Player playback bar initialization called.');
+    
+      // Set up all general event listeners for user interactions
       setupEventListeners();
       console.log('Event listeners set up.');
-      updateGamesPage(); // Now safe to call as it relies on DOM elements potentially defined in 'pages'
-      setupDragAndDrop();
-      console.log('Games page updated and drag/drop setup.');
-      // checkVersion(); // Moved checkVersion call to the Home page content load
-      switchPage('Home'); // Initial page load
-      console.log('Switched to Home page.');
+    
+      // Update the games page UI based on loaded data (content defined in 'pages')
+      // updateGamesPage(); // This will be handled by switchPage
+    
+      // Setup drag and drop functionality for games (elements created by updateGamesPage)
+      // setupDragAndDrop(); // This should be called within switchPage or updateGamesPage
+    
+      // Switch to the initial page (usually Home)
+      // This also triggers the first call to checkVersion() for Home page status display
+      // and mp_initializeMusicPlayerPage if starting on Music page (unlikely)
+      switchPage(localStorage.getItem('lastActivePage') || 'Home');
+      console.log('Initial page switched to:', localStorage.getItem('lastActivePage') || 'Home');
+    
+      // --- Setup Periodic Checks ---
+      setInterval(checkVersion, 60000); // Check every 60 seconds
+      console.log("Periodic update check started (every 60 seconds).");
+    
+      setInterval(checkNotifications, 15000); // Check every 15 seconds
+      console.log("Periodic notification check started (every 15 seconds).");
+      checkNotifications(); // Initial check
+    
+      console.log('Application initialization completed.');
     });
+    // --- End of DOMContentLoaded listener ---
 
     function initializeVanta() {
         console.log('Entering initializeVanta() function.');
@@ -3223,6 +3712,40 @@ const pages = {
             </div>`,
         Viewer: `<div class="panel"><h2>Viewer</h2><p>Click the globe icon or use the search bar on the Home page to launch the viewer.</p></div>`, // Simplified Viewer page, main viewing happens in iframe overlay
         Games: ``, // Placeholder - content is dynamically generated
+        Music: `
+          <div class="music-player-grid">
+              <div class="music-box">
+                  <h2>Add Music</h2>
+                  <p>Select audio files or a folder (requires folder permission for persistence).</p>
+                  <button onclick="mp_selectMusicDirectory()">Select Folder (or files)</button>
+                  <input type="file" id="mp_fileInput" multiple accept="audio/*" webkitdirectory directory style="display: none;">
+                  <div style="height: 10px;"></div> <button class="secondary" onclick="mp_openRemoveSongsModal()">Remove Selected Songs</button>
+              </div>
+
+              <div class="music-box">
+                  <h2>Songs</h2>
+                  <input type="search" id="mp_songSearch" placeholder="Search all songs...">
+                  <div class="scrollable-list" id="mp_songsList">
+                      <p class="placeholder-text">Upload songs to see your library</p>
+                  </div>
+              </div>
+
+              <div class="music-box">
+                  <h2>Recently Played</h2>
+                  <div class="scrollable-list" id="mp_recentlyPlayedList">
+                       <p class="placeholder-text">Play a song to see it here</p>
+                  </div>
+              </div>
+
+              <div class="music-box">
+                  <h2>Playlists</h2>
+                  <button onclick="mp_openCreatePlaylistModal()">Create New Playlist</button>
+                  <div class="scrollable-list" id="mp_playlistsList">
+                       <p class="placeholder-text">Create a playlist to see it here</p>
+                  </div>
+              </div>
+          </div>
+        `,
         Updater: `
             <div class="panel">
               <h2>Updater</h2>
@@ -3349,114 +3872,121 @@ const pages = {
     }
 
 
+    // --- Replace your existing switchPage function with this ---
     function switchPage(pageKey) {
        console.log('Switching to page:', pageKey);
-
-       // Handle special case for Games page entry/exit to manage favorite view state
+    
+       // Update page title visibility and content based on the target page
        if (pageKey === 'Games') {
-           showingFavorites = false; // Always reset to show all games when navigating *to* the Games page
-            pageTitle.textContent = 'Games'; // Ensure title is 'Games' when initially entering
-            pageTitle.style.display = 'block'; // Show title for Games page
-             console.log('Switched to Games page. Resetting favorites view state.');
-
-           // Update the Favorites action card appearance to show 'Favorites'
-            const favActionCard = document.querySelector('.games-header .action-card:nth-child(2)');
-            if (favActionCard) {
-                const icon = favActionCard.querySelector('i.fa-star');
-                const textP = favActionCard.querySelector('p');
-                 if (icon) {
-                     icon.classList.remove('fa-solid');
-                     icon.classList.add('fa-regular'); // Use fa-regular for outline star
-                     icon.style.color = ''; // Remove accent color
-                 }
-                 if (textP) textP.textContent = 'Favorites';
-                 console.log('Reset Games action card to show Favorites.');
-            } else {
-                console.warn('Games action card for favorites not found during page switch.');
-            }
-
-
+           showingFavorites = false; // Reset view to 'All Games' when entering Games page
+           pageTitle.textContent = 'Games'; // Set title
+           pageTitle.style.display = 'block'; // Show title
+           console.log('Switched to Games page. Resetting favorites view state.');
        } else if (pageKey === 'Home') {
-           // Hide page title on the Home page
-           pageTitle.style.display = 'none';
+           pageTitle.style.display = 'none'; // Hide title on Home page
            console.log('Switched to Home page. Hiding page title.');
-           // Reset favorite view state if coming from Games page
+            // Reset favorite view state if coming from Games page
             if (showingFavorites) {
                  showingFavorites = false;
-                  console.log('Came from favorites view, resetting showingFavorites state.');
+                 console.log('Came from favorites view, resetting showingFavorites state.');
             }
-       } else {
-            // Show page title for other pages
-             pageTitle.style.display = 'block';
-             pageTitle.textContent = pageKey; // Use the key as title for non-Games/Favorites pages
-             console.log('Switched to page:', pageKey, 'Showing page title.');
-
-            // Reset favorite view state if coming from Games page
-             if (showingFavorites) {
-                  showingFavorites = false;
-                   console.log('Came from favorites view on another page, resetting showingFavorites state.');
-             }
+       } else { // For all other pages (Library, Music, Settings, About, etc.)
+            pageTitle.textContent = pageKey; // Use the key as the title
+            pageTitle.style.display = 'block'; // Show title
+            console.log('Switched to page:', pageKey, 'Showing page title.');
+           // Reset favorite view state if coming from Games page
+           if (showingFavorites) {
+               showingFavorites = false;
+                console.log('Came from favorites view on another page, resetting showingFavorites state.');
+           }
        }
-
-
-       // Fade out content
+    
+       // Fade out current content
        pageContent.classList.add('fade-out');
        console.log('Adding fade-out class to content.');
-
-
-       // Store last page for potential back navigation - IMPORTANT: only store the actual page key
+    
+       // Store the last active page key and its title
        localStorage.setItem('lastActivePage', pageKey);
-       localStorage.setItem('lastActivePageTitle', pageTitle.textContent); // Store the actual title text
-       console.log('Saved last active page:', pageKey);
-
-
+       localStorage.setItem('lastActivePageTitle', pageTitle.textContent);
+       console.log('Saved last active page:', pageKey, 'with title:', pageTitle.textContent);
+    
+       // Wait for fade-out transition, then update content and fade in
        setTimeout(() => {
          console.log('Timeout before content switch complete.');
-         // Set content based on the page key
-         pageContent.innerHTML = pages[pageKey] || `<p>Content for ${pageKey} not found.</p>`;
+         // Set new page content from the 'pages' object
+         pageContent.innerHTML = pages[pageKey] || `<div class="panel"><p>Content for ${pageKey} not found.</p></div>`; // Added default panel
          console.log(`Content set for page: ${pageKey}. Content found: ${!!pages[pageKey]}`);
-
-
-         // Specific actions after loading content
-         if (pageKey === 'Games') {
-            updateGamesPage(); // This calls generateGamesHTML which now respects the showingFavorites state
-         } else if (pageKey === 'Library') {
-           updateLibraryPage();
-         } else if (pageKey === 'Home') {
-           checkVersion(); // Re-check version when going home
-           fetchNews(); // Fetch news on home page load
-            // The version spans are now in the Home page HTML, checkVersion will target them
-             console.log('Home page specific actions (checkVersion, fetchNews) triggered.');
-         } else if (pageKey === 'Settings') {
-             // Ensure current theme is selected visually
-             // setTheme(currentTheme);
-              console.log('Settings page loaded, setTheme called for current theme.');
-         } else if (pageKey === 'About') {
-             // Update about page version if needed
-             const aboutVersionEl = document.getElementById('about-version');
-             if (aboutVersionEl) aboutVersionEl.textContent = "1.0.0"; // Replace with dynamic version if available
-             console.log('About page loaded, version updated.');
+    
+         // --- Page-Specific Initialization ---
+         if (pageKey === 'Music') {
+             console.log("MP: Initializing Music page content via switchPage.");
+             mp_initializeMusicPlayerPage(); // Initialize/render the music page elements and listeners
+             // Ensure playback bar is visible if music has ever been loaded/played or library exists
+             if (mp_playbackControlsBar && (mp_currentSong || mp_musicLibrary.length > 0)) {
+                 mp_playbackControlsBar.style.display = 'flex';
+             }
+         } else {
+              // Optional: You could add logic here if you need to *clean up* music player listeners
+              // when navigating away, but it's often not necessary if handled correctly on init.
          }
-
-
+    
+         // Handle initialization/updates for other pages
+         if (pageKey === 'Games') {
+            updateGamesPage(); // This generates HTML and calls setupDragAndDrop
+            // Note: setupDragAndDrop() should be called within updateGamesPage()
+         } else if (pageKey === 'Library') {
+           updateLibraryPage(); // Updates library lists and handles filtering
+         } else if (pageKey === 'Home') {
+           checkVersion(); // Check/display version info
+           fetchNews();    // Fetch news and Game of the Day
+           console.log('Home page specific actions (checkVersion, fetchNews) triggered.');
+         } else if (pageKey === 'Settings') {
+             // Load and apply specific settings UI states
+             loadTabCloakSettings(); // Set the cloak dropdown correctly
+             // Ensure theme selector reflects current theme (setTheme handles this visually if called)
+             setTheme(currentThemeName); // Re-apply to ensure selection marks are correct
+             // Load panic key values into inputs
+             const keyInput = document.getElementById('panicKeyInput');
+             const urlInput = document.getElementById('panicUrlInput');
+             if (keyInput && panicKey) keyInput.value = panicKey;
+             if (urlInput && panicUrl) urlInput.value = panicUrl;
+              // Load App Appearance values into inputs
+             const appTitleInput = document.getElementById('appTabTitleInput');
+             const appIconInput = document.getElementById('appFaviconUrlInput');
+             const currentAppSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+             if (appTitleInput) appTitleInput.value = currentAppSettings.tabTitle || 'Underground';
+             if (appIconInput) appIconInput.value = currentAppSettings.faviconUrl || '';
+              // Load About:Blank toggle state
+             const aboutBlankToggle = document.getElementById('aboutBlankToggle');
+             const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
+             if (aboutBlankToggle) aboutBlankToggle.checked = aboutBlankPref !== 'false';
+    
+             console.log('Settings page specific UI states loaded.');
+         } else if (pageKey === 'About') {
+             // Update version number on About page if needed
+             const aboutVersionEl = document.getElementById('about-version');
+             if (aboutVersionEl) aboutVersionEl.textContent = "v1.0.0"; // Replace with dynamic version if available
+             console.log('About page loaded.');
+         }
+    
          // Fade in new content
          pageContent.classList.remove('fade-out');
          console.log('Removing fade-out class, content should fade in.');
-
-
-         // Ensure correct icon is active - ONLY for non-Viewer icons
-          icons.forEach(i => {
-              i.classList.remove('active');
-              // Only activate if the data-page matches the actual pageKey AND it's not the Viewer icon
-              if (i.getAttribute('data-page') === pageKey && pageKey !== 'Viewer') {
-                  i.classList.add('active');
-              }
-          });
-          console.log('Active sidebar icon updated.');
-
-
-       }, 150); // Reduced fade time slightly
+    
+         // Update active icon in the sidebar
+         icons.forEach(i => {
+             i.classList.remove('active');
+             // Activate icon if its data-page matches the current pageKey AND it's not the Viewer icon
+             // (Viewer icon click doesn't change the main page, it opens an overlay)
+             if (i.getAttribute('data-page') === pageKey && pageKey !== 'Viewer') {
+                 i.classList.add('active');
+             }
+         });
+         console.log('Active sidebar icon updated.');
+    
+       }, 150); // Match this delay to your CSS transition duration for fade-out
      }
+    // --- End of switchPage function ---
 
 
     function handleIconClick() {
@@ -4303,7 +4833,869 @@ function setupEventListeners() {
             }
              console.log("Notification check complete.");
         }
-      
+
+    // --- START OF MUSIC PLAYER JAVASCRIPT ---
+    // Prefix functions and IDs with 'mp_' to avoid conflicts
+    
+    // --- Music Player State ---
+    let mp_musicLibrary = []; // Array of song objects { id, artist, title, fileName, fileSize }
+    let mp_recentlyPlayed = []; // Array of song IDs
+    let mp_playlists = {}; // Object: { "Playlist Name": [songId1, songId2] }
+    let mp_currentSong = null; // The song object currently loaded/playing (includes tempUrl)
+    let mp_currentSongIndex = -1; // Index in the currently playing list
+    let mp_isPlaying = false;
+    let mp_currentQueue = []; // Holds the IDs of songs being played
+    let mp_currentPlaylistNameForView = null; // To know which playlist is open in the modal
+    let mp_currentDirectoryHandle = null; // Holds the File System Access API handle
+    const MP_MAX_RECENTLY_PLAYED = 20;
+    let mp_isInitialized = false; // Flag to check if player UI is set up
+    let mp_playbackBarInitialized = false; // Flag for playback bar listeners
+    
+    // --- Music Player DOM Element References (Filled by mp_initializeMusicPlayerPage or mp_initializePlaybackBar) ---
+    let mp_fileInput = null;
+    let mp_songsList = null;
+    let mp_recentlyPlayedList = null;
+    let mp_playlistsList = null;
+    let mp_songSearch = null;
+    const mp_audioPlayer = document.getElementById('mp_audioPlayer'); // Get early
+    const mp_playbackControlsBar = document.getElementById('mp_playback_controls'); // Get early
+    let mp_playPauseButton = null;
+    let mp_prevButton = null;
+    let mp_nextButton = null;
+    let mp_seekBar = null;
+    let mp_currentTime = null;
+    let mp_totalDuration = null;
+    let mp_currentSongInfo = null;
+    let mp_volumeSlider = null;
+    let mp_muteButton = null;
+    let mp_volumePercentage = null;
+    
+    
+    // --- Core Music Player Functions ---
+    
+    // Loads metadata from LocalStorage.
+    function mp_loadDataFromLocalStorage() {
+        console.log("MP: Loading data from LocalStorage.");
+        const libraryData = localStorage.getItem('mp_musicLibrary');
+        const recentlyPlayedData = localStorage.getItem('mp_recentlyPlayed');
+        const playlistsData = localStorage.getItem('mp_playlists');
+    
+        mp_musicLibrary = libraryData ? JSON.parse(libraryData) : [];
+        mp_recentlyPlayed = recentlyPlayedData ? JSON.parse(recentlyPlayedData) : [];
+        mp_playlists = playlistsData ? JSON.parse(playlistsData) : {};
+    
+        console.log(`MP: Loaded Metadata: ${mp_musicLibrary.length} songs, ${mp_recentlyPlayed.length} recents, ${Object.keys(mp_playlists).length} playlists`);
+    
+        // --- IMPORTANT: IndexedDB Integration Needed ---
+        // Retrieve Directory Handle from IndexedDB here for true persistence.
+        // Placeholder: retrieveDirectoryHandleFromDB().then(handle => { mp_currentDirectoryHandle = handle; });
+        console.warn("MP: Persistence across sessions requires IndexedDB to store the directory handle. Handle not loaded.");
+    }
+    
+    // Saves metadata to LocalStorage.
+    function mp_saveDataToLocalStorage() {
+        console.log("MP: Saving metadata to LocalStorage.");
+        const libraryToStore = mp_musicLibrary.map(song => ({
+            id: song.id, artist: song.artist, title: song.title,
+            fileName: song.fileName, fileSize: song.fileSize
+        }));
+    
+        localStorage.setItem('mp_musicLibrary', JSON.stringify(libraryToStore));
+        localStorage.setItem('mp_recentlyPlayed', JSON.stringify(mp_recentlyPlayed));
+        localStorage.setItem('mp_playlists', JSON.stringify(mp_playlists));
+    
+        // --- IMPORTANT: IndexedDB Integration Needed ---
+        // Save Directory Handle to IndexedDB here.
+        // Placeholder: if (mp_currentDirectoryHandle) { saveDirectoryHandleToDB(mp_currentDirectoryHandle); }
+    }
+    
+    // Requests directory access using File System Access API
+    async function mp_requestDirectoryAccess() {
+        console.log("MP: Requesting directory access.");
+        if (!window.showDirectoryPicker) {
+            alert('MP: Your browser does not support the File System Access API. Using temporary file selection.');
+            const input = document.getElementById('mp_fileInput');
+            if (input) input.click(); // Fallback
+            else console.error("MP: File input not found for fallback.");
+            return null;
+        }
+        try {
+            const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
+            console.log("MP: Directory access granted:", dirHandle.name);
+            // --- IndexedDB Step (Needed for persistence) ---
+            // await saveDirectoryHandleToDB(dirHandle);
+            return dirHandle;
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                console.error('MP: Error accessing directory:', err);
+                alert(`MP: Error accessing directory: ${err.message}`);
+            } else {
+                console.log("MP: User cancelled directory selection.");
+            }
+            const input = document.getElementById('mp_fileInput');
+            if (input) input.click(); // Fallback
+            else console.error("MP: File input not found for fallback.");
+            return null;
+        }
+    }
+    
+    // Called by the "Select Folder" button
+    async function mp_selectMusicDirectory() {
+        console.log("MP: Select Music Directory button clicked.");
+        const dirHandle = await mp_requestDirectoryAccess();
+        if (dirHandle) {
+            mp_currentDirectoryHandle = dirHandle; // Store for this session
+            mp_saveDataToLocalStorage(); // Trigger save logic (for IndexedDB if implemented)
+            await mp_processDirectoryHandle(dirHandle);
+        }
+    }
+    
+    // Processes files from the directory handle (recursive)
+    async function mp_processDirectoryHandle(dirHandle) {
+        console.log(`MP: Processing directory: ${dirHandle.name}`);
+        const processingPromises = [];
+        let fileCount = 0;
+        const processedPaths = new Set(); // To avoid processing duplicates if structure is odd
+    
+        async function processEntry(entryHandle, currentPath = '') {
+             const entryPath = currentPath ? `${currentPath}/${entryHandle.name}` : entryHandle.name;
+             if (processedPaths.has(entryPath)) return; // Skip if already processed
+             processedPaths.add(entryPath);
+    
+             try {
+                 if (entryHandle.kind === 'file') {
+                     const file = await entryHandle.getFile();
+                     if (file.type.startsWith('audio/')) {
+                         fileCount++;
+                         processingPromises.push(mp_processPersistentSongFile(file, entryHandle));
+                     }
+                 } else if (entryHandle.kind === 'directory') {
+                      if (await entryHandle.queryPermission({ mode: 'read' }) === 'granted') {
+                           // console.log(`MP: Entering subdirectory: ${entryPath}`); // Optional verbose log
+                           for await (const subEntryHandle of entryHandle.values()) {
+                               await processEntry(subEntryHandle, entryPath);
+                           }
+                      } else {
+                           console.warn(`MP: Read permission not granted for subdirectory: ${entryPath}`);
+                      }
+                 }
+              } catch (err) {
+                  console.error(`MP: Error processing entry ${entryPath}:`, err);
+              }
+         }
+    
+        await processEntry(dirHandle); // Start processing from root handle
+        await Promise.all(processingPromises);
+        console.log(`MP: Directory processing complete. ${processingPromises.length} audio files potentially added.`);
+        mp_saveDataToLocalStorage();
+        if (typeof mp_renderSongsList === 'function') mp_renderSongsList(); // Render if function exists
+        else console.log("MP: mp_renderSongsList not ready.");
+    }
+    
+    
+    // Processes a single file, stores metadata
+    async function mp_processPersistentSongFile(file, fileHandle = null) {
+        const songId = `mp-song-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        let { artist, title } = mp_parseFileName(file.name);
+    
+        if (mp_musicLibrary.some(s => s.fileName === file.name && s.fileSize === file.size)) {
+            // console.log(`MP: Song "${file.name}" seems to already exist by name/size. Skipping.`);
+            return;
+        }
+    
+        const song = {
+            id: songId, artist: artist, title: title,
+            fileName: file.name, fileSize: file.size,
+        };
+        mp_musicLibrary.push(song);
+        // console.log(`MP: Added metadata: ${artist} - ${title}`); // Optional verbose log
+    }
+    
+    // Fallback for standard file input
+    async function mp_handleFileSelect(event) {
+        console.log("MP: Using file input fallback.");
+        mp_currentDirectoryHandle = null; // Not using directory handle here
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+        console.log(`MP: Processing ${files.length} files from input...`);
+        const processingPromises = [];
+        Array.from(files).forEach(file => {
+            if (file.type.startsWith('audio/')) {
+                processingPromises.push(mp_processPersistentSongFile(file, null));
+            } else {
+                console.warn(`MP: Skipping non-audio file: ${file.name}`);
+            }
+        });
+        await Promise.all(processingPromises);
+        console.log("MP: File input processing complete.");
+        mp_saveDataToLocalStorage();
+        if (typeof mp_renderSongsList === 'function') mp_renderSongsList(); // Render if function exists
+         else console.log("MP: mp_renderSongsList not ready.");
+        event.target.value = null;
+    }
+    
+    // Parses filename "Artist - Title.mp3"
+    function mp_parseFileName(fileName) {
+        let baseName = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+        const separator = ' - ';
+        let artist = 'Unknown Artist';
+        let title = baseName;
+        if (baseName.includes(separator)) {
+            const parts = baseName.split(separator);
+            if (parts.length >= 2) {
+                artist = parts[0].trim();
+                title = parts.slice(1).join(separator).trim();
+            }
+        }
+        return { artist, title };
+    }
+    
+    // Finds song metadata by ID
+    function mp_findSongById(songId) {
+        return mp_musicLibrary.find(song => song.id === songId);
+    }
+    
+    // --- Rendering Functions (Called when Music Page is active) ---
+    function mp_renderSongsList(filter = '') {
+        if (!mp_songsList) return; // Check if element exists
+        mp_songsList.innerHTML = '';
+        const lowerFilter = filter.toLowerCase();
+        const filteredLibrary = mp_musicLibrary.filter(song =>
+            song.title.toLowerCase().includes(lowerFilter) ||
+            song.artist.toLowerCase().includes(lowerFilter) ||
+            song.fileName.toLowerCase().includes(lowerFilter)
+        ).sort((a, b) => `${a.artist} - ${a.title}`.localeCompare(`${b.artist} - ${b.title}`));
+    
+        if (filteredLibrary.length === 0) {
+            mp_songsList.innerHTML = `<p class="placeholder-text">${mp_musicLibrary.length === 0 ? 'Upload songs to see your library' : (filter ? 'No songs match search' : 'Library empty?')}</p>`;
+            return;
+        }
+        filteredLibrary.forEach(song => {
+            const listItem = mp_createListItem(song, () => mp_playSongFromLibrary(song.id));
+            mp_songsList.appendChild(listItem);
+        });
+        mp_updatePlayingIndicator();
+    }
+    
+    function mp_renderRecentlyPlayed() {
+        if (!mp_recentlyPlayedList) return; // Check if element exists
+        mp_recentlyPlayedList.innerHTML = '';
+         if (mp_recentlyPlayed.length === 0) {
+             mp_recentlyPlayedList.innerHTML = '<p class="placeholder-text">Play a song to see it here</p>';
+             return;
+         }
+        mp_recentlyPlayed.forEach(songId => {
+            const song = mp_findSongById(songId);
+            if (song) {
+                const listItem = mp_createListItem(song, () => mp_playSongFromLibrary(song.id));
+                mp_recentlyPlayedList.appendChild(listItem);
+            }
+        });
+        mp_updatePlayingIndicator();
+    }
+    
+    function mp_renderPlaylists() {
+        if (!mp_playlistsList) return; // Check if element exists
+        mp_playlistsList.innerHTML = '';
+        const playlistNames = Object.keys(mp_playlists).sort((a, b) => a.localeCompare(b));
+    
+        if (playlistNames.length === 0) {
+            mp_playlistsList.innerHTML = '<p class="placeholder-text">Create a playlist to see it here</p>';
+            return;
+        }
+        playlistNames.forEach(name => {
+            const songCount = mp_playlists[name]?.length || 0;
+            const listItem = document.createElement('div');
+            listItem.className = 'list-item';
+            listItem.innerHTML = `
+                <div class="playlist-info">
+                    <span style="cursor: pointer;" onclick="mp_openViewPlaylistModal('${escapeHtml(name)}')">${escapeHtml(name)} (${songCount} songs)</span>
+                    <div class="playlist-controls">
+                        <button onclick="event.stopPropagation(); mp_playPlaylist('${escapeHtml(name)}')" title="Play ${escapeHtml(name)}"><i class="fas fa-play"></i></button>
+                    </div>
+                </div>`;
+            mp_playlistsList.appendChild(listItem);
+        });
+    }
+    
+    // Helper to create list items
+    function mp_createListItem(song, onClickCallback) {
+        const listItem = document.createElement('div');
+        listItem.className = 'list-item';
+        listItem.textContent = `${song.artist} - ${song.title}`;
+        listItem.title = `${song.artist} - ${song.title} (${song.fileName})`;
+        listItem.dataset.songId = song.id;
+        listItem.onclick = onClickCallback;
+        return listItem;
+    }
+    
+    // Updates playing indicator across all lists
+    function mp_updatePlayingIndicator() {
+        // Use querySelectorAll on the document to find all potential list items
+        document.querySelectorAll('.list-item[data-song-id]').forEach(item => {
+            item.classList.remove('playing');
+            if (mp_currentSong && mp_isPlaying && item.dataset.songId === mp_currentSong.id) {
+                item.classList.add('playing');
+            }
+        });
+    }
+    
+    // --- Playback Logic ---
+    
+    // Stops playback, revokes URL, clears UI
+    function mp_stopPlaybackAndClearUI() {
+        console.log("MP: Stopping playback and clearing UI.");
+        if (mp_currentSong && mp_currentSong.tempUrl) {
+            URL.revokeObjectURL(mp_currentSong.tempUrl);
+            console.log("MP: Revoked temporary URL.");
+        }
+        if (mp_audioPlayer) mp_audioPlayer.pause();
+        if (mp_audioPlayer) mp_audioPlayer.src = '';
+        mp_currentSong = null;
+        mp_currentSongIndex = -1;
+        mp_currentQueue = [];
+        mp_isPlaying = false;
+        mp_updatePlaybackControls(); // Update buttons etc.
+        if (mp_currentSongInfo) mp_currentSongInfo.textContent = "No Song Playing";
+        if (mp_currentSongInfo) mp_currentSongInfo.title = "";
+        if (mp_seekBar) mp_seekBar.value = 0;
+        if (mp_currentTime) mp_currentTime.textContent = mp_formatTime(0);
+        if (mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(0);
+        mp_updatePlayingIndicator(); // Clear playing indicators
+    }
+    
+    // Loads song metadata, gets file handle, creates temp URL, loads player
+    async function mp_loadSong(songMetaData) {
+        console.log("MP: loadSong called for:", songMetaData?.fileName);
+        if (!songMetaData || !songMetaData.fileName) {
+            console.error("MP: Invalid song metadata.");
+            mp_stopPlaybackAndClearUI();
+            return;
+        }
+        // Show playback bar when loading a song
+        if (mp_playbackControlsBar) mp_playbackControlsBar.style.display = 'flex';
+    
+        // --- Get Directory Handle (Essential for File System Access) ---
+        if (!mp_currentDirectoryHandle) {
+             console.warn("MP: Directory handle not available. Re-requesting...");
+             mp_currentDirectoryHandle = await mp_requestDirectoryAccess(); // Re-populate
+             if (!mp_currentDirectoryHandle) {
+                 alert("MP: Could not access music directory. Please select folder again.");
+                 mp_stopPlaybackAndClearUI();
+                 return;
+             }
+        }
+    
+        // --- Find File Handle & Get File ---
+        let fileToPlay = null;
+        try {
+             async function findFileHandleRecursive(dirHandle, fileNameToFind) {
+                 try {
+                     for await (const entryHandle of dirHandle.values()) {
+                         if (entryHandle.kind === 'file' && entryHandle.name === fileNameToFind) {
+                             return entryHandle;
+                         } else if (entryHandle.kind === 'directory') {
+                              if (await entryHandle.queryPermission({ mode: 'read' }) === 'granted') {
+                                 const found = await findFileHandleRecursive(entryHandle, fileNameToFind);
+                                 if (found) return found;
+                              }
+                         }
+                     }
+                 } catch(innerErr) {
+                      console.warn(`MP: Error iterating directory ${dirHandle.name}: ${innerErr.message}`);
+                 }
+                 return null;
+             }
+            const fileHandle = await findFileHandleRecursive(mp_currentDirectoryHandle, songMetaData.fileName);
+            if (!fileHandle) throw new Error(`File not found: ${songMetaData.fileName}`);
+            if (await fileHandle.queryPermission({ mode: 'read' }) !== 'granted') {
+                if (await fileHandle.requestPermission({ mode: 'read' }) !== 'granted') {
+                    throw new Error(`Read permission denied: ${fileHandle.name}`);
+                }
+            }
+            fileToPlay = await fileHandle.getFile();
+            console.log(`MP: Retrieved file object for: ${fileToPlay.name}`);
+        } catch (err) {
+            console.error("MP: Error getting file for playback:", err);
+            alert(`MP: Error loading "${songMetaData.title}": ${err.message}`);
+            mp_stopPlaybackAndClearUI();
+            return;
+        }
+    
+        // --- Create Temporary URL ---
+        if (mp_currentSong && mp_currentSong.tempUrl) {
+            URL.revokeObjectURL(mp_currentSong.tempUrl);
+        }
+        const tempUrl = URL.createObjectURL(fileToPlay);
+        console.log(`MP: Created temp URL for ${songMetaData.fileName}`);
+    
+        // --- Load Player ---
+        mp_currentSong = { ...songMetaData, tempUrl: tempUrl };
+        if (mp_audioPlayer) {
+            mp_audioPlayer.src = tempUrl;
+            mp_audioPlayer.load();
+        }
+        if (mp_seekBar) mp_seekBar.value = 0;
+        if (mp_currentTime) mp_currentTime.textContent = mp_formatTime(0);
+        if (mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(0);
+        if (mp_currentSongInfo) {
+            mp_currentSongInfo.textContent = `${songMetaData.artist} - ${songMetaData.title}`;
+            mp_currentSongInfo.title = `${songMetaData.artist} - ${songMetaData.title}`;
+        }
+        mp_playAudio(); // Attempt playback
+        mp_addToRecentlyPlayed(songMetaData.id);
+        mp_updatePlayingIndicator();
+    }
+    
+    // Plays a song from the library view
+    function mp_playSongFromLibrary(songId) {
+        console.log("MP: playSongFromLibrary, ID:", songId);
+        const songMeta = mp_findSongById(songId);
+        if (!songMeta) return;
+    
+        const currentFilter = mp_songSearch ? mp_songSearch.value.toLowerCase() : '';
+        mp_currentQueue = mp_musicLibrary
+            .filter(s => s.title.toLowerCase().includes(currentFilter) || s.artist.toLowerCase().includes(currentFilter) || s.fileName.toLowerCase().includes(currentFilter))
+            .map(s => s.id);
+        mp_currentSongIndex = mp_currentQueue.findIndex(id => id === songId);
+        mp_loadSong(songMeta);
+    }
+    
+    // Starts playback of a specific playlist
+    function mp_playPlaylist(playlistName) {
+        console.log("MP: playPlaylist:", playlistName);
+        const playlistSongIds = mp_playlists[playlistName];
+        if (!playlistSongIds || playlistSongIds.length === 0) {
+            alert(`MP: Playlist "${playlistName}" is empty.`);
+            return;
+        }
+        mp_currentQueue = [...playlistSongIds];
+        mp_currentSongIndex = 0;
+        const firstSongMeta = mp_findSongById(mp_currentQueue[0]);
+        if (firstSongMeta) {
+            mp_loadSong(firstSongMeta);
+        } else {
+            console.error("MP: First song in playlist not found, ID:", mp_currentQueue[0]);
+            mp_playNextSong(); // Try next
+        }
+    }
+    
+    // Starts audio playback
+    function mp_playAudio() {
+        if (!mp_currentSong || !mp_audioPlayer || !mp_audioPlayer.src) return;
+        mp_audioPlayer.play()
+            .then(() => { mp_isPlaying = true; mp_updatePlaybackControls(); console.log("MP: Playback started."); })
+            .catch(error => {
+                console.error("MP: Playback failed:", error); mp_isPlaying = false; mp_updatePlaybackControls();
+                alert(`MP: Playback Error - ${error.name}: ${error.message}`);
+            });
+    }
+    
+    // Pauses audio playback
+    function mp_pauseAudio() {
+        if(mp_audioPlayer) mp_audioPlayer.pause();
+        mp_isPlaying = false;
+        mp_updatePlaybackControls();
+        console.log("MP: Playback paused.");
+    }
+    
+    // Toggles play/pause state
+    function mp_togglePlayPause() {
+        if (!mp_currentSong) {
+            if (mp_musicLibrary.length > 0) mp_playSongFromLibrary(mp_musicLibrary[0].id);
+            return;
+        }
+        if (mp_isPlaying) mp_pauseAudio();
+        else mp_playAudio();
+    }
+    
+    // Plays the next song in the current queue
+    function mp_playNextSong() {
+        if (mp_currentQueue.length === 0) { mp_stopPlaybackAndClearUI(); return; }
+        let nextIndex = mp_currentSongIndex + 1;
+        if (nextIndex >= mp_currentQueue.length) nextIndex = 0;
+        const nextSongId = mp_currentQueue[nextIndex];
+        const nextSongMeta = mp_findSongById(nextSongId);
+        if (nextSongMeta) {
+            mp_currentSongIndex = nextIndex;
+            mp_loadSong(nextSongMeta);
+        } else {
+            console.warn("MP: Next song ID not found, removing from queue:", nextSongId);
+            mp_currentQueue.splice(nextIndex, 1);
+            if (mp_currentQueue.length > 0) mp_playNextSong(); // Recursive call
+            else mp_stopPlaybackAndClearUI();
+        }
+    }
+    
+    // Plays the previous song or restarts current
+    function mp_playPrevSong() {
+        if (mp_currentQueue.length === 0) return;
+        if (mp_audioPlayer && mp_audioPlayer.currentTime > 3) {
+            mp_audioPlayer.currentTime = 0; mp_playAudio(); return;
+        }
+        let prevIndex = mp_currentSongIndex - 1;
+        if (prevIndex < 0) prevIndex = mp_currentQueue.length - 1;
+        const prevSongId = mp_currentQueue[prevIndex];
+        const prevSongMeta = mp_findSongById(prevSongId);
+        if (prevSongMeta) {
+            mp_currentSongIndex = prevIndex;
+            mp_loadSong(prevSongMeta);
+        } else {
+            console.warn("MP: Previous song ID not found, removing from queue:", prevSongId);
+            mp_currentQueue.splice(prevIndex, 1);
+            if (prevIndex < mp_currentSongIndex) mp_currentSongIndex--;
+            if (mp_currentQueue.length > 0) mp_playPrevSong(); // Recursive call
+            else mp_stopPlaybackAndClearUI();
+        }
+    }
+    
+    // Updates playback control buttons/UI state
+    function mp_updatePlaybackControls() {
+        if (!mp_playbackBarInitialized) return; // Don't update if bar isn't set up
+        if (mp_playPauseButton) {
+            mp_playPauseButton.innerHTML = mp_isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
+            mp_playPauseButton.title = mp_isPlaying ? 'Pause' : 'Play';
+        }
+        const canNavigate = mp_currentQueue.length > 1;
+        if (mp_prevButton) mp_prevButton.disabled = !canNavigate;
+        if (mp_nextButton) mp_nextButton.disabled = !canNavigate;
+        mp_updatePlayingIndicator(); // Ensure list indicators are updated
+    }
+    
+    // Formats time in seconds to M:SS
+    function mp_formatTime(totalSeconds) {
+        if (isNaN(totalSeconds) || totalSeconds < 0) return '0:00';
+        const minutes = Math.floor(totalSeconds / 60);
+        const secs = Math.floor(totalSeconds % 60);
+        return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+    
+    // Updates seek bar progress and time display
+    function mp_updateSeekBar() {
+        if (!mp_audioPlayer || !mp_audioPlayer.duration || isNaN(mp_audioPlayer.duration) || !mp_seekBar) return;
+        const percentage = (mp_audioPlayer.currentTime / mp_audioPlayer.duration) * 100;
+        mp_seekBar.value = isNaN(percentage) ? 0 : percentage;
+        if (mp_currentTime) mp_currentTime.textContent = mp_formatTime(mp_audioPlayer.currentTime);
+        if (mp_totalDuration && (mp_totalDuration.textContent === '0:00' || mp_totalDuration.textContent === 'NaN:NaN')) {
+             mp_totalDuration.textContent = mp_formatTime(mp_audioPlayer.duration);
+        }
+    }
+    
+    // Updates volume slider and mute button UI
+    function mp_updateVolumeControls() {
+        if (!mp_playbackBarInitialized || !mp_audioPlayer) return; // Check initialization
+        if (mp_audioPlayer.muted || mp_audioPlayer.volume === 0) {
+            if (mp_muteButton) {
+                mp_muteButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                mp_muteButton.title = 'Unmute';
+            }
+            if (mp_volumePercentage) mp_volumePercentage.textContent = `0%`;
+        } else {
+            if (mp_muteButton) {
+                mp_muteButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                mp_muteButton.title = 'Mute';
+            }
+            if (mp_volumePercentage) mp_volumePercentage.textContent = `${Math.round(mp_audioPlayer.volume * 100)}%`;
+        }
+        if (mp_volumeSlider && !mp_audioPlayer.muted) {
+            mp_volumeSlider.value = mp_audioPlayer.volume;
+        }
+    }
+    
+    // --- Recently Played Logic ---
+    function mp_addToRecentlyPlayed(songId) {
+        mp_recentlyPlayed = mp_recentlyPlayed.filter(id => id !== songId);
+        mp_recentlyPlayed.unshift(songId);
+        if (mp_recentlyPlayed.length > MP_MAX_RECENTLY_PLAYED) {
+            mp_recentlyPlayed = mp_recentlyPlayed.slice(0, MP_MAX_RECENTLY_PLAYED);
+        }
+        mp_saveDataToLocalStorage(); // Save metadata
+        if (typeof mp_renderRecentlyPlayed === 'function') mp_renderRecentlyPlayed(); // Render if available
+    }
+    
+    // --- Playlist Management ---
+    function mp_populateCreatePlaylistModalSongs() {
+        const modalList = document.getElementById('mp_createPlaylistSongList');
+        if (!modalList) return;
+        modalList.innerHTML = '';
+        if (mp_musicLibrary.length === 0) {
+            modalList.innerHTML = '<p class="placeholder-text">No songs in library.</p>';
+        } else {
+            const sortedLibrary = [...mp_musicLibrary].sort((a, b) => `${a.artist} - ${a.title}`.localeCompare(`${b.artist} - ${b.title}`));
+            sortedLibrary.forEach(song => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.style.cursor = 'default';
+                div.innerHTML = `
+                    <input type="checkbox" id="mp_createpl_${song.id}" value="${song.id}">
+                    <label for="mp_createpl_${song.id}" title="${escapeHtml(song.artist)} - ${escapeHtml(song.title)}">${escapeHtml(song.artist)} - ${escapeHtml(song.title)}</label>`;
+                modalList.appendChild(div);
+            });
+        }
+    }
+    
+    function mp_openCreatePlaylistModal() {
+        const nameInput = document.getElementById('mp_newPlaylistName');
+        if (nameInput) nameInput.value = '';
+        mp_populateCreatePlaylistModalSongs();
+        mp_openModal('mp_createPlaylistModal');
+    }
+    
+    function mp_createNewPlaylist() {
+        const nameInput = document.getElementById('mp_newPlaylistName');
+        const name = nameInput ? nameInput.value.trim() : '';
+        if (!name) { alert("MP: Please enter a playlist name."); return; }
+        if (mp_playlists[name]) { alert(`MP: Playlist "${name}" already exists.`); return; }
+        const checkboxes = document.querySelectorAll('#mp_createPlaylistSongList input[type="checkbox"]:checked');
+        const initialSongIds = Array.from(checkboxes).map(cb => cb.value);
+        mp_playlists[name] = initialSongIds;
+        mp_saveDataToLocalStorage();
+        if(typeof mp_renderPlaylists === 'function') mp_renderPlaylists();
+        mp_closeModal('mp_createPlaylistModal');
+        console.log(`MP: Playlist "${name}" created with ${initialSongIds.length} songs.`);
+    }
+    
+    function mp_deleteCurrentPlaylist() {
+        if (!mp_currentPlaylistNameForView) return;
+        if (confirm(`MP: Delete playlist "${mp_currentPlaylistNameForView}"?`)) {
+            delete mp_playlists[mp_currentPlaylistNameForView];
+            mp_saveDataToLocalStorage();
+            if(typeof mp_renderPlaylists === 'function') mp_renderPlaylists();
+            mp_closeModal('mp_viewPlaylistModal');
+            console.log(`MP: Playlist "${mp_currentPlaylistNameForView}" deleted.`);
+            mp_currentPlaylistNameForView = null;
+        }
+    }
+    
+    function mp_removeSongFromPlaylist(playlistName, songId) {
+        if (!mp_playlists[playlistName]) return;
+        mp_playlists[playlistName] = mp_playlists[playlistName].filter(id => id !== songId);
+        mp_saveDataToLocalStorage();
+        if (typeof mp_renderPlaylists === 'function') mp_renderPlaylists(); // Update counts
+        if (document.getElementById('mp_viewPlaylistModal')?.style.display === 'flex' && mp_currentPlaylistNameForView === playlistName) {
+            mp_populateViewPlaylistModal(playlistName); // Refresh modal if open
+        }
+    }
+    
+    function mp_populateViewPlaylistModal(playlistName) {
+        const modalList = document.getElementById('mp_viewPlaylistModalList');
+        if (!modalList) return;
+        modalList.innerHTML = '';
+        const songIds = mp_playlists[playlistName];
+        if (!songIds || songIds.length === 0) {
+            modalList.innerHTML = '<p class="placeholder-text">This playlist is empty.</p>'; return;
+        }
+        const songsInPlaylist = songIds.map(id => mp_findSongById(id)).filter(song => song)
+                               .sort((a, b) => `${a.artist} - ${a.title}`.localeCompare(`${b.artist} - ${b.title}`));
+        songsInPlaylist.forEach(song => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.style.cursor = 'default';
+            div.innerHTML = `
+                <span>${escapeHtml(song.artist)} - ${escapeHtml(song.title)}</span>
+                <button onclick="mp_removeSongFromPlaylist('${escapeHtml(playlistName)}', '${song.id}')" title="Remove from Playlist">Remove</button>`;
+            modalList.appendChild(div);
+        });
+    }
+    
+    function mp_openViewPlaylistModal(playlistName) {
+        const nameEl = document.getElementById('mp_viewPlaylistName');
+        if (nameEl) nameEl.textContent = `Playlist: ${playlistName}`;
+        mp_currentPlaylistNameForView = playlistName;
+        mp_populateViewPlaylistModal(playlistName);
+        mp_openModal('mp_viewPlaylistModal');
+    }
+    
+    
+    // --- Modal Handling ---
+    function mp_openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.style.display = 'flex';
+    }
+    
+    function mp_closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.style.display = 'none';
+        // Clear specific modal content on close
+        if (modalId === 'mp_viewPlaylistModal') {
+            mp_currentPlaylistNameForView = null;
+            const list = document.getElementById('mp_viewPlaylistModalList');
+            if(list) list.innerHTML = '';
+        } else if (modalId === 'mp_removeSongsModal') {
+            const list = document.getElementById('mp_removeSongsModalList');
+             if(list) list.innerHTML = '';
+        } else if (modalId === 'mp_createPlaylistModal') {
+            const list = document.getElementById('mp_createPlaylistSongList');
+            if(list) list.innerHTML = '';
+        }
+    }
+    
+    function mp_openRemoveSongsModal() {
+        const modalList = document.getElementById('mp_removeSongsModalList');
+        if (!modalList) return;
+        modalList.innerHTML = '';
+        if (mp_musicLibrary.length === 0) {
+            modalList.innerHTML = '<p class="placeholder-text">No songs in library.</p>';
+        } else {
+            const sortedLibrary = [...mp_musicLibrary].sort((a, b) => `${a.artist} - ${a.title}`.localeCompare(`${b.artist} - ${b.title}`));
+            sortedLibrary.forEach(song => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.style.cursor = 'default';
+                div.innerHTML = `
+                    <input type="checkbox" id="mp_remove_${song.id}" value="${song.id}">
+                    <label for="mp_remove_${song.id}" title="${escapeHtml(song.artist)} - ${escapeHtml(song.title)}">${escapeHtml(song.artist)} - ${escapeHtml(song.title)}</label>`;
+                modalList.appendChild(div);
+            });
+        }
+        mp_openModal('mp_removeSongsModal');
+    }
+    
+    function mp_removeSelectedSongs() {
+        const checkboxes = document.querySelectorAll('#mp_removeSongsModalList input[type="checkbox"]:checked');
+        const idsToRemove = Array.from(checkboxes).map(cb => cb.value);
+        if (idsToRemove.length === 0) { alert("MP: No songs selected."); return; }
+    
+        if (confirm(`MP: Remove ${idsToRemove.length} song(s)? This cannot be undone.`)) {
+            // Check if playing song is being removed
+            if (mp_currentSong && idsToRemove.includes(mp_currentSong.id)) {
+                 mp_stopPlaybackAndClearUI(); // Stop playback and revoke URL
+             }
+            // Remove from library
+            mp_musicLibrary = mp_musicLibrary.filter(song => !idsToRemove.includes(song.id));
+            // Remove from recently played
+            mp_recentlyPlayed = mp_recentlyPlayed.filter(id => !idsToRemove.includes(id));
+            // Remove from all playlists
+            Object.keys(mp_playlists).forEach(pName => {
+                mp_playlists[pName] = mp_playlists[pName].filter(id => !idsToRemove.includes(id));
+            });
+            mp_saveDataToLocalStorage(); // Save changes
+            // Re-render lists if they are currently displayed
+            if (typeof mp_renderSongsList === 'function') mp_renderSongsList();
+            if (typeof mp_renderRecentlyPlayed === 'function') mp_renderRecentlyPlayed();
+            if (typeof mp_renderPlaylists === 'function') mp_renderPlaylists();
+            mp_closeModal('mp_removeSongsModal');
+            console.log(`MP: Removed ${idsToRemove.length} songs.`);
+        }
+    }
+    
+    
+    // --- Initialization and Event Listeners ---
+    
+    // Sets up listeners for the persistent playback bar
+    function mp_initializePlaybackBar() {
+         if (mp_playbackBarInitialized) return; // Run only once
+         console.log("MP: Initializing Playback Bar Listeners...");
+    
+         // Get references AFTER DOM is loaded
+         mp_playPauseButton = document.getElementById('mp_playPauseButton');
+         mp_prevButton = document.getElementById('mp_prevButton');
+         mp_nextButton = document.getElementById('mp_nextButton');
+         mp_seekBar = document.getElementById('mp_seekBar');
+         mp_currentTime = document.getElementById('mp_currentTime');
+         mp_totalDuration = document.getElementById('mp_totalDuration');
+         mp_currentSongInfo = document.getElementById('mp_currentSongInfo');
+         mp_volumeSlider = document.getElementById('mp_volumeSlider');
+         mp_muteButton = document.getElementById('mp_muteButton');
+         mp_volumePercentage = document.getElementById('mp_volumePercentage');
+    
+         // Check if all elements were found
+         if (!mp_playPauseButton || !mp_prevButton || !mp_nextButton || !mp_seekBar || !mp_volumeSlider || !mp_muteButton || !mp_audioPlayer) {
+             console.error("MP: Failed to find one or more essential playback control elements. Cannot initialize.");
+             return;
+         }
+    
+         // Attach listeners
+         mp_playPauseButton.addEventListener('click', mp_togglePlayPause);
+         mp_nextButton.addEventListener('click', mp_playNextSong);
+         mp_prevButton.addEventListener('click', mp_playPrevSong);
+    
+         mp_seekBar.addEventListener('input', () => {
+             if (!mp_audioPlayer || !mp_audioPlayer.duration || isNaN(mp_audioPlayer.duration)) return;
+             const seekTime = (mp_seekBar.value / 100) * mp_audioPlayer.duration;
+             if (!isNaN(seekTime)) mp_audioPlayer.currentTime = seekTime;
+         });
+    
+         mp_volumeSlider.addEventListener('input', () => {
+             if (!mp_audioPlayer) return;
+             mp_audioPlayer.volume = mp_volumeSlider.value;
+             mp_audioPlayer.muted = false;
+             mp_updateVolumeControls();
+         });
+    
+         mp_muteButton.addEventListener('click', () => {
+              if (!mp_audioPlayer) return;
+              mp_audioPlayer.muted = !mp_audioPlayer.muted;
+              mp_updateVolumeControls();
+         });
+    
+         // Audio element listeners
+         mp_audioPlayer.addEventListener('timeupdate', mp_updateSeekBar);
+         mp_audioPlayer.addEventListener('loadedmetadata', () => {
+             if (!isNaN(mp_audioPlayer.duration)) {
+                if(mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(mp_audioPlayer.duration);
+             }
+             mp_updateSeekBar(); // Update current time immediately
+         });
+         mp_audioPlayer.addEventListener('ended', mp_playNextSong);
+         mp_audioPlayer.addEventListener('error', (e) => {
+             console.error("MP: Audio Player Error:", e);
+             if(mp_currentSongInfo) mp_currentSongInfo.textContent = `Error playing ${mp_currentSong?.title || 'song'}`;
+             alert(`MP: Error playing ${mp_currentSong?.title || 'song'}. Check file/permissions.`);
+             mp_stopPlaybackAndClearUI();
+         });
+         mp_audioPlayer.addEventListener('play', mp_updatePlayingIndicator);
+         mp_audioPlayer.addEventListener('pause', mp_updatePlayingIndicator);
+         mp_audioPlayer.addEventListener('volumechange', mp_updateVolumeControls);
+    
+         mp_updateVolumeControls(); // Initial volume UI setup
+         mp_updatePlaybackControls(); // Initial button state
+         mp_playbackBarInitialized = true;
+         console.log("MP: Playback Bar Initialized.");
+     }
+    
+    // Initializes elements and listeners specific to the Music page content
+    function mp_initializeMusicPlayerPage() {
+        if (mp_isInitialized) {
+             console.log("MP: Music Player page already initialized.");
+             // Re-render lists in case data changed while away
+             mp_renderSongsList(mp_songSearch ? mp_songSearch.value : '');
+             mp_renderRecentlyPlayed();
+             mp_renderPlaylists();
+             return;
+        }
+        console.log("MP: Initializing Music Player Page Content...");
+    
+        // Get elements specific to the music page grid
+        mp_fileInput = document.getElementById('mp_fileInput');
+        mp_songsList = document.getElementById('mp_songsList');
+        mp_recentlyPlayedList = document.getElementById('mp_recentlyPlayedList');
+        mp_playlistsList = document.getElementById('mp_playlistsList');
+        mp_songSearch = document.getElementById('mp_songSearch');
+    
+        // Check if elements were found
+        if (!mp_fileInput || !mp_songsList || !mp_recentlyPlayedList || !mp_playlistsList || !mp_songSearch) {
+             console.error("MP: Failed to find one or more music page elements. Cannot initialize page fully.");
+             return; // Stop initialization if essential elements are missing
+        }
+    
+    
+        // Attach listeners for page-specific elements
+        mp_fileInput.addEventListener('change', mp_handleFileSelect);
+        mp_songSearch.addEventListener('input', () => {
+            mp_renderSongsList(mp_songSearch.value);
+        });
+    
+        // Initial rendering of lists
+        mp_renderSongsList();
+        mp_renderRecentlyPlayed();
+        mp_renderPlaylists();
+    
+        mp_isInitialized = true;
+        console.log("MP: Music Player Page Content Initialized.");
+    }
+
+
       
   </script>
 </body>
