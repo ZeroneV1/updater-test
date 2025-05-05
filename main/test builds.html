@@ -1232,11 +1232,18 @@
     .music-box input[type="search"],
     .mp-modal-content input[type="text"] {
          /* Inherit general input styles from main app */
-         /* background: var(--card-bg); Use card background */
-         /* border: 1px solid var(--accent); Accent border */
-         /* color: var(--text-light); Light text */
-         /* Add padding if not inherited */
-         padding: 0.5rem;
+         background: var(--card-bg); /* Use card background */
+         border: 1px solid var(--accent); /* Accent border */
+         color: var(--text-light); /* Light text */
+         padding: 0.5rem; /* Add padding if not inherited */
+          box-sizing: border-box; /* Include padding and border in element's total width */
+          width: 100%; /* Ensure it takes full width of its container */
+          margin-bottom: 10px; /* Add some space below it */
+          border-radius: 5px; /* Match other inputs */
+           height: var(--search-height); /* Use defined height */
+           font-size: 1rem; /* Adjust font size */
+           /* Remove or adjust padding-left if you don't need a search icon inside */
+           /* padding-left: calc(0.5rem + 24px); /* Space for search icon */
     }
     .music-box input[type="text"]:focus,
     .music-box input[type="search"]:focus,
@@ -1251,17 +1258,25 @@
     #mp_playback_controls { /* Target the specific ID */
         position: fixed;
         bottom: 0;
-        left: 0;
-        width: 100%;
+        left: 0; /* Keep this as the default for when sidebar is closed */
+        width: 100%; /* Keep this as the default for when sidebar is closed */
         background-color: var(--sidebar-dark); /* Use sidebar dark for contrast */
         padding: 10px 15px; /* Use app padding or default */
         box-sizing: border-box;
-        display: flex;
+        display: flex; /* Handled by JS, but ensure default is flex */
         align-items: center;
         gap: 15px;
         border-top: 1px solid #444;
         z-index: 90; /* Below modals but above content/sidebar */
         color: var(--text-light); /* Ensure text color */
+         /* Add a transition for 'left' and 'width' */
+        transition: left var(--transition-speed) ease, width var(--transition-speed) ease;
+    }
+    
+    /* Add this new rule */
+    .sidebar.open ~ #mp_playback_controls {
+        left: 60px; /* Push the playback bar by the sidebar width */
+        width: calc(100% - 60px); /* Reduce width by the sidebar width */
     }
     
     #mp_playback_controls .song-info {
@@ -3717,9 +3732,9 @@ const pages = {
               <div class="music-box">
                   <h2>Add Music</h2>
                   <p>Select audio files or a folder (requires folder permission for persistence).</p>
-                  <button onclick="mp_selectMusicDirectory()">Select Folder (or files)</button>
+                  <button onclick="mp_selectMusicDirectory()">Select Folder</button>
                   <input type="file" id="mp_fileInput" multiple accept="audio/*" webkitdirectory directory style="display: none;">
-                  <div style="height: 10px;"></div> <button class="secondary" onclick="mp_openRemoveSongsModal()">Remove Selected Songs</button>
+                  <div style="height: 10px;"></div> <button class="secondary" onclick="mp_openRemoveSongsModal()">Remove Songs</button>
               </div>
 
               <div class="music-box">
@@ -3875,7 +3890,7 @@ const pages = {
     // --- Replace your existing switchPage function with this ---
     function switchPage(pageKey) {
        console.log('Switching to page:', pageKey);
-    
+
        // Update page title visibility and content based on the target page
        if (pageKey === 'Games') {
            showingFavorites = false; // Reset view to 'All Games' when entering Games page
@@ -3900,36 +3915,43 @@ const pages = {
                 console.log('Came from favorites view on another page, resetting showingFavorites state.');
            }
        }
-    
+
        // Fade out current content
        pageContent.classList.add('fade-out');
        console.log('Adding fade-out class to content.');
-    
-       // Store the last active page key and its title
-       localStorage.setItem('lastActivePage', pageKey);
-       localStorage.setItem('lastActivePageTitle', pageTitle.textContent);
-       console.log('Saved last active page:', pageKey, 'with title:', pageTitle.textContent);
-    
+
        // Wait for fade-out transition, then update content and fade in
        setTimeout(() => {
          console.log('Timeout before content switch complete.');
          // Set new page content from the 'pages' object
          pageContent.innerHTML = pages[pageKey] || `<div class="panel"><p>Content for ${pageKey} not found.</p></div>`; // Added default panel
          console.log(`Content set for page: ${pageKey}. Content found: ${!!pages[pageKey]}`);
-    
+
          // --- Page-Specific Initialization ---
          if (pageKey === 'Music') {
              console.log("MP: Initializing Music page content via switchPage.");
-             mp_initializeMusicPlayerPage(); // Initialize/render the music page elements and listeners
+             // This function will now handle getting elements and calling render internally
+             mp_initializeMusicPlayerPage();
+
+             // REMOVED the redundant setTimeout block with rendering calls here.
+             // Rendering is now handled within mp_initializeMusicPlayerPage after element refs are obtained.
+
              // Ensure playback bar is visible if music has ever been loaded/played or library exists
              if (mp_playbackControlsBar && (mp_currentSong || mp_musicLibrary.length > 0)) {
                  mp_playbackControlsBar.style.display = 'flex';
+             } else {
+                 // If navigating *away* from Music and playback bar should hide, handle that here
+                 // Although the initial CSS display: none and the check above should suffice
              }
          } else {
+              // Hide the music playback bar when switching away from the Music page
+              if (mp_playbackControlsBar) {
+                  mp_playbackControlsBar.style.display = 'none';
+              }
               // Optional: You could add logic here if you need to *clean up* music player listeners
               // when navigating away, but it's often not necessary if handled correctly on init.
          }
-    
+
          // Handle initialization/updates for other pages
          if (pageKey === 'Games') {
             updateGamesPage(); // This generates HTML and calls setupDragAndDrop
@@ -3960,7 +3982,7 @@ const pages = {
              const aboutBlankToggle = document.getElementById('aboutBlankToggle');
              const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
              if (aboutBlankToggle) aboutBlankToggle.checked = aboutBlankPref !== 'false';
-    
+
              console.log('Settings page specific UI states loaded.');
          } else if (pageKey === 'About') {
              // Update version number on About page if needed
@@ -3968,11 +3990,11 @@ const pages = {
              if (aboutVersionEl) aboutVersionEl.textContent = "v1.0.0"; // Replace with dynamic version if available
              console.log('About page loaded.');
          }
-    
+
          // Fade in new content
          pageContent.classList.remove('fade-out');
          console.log('Removing fade-out class, content should fade in.');
-    
+
          // Update active icon in the sidebar
          icons.forEach(i => {
              i.classList.remove('active');
@@ -3983,11 +4005,13 @@ const pages = {
              }
          });
          console.log('Active sidebar icon updated.');
-    
+
+         // Save the last active page to localStorage (optional but good for remembering state)
+         localStorage.setItem('lastActivePage', pageKey);
+         localStorage.setItem('lastActivePageTitle', pageTitle.textContent); // Save the displayed title too
+
        }, 150); // Match this delay to your CSS transition duration for fade-out
      }
-    // --- End of switchPage function ---
-
 
     function handleIconClick() {
       const page = this.getAttribute('data-page');
@@ -4439,81 +4463,65 @@ function setupEventListeners() {
       console.log('All event listeners setup function completed.');
     }
 
-// This event fires when the initial HTML document has been completely loaded and parsed.
-    // It does not wait for stylesheets, images, and subframes to finish loading.
+    // --- Replace your existing DOMContentLoaded listener with this ---
     window.addEventListener('DOMContentLoaded', async () => {
       console.log('DOMContentLoaded fired. Starting application initialization...');
-
+    
       // Load saved data from localStorage (theme, app settings, games, library, favorites)
       loadData();
       console.log('Data loaded from localStorage (theme, app, games, library, favorites).');
-
+    
+      // Load music player data (must happen before initializing playback bar)
+      mp_loadDataFromLocalStorage();
+      console.log('Music Player data loaded from localStorage.');
+    
       // Load panic key settings from localStorage
       loadPanicKeySettings();
       console.log('Panic key settings loaded.');
-
+    
       // Initialize Vanta.js background effect
-      // Using a setTimeout here to give the DOM/CSS a moment to settle before Vanta initializes
-      // This can sometimes help prevent issues with canvas rendering.
       setTimeout(() => {
           console.log('Attempting to initialize Vanta.js...');
-          initializeVanta(); // Your function to initialize Vanta
-          console.log('initializeVanta() called. Vanta effect:', vantaEffect); // Log the result
-
-          // If Vanta.js initialized successfully, apply the current theme colors to it
+          initializeVanta();
+          console.log('initializeVanta() called. Vanta effect:', vantaEffect);
+    
           if (vantaEffect) {
               console.log('Calling setTheme with currentThemeName after Vanta initialization.');
-               // Ensure you are passing the theme name, not the theme object
-              setTheme(currentThemeName); // Apply colors based on the saved or default theme
+              setTheme(currentThemeName);
           } else {
               console.warn('Vanta effect is null after initialization, cannot call setTheme to update Vanta options.');
           }
-      }, 50); // A short delay (e.g., 50ms)
-
-
-      // Set up all event listeners for user interactions
+      }, 50); // Short delay
+    
+      // Initialize the Music Player Playback Bar (needs audioPlayer element)
+      mp_initializePlaybackBar(); // Initialize the music controls bar listeners
+      console.log('Music Player playback bar initialization called.');
+    
+      // Set up all general event listeners for user interactions
       setupEventListeners();
       console.log('Event listeners set up.');
-
-      // Update the games page UI based on loaded data
-      updateGamesPage();
-      console.log('Games page UI updated.');
-
-      // Setup drag and drop functionality for games
-      setupDragAndDrop(); // Your function for drag/drop
-      console.log('Drag and drop setup.');
-
-
+    
+      // Update the games page UI based on loaded data (content defined in 'pages')
+      // updateGamesPage(); // This will be handled by switchPage
+    
+      // Setup drag and drop functionality for games (elements created by updateGamesPage)
+      // setupDragAndDrop(); // This should be called within switchPage or updateGamesPage
+    
       // Switch to the initial page (usually Home)
-      // This also triggers the first call to checkVersion() specifically for the Home page status display
-      switchPage('Home');
-      console.log('Initial page switched to Home.');
-
+      // This also triggers the first call to checkVersion() for Home page status display
+      // and mp_initializeMusicPlayerPage if starting on Music page (unlikely)
+    
       // --- Setup Periodic Checks ---
-
-      // Set up periodic update check (e.g., every 1 minute)
-      // This will call checkVersion() function repeatedly at the specified interval (milliseconds).
-      // Use a shorter interval (like 5000ms for 5 seconds) for debugging if needed,
-      // but remember to set it back to a longer duration (like 60000ms for 1 minute) for production.
       setInterval(checkVersion, 60000); // Check every 60 seconds
       console.log("Periodic update check started (every 60 seconds).");
-      // The initial checkVersion for the Home page status is done by switchPage('Home').
-
-      // Set up periodic notification check (e.g., every 15 seconds)
-      // This will call checkNotifications() function repeatedly.
-      setInterval(checkNotifications, 15000); // Check every 15 seconds (adjust as needed)
+    
+      setInterval(checkNotifications, 15000); // Check every 15 seconds
       console.log("Periodic notification check started (every 15 seconds).");
-      // Run an initial notification check immediately when the app loads
-      checkNotifications();
-
-      // If you have a function to display the current time, start its interval here
-      // Example:
-      // setInterval(updateTime, 1000); // Update time every second
-      // updateTime(); // Initial time display
-
-
+      checkNotifications(); // Initial check
+    
       console.log('Application initialization completed.');
     });
+    // --- End of DOMContentLoaded listener ---
 
     // --- Individual Settings Reset Functions ---
 
@@ -5055,9 +5063,13 @@ function setupEventListeners() {
         return mp_musicLibrary.find(song => song.id === songId);
     }
     
-    // --- Rendering Functions (Called when Music Page is active) ---
+    // Inside function mp_renderSongsList(filter = '') { ... }
     function mp_renderSongsList(filter = '') {
-        if (!mp_songsList) return; // Check if element exists
+        console.log("MP: Entering mp_renderSongsList. Filter:", filter); // Added log
+        if (!mp_songsList) {
+            console.error("MP: mp_songsList element not found for rendering."); // Added error log
+            return; // Check if element exists
+        }
         mp_songsList.innerHTML = '';
         const lowerFilter = filter.toLowerCase();
         const filteredLibrary = mp_musicLibrary.filter(song =>
@@ -5065,48 +5077,77 @@ function setupEventListeners() {
             song.artist.toLowerCase().includes(lowerFilter) ||
             song.fileName.toLowerCase().includes(lowerFilter)
         ).sort((a, b) => `${a.artist} - ${a.title}`.localeCompare(`${b.artist} - ${b.title}`));
-    
+
+        console.log("MP: Filtered library. Found", filteredLibrary.length, "songs to display."); // Added log
+
         if (filteredLibrary.length === 0) {
             mp_songsList.innerHTML = `<p class="placeholder-text">${mp_musicLibrary.length === 0 ? 'Upload songs to see your library' : (filter ? 'No songs match search' : 'Library empty?')}</p>`;
+            console.log("MP: Songs list is empty after filtering, displaying placeholder."); // Added log
             return;
         }
         filteredLibrary.forEach(song => {
+            // console.log("MP: Creating list item for song:", song.title); // Optional: very verbose log
             const listItem = mp_createListItem(song, () => mp_playSongFromLibrary(song.id));
             mp_songsList.appendChild(listItem);
+            // console.log("MP: Appended list item for", song.title); // Optional: very verbose log
         });
+        console.log("MP: Finished appending song list items. Total children:", mp_songsList.children.length); // Added log
         mp_updatePlayingIndicator();
+        console.log("MP: Exiting mp_renderSongsList."); // Added log
     }
+
     
-    function mp_renderRecentlyPlayed() {
-        if (!mp_recentlyPlayedList) return; // Check if element exists
+    // Inside function mp_renderRecentlyPlayed() { ... }
+   function mp_renderRecentlyPlayed() {
+        console.log("MP: Entering mp_renderRecentlyPlayed."); // Added log
+        if (!mp_recentlyPlayedList) {
+            console.error("MP: mp_recentlyPlayedList element not found for rendering."); // Added error log
+            return; // Check if element exists
+        }
         mp_recentlyPlayedList.innerHTML = '';
          if (mp_recentlyPlayed.length === 0) {
              mp_recentlyPlayedList.innerHTML = '<p class="placeholder-text">Play a song to see it here</p>';
+             console.log("MP: Recently played list is empty, displaying placeholder."); // Added log
              return;
          }
         mp_recentlyPlayed.forEach(songId => {
             const song = mp_findSongById(songId);
             if (song) {
+                // console.log("MP: Creating list item for recently played song:", song.title); // Optional: very verbose
                 const listItem = mp_createListItem(song, () => mp_playSongFromLibrary(song.id));
                 mp_recentlyPlayedList.appendChild(listItem);
+                // console.log("MP: Appended list item for recently played", song.title); // Optional: very verbose
+            } else {
+                 console.warn("MP: Recently played song ID not found in library:", songId); // Added warn
             }
         });
+        console.log("MP: Finished appending recently played items. Total children:", mp_recentlyPlayedList.children.length); // Added log
         mp_updatePlayingIndicator();
+        console.log("MP: Exiting mp_renderRecentlyPlayed."); // Added log
     }
-    
+
+    // Inside function mp_renderPlaylists() { ... }
     function mp_renderPlaylists() {
-        if (!mp_playlistsList) return; // Check if element exists
+        console.log("MP: Entering mp_renderPlaylists."); // Added log
+        if (!mp_playlistsList) {
+             console.error("MP: mp_playlistsList element not found for rendering."); // Added error log
+             return; // Check if element exists
+        }
         mp_playlistsList.innerHTML = '';
         const playlistNames = Object.keys(mp_playlists).sort((a, b) => a.localeCompare(b));
-    
+
+        console.log("MP: Found", playlistNames.length, "playlists."); // Added log
+
         if (playlistNames.length === 0) {
             mp_playlistsList.innerHTML = '<p class="placeholder-text">Create a playlist to see it here</p>';
+             console.log("MP: No playlists found, displaying placeholder."); // Added log
             return;
         }
         playlistNames.forEach(name => {
             const songCount = mp_playlists[name]?.length || 0;
             const listItem = document.createElement('div');
             listItem.className = 'list-item';
+            listItem.style.cursor = 'default';
             listItem.innerHTML = `
                 <div class="playlist-info">
                     <span style="cursor: pointer;" onclick="mp_openViewPlaylistModal('${escapeHtml(name)}')">${escapeHtml(name)} (${songCount} songs)</span>
@@ -5115,7 +5156,10 @@ function setupEventListeners() {
                     </div>
                 </div>`;
             mp_playlistsList.appendChild(listItem);
+            // console.log("MP: Appended list item for playlist", name); // Optional: very verbose
         });
+         console.log("MP: Finished appending playlist items. Total children:", mp_playlistsList.children.length); // Added log
+        console.log("MP: Exiting mp_renderPlaylists."); // Added log
     }
     
     // Helper to create list items
@@ -5656,41 +5700,52 @@ function setupEventListeners() {
     
     // Initializes elements and listeners specific to the Music page content
     function mp_initializeMusicPlayerPage() {
-        if (mp_isInitialized) {
-             console.log("MP: Music Player page already initialized.");
-             // Re-render lists in case data changed while away
-             mp_renderSongsList(mp_songSearch ? mp_songSearch.value : '');
-             mp_renderRecentlyPlayed();
-             mp_renderPlaylists();
-             return;
-        }
-        console.log("MP: Initializing Music Player Page Content...");
-    
-        // Get elements specific to the music page grid
+        // Get elements specific to the music page grid - DO THIS EVERY TIME
         mp_fileInput = document.getElementById('mp_fileInput');
         mp_songsList = document.getElementById('mp_songsList');
         mp_recentlyPlayedList = document.getElementById('mp_recentlyPlayedList');
         mp_playlistsList = document.getElementById('mp_playlistsList');
         mp_songSearch = document.getElementById('mp_songSearch');
-    
-        // Check if elements were found
-        if (!mp_fileInput || !mp_songsList || !mp_recentlyPlayedList || !mp_playlistsList || !mp_songSearch) {
-             console.error("MP: Failed to find one or more music page elements. Cannot initialize page fully.");
-             return; // Stop initialization if essential elements are missing
+
+         // Check if elements were found - If not, stop and report
+         if (!mp_fileInput || !mp_songsList || !mp_recentlyPlayedList || !mp_playlistsList || !mp_songSearch) {
+              console.error("MP: Failed to find one or more music page elements. Cannot initialize page fully.");
+              mp_isInitialized = false; // Ensure flag is false if elements are missing
+              return;
+         }
+
+        if (mp_isInitialized) {
+             console.log("MP: Music Player page already initialized. Re-rendering lists.");
+             // Re-render lists using the newly obtained element references
+             // Add a small delay here to ensure elements are fully in the DOM before rendering
+             setTimeout(() => {
+                 console.log("MP: Re-rendering music lists after slight delay (initialized page)...");
+                 mp_renderSongsList(mp_songSearch ? mp_songSearch.value : '');
+                 mp_renderRecentlyPlayed();
+                 mp_renderPlaylists();
+                 console.log("MP: Re-rendering complete.");
+             }, 10); // Small delay, adjust if needed
+             return; // Exit since initialization is complete
         }
-    
-    
-        // Attach listeners for page-specific elements
+        console.log("MP: Initializing Music Player Page Content (first time)...");
+
+        // Attach listeners for page-specific elements - DO THIS ONLY ON FIRST INITIALIZATION
         mp_fileInput.addEventListener('change', mp_handleFileSelect);
         mp_songSearch.addEventListener('input', () => {
             mp_renderSongsList(mp_songSearch.value);
         });
-    
-        // Initial rendering of lists
-        mp_renderSongsList();
-        mp_renderRecentlyPlayed();
-        mp_renderPlaylists();
-    
+
+        // Initial rendering of lists - DO THIS ONLY ON FIRST INITIALIZATION
+         // Also add a small delay here for the very first render after page content is set
+         setTimeout(() => {
+            console.log("MP: Initial rendering of music lists after slight delay (first time)...");
+            mp_renderSongsList();
+            mp_renderRecentlyPlayed();
+            mp_renderPlaylists();
+            console.log("MP: Initial rendering complete.");
+         }, 10); // Small delay, adjust if needed
+
+
         mp_isInitialized = true;
         console.log("MP: Music Player Page Content Initialized.");
     }
