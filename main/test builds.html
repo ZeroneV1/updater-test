@@ -73,6 +73,11 @@
     .sidebar.open {
       left: 0;
     }
+      
+    .sidebar.open ~ .iframe-container {
+        left: 60px; /* Push by sidebar width */
+        width: calc(100% - 60px); /* Reduce width by sidebar width */
+    }
 
     .icon {
       color: var(--text-muted); /* Use variable */
@@ -1504,6 +1509,136 @@
          margin-top: 20px;
      }
 
+    /* Container for the music icon and its hover overlay */
+    /* Positioned relative to the sidebar, so its absolute child can be placed */
+    #musicIconAndHoverContainer {
+        position: relative; /* Needed for absolute positioning of the overlay */
+        /* You might need to add specific positioning here if you want the overlay
+           to appear differently when the sidebar is open/closed. For simplicity,
+           we'll position the overlay relative to the icon's fixed spot. */
+    }
+    
+    
+    /* Style for the hover overlay box */
+    #audioControlHoverOverlay {
+        display: none; /* Hidden by default */
+        position: absolute; /* Position relative to #musicIconAndHoverContainer */
+    
+        /* Adjust position relative to the sidebar icon's location */
+        /* Example: To appear to the right of the icon when sidebar is closed */
+        top: 0; /* Align top with the icon */
+        left: calc(60px + 10px); /* Sidebar width (60px) + a little gap (10px) */
+        /* Example: To appear just below the icon when sidebar is open (more complex CSS or JS might be needed) */
+        /* top: 60px; left: 50%; transform: translateX(-50%); width: 200px; */
+    
+    
+        width: 220px; /* Compressed box width */
+        background-color: var(--card-bg); /* Use theme card background */
+        border: 1px solid var(--accent); /* Use theme accent border */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        padding: 10px;
+        border-radius: var(--border-radius);
+        z-index: 100; /* Ensure it's above most content, below modals */
+        color: var(--text-light); /* Use theme text color */
+    
+        /* Basic layout using Flexbox */
+        display: flex; /* Use flex when visible */
+        flex-direction: column;
+        gap: 8px; /* Space between sections */
+    }
+    
+    /* Style for the song title in the overlay */
+    .overlay-song-title {
+        font-size: 0.9em;
+        font-weight: bold;
+        white-space: nowrap; /* Prevent wrapping */
+        overflow: hidden; /* Hide overflow text */
+        text-overflow: ellipsis; /* Show ellipsis for overflow */
+        text-align: center;
+    }
+    
+    /* Style for the "Next song:" label in the overlay */
+    .overlay-label {
+        font-size: 0.8em;
+        color: var(--text-muted); /* Use theme muted text */
+        text-align: center;
+    }
+    
+    /* Container for control buttons in the overlay */
+    .overlay-controls {
+        display: flex;
+        justify-content: center; /* Center buttons horizontally */
+        gap: 10px; /* Space between buttons */
+    }
+    
+    /* Style for control buttons in the overlay */
+    .overlay-controls button {
+        background: none;
+        border: none;
+        font-size: 1.5em;
+        cursor: pointer;
+        padding: 0 5px; /* Add some padding */
+        color: var(--text-light); /* Use theme text color */
+        transition: color 0.2s;
+    }
+    
+    .overlay-controls button:hover {
+        color: var(--accent); /* Use theme accent on hover */
+    }
+    .overlay-controls button:disabled {
+         color: var(--text-muted); /* Muted color for disabled buttons */
+         cursor: not-allowed;
+         opacity: 0.5;
+    }
+    
+    
+    /* Container for time and scroller in the overlay */
+    .overlay-time-scroller {
+        display: flex;
+        align-items: center; /* Vertically align items */
+        gap: 5px;
+    }
+    
+    /* Style for the scroller (range input) in the overlay */
+    .overlay-time-scroller input[type="range"] {
+        flex-grow: 1; /* Allow scroller to fill available space */
+         cursor: pointer;
+         height: 5px;
+         background: #555; /* Static grey background for the track */
+         border-radius: 3px;
+         -webkit-appearance: none; /* Hide default styling */
+         appearance: none;
+         /* You might need specific styles for the thumb based on browser */
+    }
+    /* Styles for the scroller thumb */
+    .overlay-time-scroller input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        background: var(--accent); /* Use theme accent for thumb */
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    .overlay-time-scroller input[type="range"]::-moz-range-thumb {
+         width: 14px;
+         height: 14px;
+         background: var(--accent);
+         border-radius: 50%;
+         cursor: pointer;
+         border: none; /* Remove default Firefox border */
+    }
+    
+    
+    /* Style for time spans in the overlay */
+    .overlay-time {
+        font-size: 0.8em;
+        color: var(--text-muted); /* Use theme muted text */
+        min-width: 35px; /* Give time spans a minimum width to prevent layout shifts */
+        text-align: center;
+        font-variant-numeric: tabular-nums; /* Helps keep numbers aligned */
+    }
+
 
 
   </style>
@@ -1559,7 +1694,26 @@
     <div class="icon" data-page="Viewer" title="Viewer"><i class="fas fa-globe"></i></div>
     <div class="icon" data-page="Games" title="Games"><i class="fas fa-gamepad"></i></div>
     <div class="icon" data-page="Updater" title="Updater"><i class="fas fa-sync-alt"></i></div>
-    <div class="icon" data-page="Music" title="Music"><i class="fas fa-music"></i></div>
+      
+    <div id="musicIconAndHoverContainer" style="position: relative; z-index: 11;"> <div class="icon" data-page="Music" title="Music">
+            <i class="fas fa-music"></i>
+        </div>
+    
+        <div id="audioControlHoverOverlay" class="audio-hover-overlay">
+            <div id="hoverOverlaySongTitle" class="overlay-song-title">No song playing</div>
+            <div class="overlay-label">Next song:</div>
+            <div id="hoverOverlayControls" class="overlay-controls">
+                <button id="hoverOverlayBackwardBtn" title="Previous"><i class="fas fa-step-backward"></i></button>
+                <button id="hoverOverlayPlayPauseBtn" title="Play/Pause"><i class="fas fa-play"></i></button>
+                <button id="hoverOverlayForwardBtn" title="Next"><i class="fas fa-step-forward"></i></button>
+            </div>
+            <div id="hoverOverlayTimeScroller" class="overlay-time-scroller">
+                <span id="hoverOverlayCurrentTime" class="overlay-time">0:00</span>
+                <input type="range" id="hoverOverlayScroller" min="0" value="0" step="0.1">
+                <span id="hoverOverlayTotalDuration" class="overlay-time">0:00</span>
+            </div>
+        </div>
+    </div>
 
     <div class="bottom-icons">
       <div class="icon" data-page="Settings" title="Settings"><i class="fas fa-cog"></i></div>
@@ -1665,6 +1819,21 @@
     let notificationEnabled = true;
     let notificationDisplayDuration = 8000;
     let currentThemeName = 'default';
+
+    // --- Music Hover Overlay Element References ---
+    let musicIconAndHoverContainer = null;
+    let audioControlHoverOverlay = null;
+    let hoverOverlaySongTitle = null;
+    // let hoverOverlayNextSongLabel = null; // This is a static label, no JS ref needed unless you want to change its text
+    let hoverOverlayBackwardBtn = null;
+    let hoverOverlayPlayPauseBtn = null;
+    let hoverOverlayForwardBtn = null;
+    let hoverOverlayCurrentTime = null;
+    let hoverOverlayScroller = null;
+    let hoverOverlayTotalDuration = null;
+    
+    // Flag to know if the hover overlay elements and listeners are initialized
+    let mp_hoverOverlayInitialized = false;
 
     // Define themes array (keep your existing themes array here)
     const themes = [
@@ -1811,6 +1980,18 @@
                 '--text-muted': '#333333', // Dark grey muted text
                 '--card-bg': '#dddddd', // Light grey card background
                 '--accent': '#404040', // Dark grey accent
+            }
+        },
+        {
+            name: 'mint-chocolate',
+            previewClass: 'theme-mint-chocolate-preview',
+            variables: {
+                '--bg-dark': '#1c0903',
+                '--sidebar-dark': '#1c0903',
+                '--text-light': '#fff',
+                '--text-muted': '#ccc',
+                '--card-bg': '#1c0903',
+                '--accent': '#19d866',
             }
         }
     ];
@@ -2382,7 +2563,7 @@
 
     // --- Playback Logic ---
 
-    // Stops playback, revokes URL, clears UI
+    // Stops playback, revokes URL, clears UI for both main bar and hover overlay
     function mp_stopPlaybackAndClearUI() {
         console.log("MP: Stopping playback and clearing UI.");
         if (mp_currentSong && mp_currentSong.tempUrl) {
@@ -2398,13 +2579,29 @@
         mp_currentSongIndex = -1;
         // mp_currentQueue = []; // Keep queue for potential resume? Maybe clear on explicit stop?
         mp_isPlaying = false;
-        mp_updatePlaybackControls(); // Update buttons etc.
+    
+        // --- Clear Main Playback Bar UI ---
         if (mp_currentSongInfo) mp_currentSongInfo.textContent = "No Song Playing";
         if (mp_currentSongInfo) mp_currentSongInfo.title = "";
         if (mp_seekBar) mp_seekBar.value = 0;
         if (mp_currentTime) mp_currentTime.textContent = mp_formatTime(0);
         if (mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(0);
-        mp_updatePlayingIndicator(); // Clear playing indicators
+    
+        // --- Update Hover Overlay State ---
+        if (audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
+            // Keep it visible or hide? Let's hide it as no song is playing.
+            audioControlHoverOverlay.style.display = 'none'; // Hide the overlay
+            // Clear its content
+            if (hoverOverlaySongTitle) hoverOverlaySongTitle.textContent = "No song playing";
+            if (hoverOverlaySongTitle) hoverOverlaySongTitle.title = "";
+            if (hoverOverlayScroller) hoverOverlayScroller.value = 0;
+            if (hoverOverlayCurrentTime) hoverOverlayCurrentTime.textContent = mp_formatTime(0);
+            if (hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = mp_formatTime(0);
+        }
+        // --- End Update Hover Overlay ---
+    
+        mp_updatePlaybackControls(); // Update both sets of buttons (will disable them)
+        mp_updatePlayingIndicator(); // Clear playing indicators in lists
     }
 
 
@@ -2416,8 +2613,8 @@
             mp_stopPlaybackAndClearUI();
             return;
         }
-
-        // *** Check if handle is available (REMOVED THE RE-REQUEST FALLBACK) ***
+    
+        // *** Check if handle is available ***
         if (!mp_currentDirectoryHandle) {
              console.error("MP: Directory handle not available. Cannot load song. Handle Status:", mp_currentDirectoryHandle);
              // Avoid alert loop - rely on UI prompt being visible
@@ -2425,10 +2622,11 @@
              mp_stopPlaybackAndClearUI(); // Stop any previous playback
              return; // Stop if handle isn't ready
         }
-
+    
         // Show playback bar when attempting to load a song
         if (mp_playbackControlsBar) mp_playbackControlsBar.style.display = 'flex';
-
+         // The hover overlay will be shown on hover if music is playing
+    
         // --- Find File Handle & Get File ---
         let fileToPlay = null;
         try {
@@ -2439,7 +2637,7 @@
                   mp_stopPlaybackAndClearUI();
                   return; // Stop loading
              }
-
+    
              // Recursive function to find the file handle within the directory structure
              async function findFileHandleRecursive(dirHandle, fileNameToFind, currentPath = '') {
                  // Check directory permission before iterating
@@ -2447,7 +2645,7 @@
                        console.warn(`MP: No permission for directory ${dirHandle.name} during search.`);
                        return null;
                   }
-
+    
                  try {
                      for await (const entryHandle of dirHandle.values()) {
                          const entryFullPath = currentPath ? `${currentPath}/${entryHandle.name}` : entryHandle.name;
@@ -2469,22 +2667,22 @@
                  }
                  return null; // Not found in this directory level
              }
-
+    
             const fileHandle = await findFileHandleRecursive(mp_currentDirectoryHandle, songMetaData.fileName);
-
+    
             if (!fileHandle) {
                  throw new Error(`File not found within granted directory: ${songMetaData.fileName}`);
             }
-
+    
             // Re-verify permission on the specific file handle (might be redundant but safe)
             if (await fileHandle.queryPermission({ mode: 'read' }) !== 'granted') {
                  throw new Error(`Read permission check failed for file: ${fileHandle.name}`);
             }
-
+    
             console.log(`MP: Found file handle for: ${fileHandle.name}`);
             fileToPlay = await fileHandle.getFile();
             console.log(`MP: Retrieved file object for: ${fileToPlay.name}`);
-
+    
         } catch (err) {
             console.error("MP: Error getting file for playback:", err);
             // Use less intrusive notification?
@@ -2493,32 +2691,50 @@
             mp_stopPlaybackAndClearUI();
             return;
         }
-
+    
         // --- Create Temporary URL & Load Player ---
         if (mp_currentSong && mp_currentSong.tempUrl) {
             URL.revokeObjectURL(mp_currentSong.tempUrl);
         }
         const tempUrl = URL.createObjectURL(fileToPlay);
         console.log(`MP: Created temp URL for ${songMetaData.fileName}`);
-
+    
         mp_currentSong = { ...songMetaData, tempUrl: tempUrl }; // Store metadata and URL
-        if (mp_audioPlayer) {
-            console.log("MP: Setting audio player src:", tempUrl);
-            mp_audioPlayer.src = tempUrl;
-            mp_audioPlayer.load(); // Important after setting src
+    
+        // --- Update Main Playback Bar Content ---
+        if (mp_currentSongInfo) {
+            mp_currentSongInfo.textContent = `${songMetaData.artist} - ${songMetaData.title}`;
+            mp_currentSongInfo.title = `${songMetaData.artist} - ${songMetaData.title}`;
         }
         if (mp_seekBar) mp_seekBar.value = 0;
         if (mp_currentTime) mp_currentTime.textContent = mp_formatTime(0);
         // Delay setting total duration until loadedmetadata fires
         if (mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(0);
-        if (mp_currentSongInfo) {
-            mp_currentSongInfo.textContent = `${songMetaData.artist} - ${songMetaData.title}`;
-            mp_currentSongInfo.title = `${songMetaData.artist} - ${songMetaData.title}`;
+    
+        // --- Update Hover Overlay Content (if visible) ---
+        if (audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
+            if (hoverOverlaySongTitle) {
+                hoverOverlaySongTitle.textContent = `${songMetaData.artist} - ${songMetaData.title}`;
+                hoverOverlaySongTitle.title = `${songMetaData.artist} - ${songMetaData.title}`;
+            }
+            if (hoverOverlayScroller) hoverOverlayScroller.value = 0;
+            if (hoverOverlayCurrentTime) hoverOverlayCurrentTime.textContent = mp_formatTime(0);
+             // Total duration is often not known precisely until loadedmetadata fires
+            if (hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = '0:00'; // Reset initially
+        }
+        // --- End Update Hover Overlay ---
+    
+    
+        if (mp_audioPlayer) {
+            console.log("MP: Setting audio player src:", tempUrl);
+            mp_audioPlayer.src = tempUrl;
+            mp_audioPlayer.load(); // Important after setting src
         }
         // mp_playAudio(); // Playback is initiated via audio element events or play button
         mp_addToRecentlyPlayed(songMetaData.id);
-        mp_updatePlayingIndicator();
-
+        mp_updatePlayingIndicator(); // This updates the main bar button/indicator
+        mp_updatePlaybackControls(); // Call this to update *both* sets of buttons
+    
          // Attempt to play (browser might block autoplay)
          mp_playAudio();
     }
@@ -2587,6 +2803,7 @@
     }
 
     // Starts audio playback
+// Starts audio playback
     function mp_playAudio() {
         if (!mp_currentSong || !mp_audioPlayer || !mp_audioPlayer.src || mp_audioPlayer.src.startsWith('blob:') === false) {
             console.warn("MP: Cannot play - No current song, audio element, or valid src.", mp_currentSong, mp_audioPlayer?.src);
@@ -2595,14 +2812,14 @@
         mp_audioPlayer.play()
             .then(() => {
                  mp_isPlaying = true;
-                 mp_updatePlaybackControls();
+                 mp_updatePlaybackControls(); // <-- Corrected function name
                  console.log("MP: Playback started or resumed.");
              })
             .catch(error => {
                 // Common errors: NotAllowedError (autoplay), NotSupportedError
                 console.error("MP: Playback failed:", error);
                 mp_isPlaying = false;
-                mp_updatePlaybackControls();
+                mp_updatePlaybackControls(); // <-- Corrected function name
                  // Don't alert here, rely on the 'error' event listener on the audio element for user feedback
                 // alert(`MP: Playback Error - ${error.name}: ${error.message}`);
             });
@@ -2612,33 +2829,40 @@
     function mp_pauseAudio() {
         if(mp_audioPlayer) mp_audioPlayer.pause();
         mp_isPlaying = false;
-        mp_updatePlaybackControls();
+        mp_updateMainPlaybackBarControls()
         console.log("MP: Playback paused.");
     }
 
     // Toggles play/pause state
     function mp_togglePlayPause() {
-        if (!mp_currentSong) {
-             // If no song loaded, try playing first song from library (if handle exists)
-             if (mp_musicLibrary.length > 0 && mp_currentDirectoryHandle) {
-                 console.log("MP: No current song, attempting to play first song from library.");
-                 mp_playSongFromLibrary(mp_musicLibrary[0].id);
-             } else if (!mp_currentDirectoryHandle) {
-                 console.warn("MP: Play toggle clicked, but no directory handle.");
-                  mp_updatePermissionUI(false, null); // Ensure prompt is visible
-                 showIndividualNotification("Permission Required", "Select music folder or grant access first.", 5000);
-             } else {
-                  console.log("MP: Play toggle clicked, but library is empty.");
-             }
-            return;
+            console.log("MP: mp_togglePlayPause called by button click."); // Specific log
+            console.log("MP: Current state - mp_isPlaying:", mp_isPlaying, "audioPlayer src:", mp_audioPlayer?.src, "audioPlayer paused:", mp_audioPlayer?.paused);
+    
+            if (mp_audioPlayer) {
+                if (mp_isPlaying) {
+                    console.log("MP: mp_togglePlayPause: mp_isPlaying is TRUE. Attempting to PAUSE audio."); // Specific log
+                    mp_audioPlayer.pause(); // This should trigger the 'pause' event listener
+                } else {
+                    console.log("MP: mp_togglePlayPause: mp_isPlaying is FALSE. Attempting to PLAY audio."); // Specific log
+                    // If not playing, check if a song is loaded or playable
+                     if (mp_currentSong || (mp_currentQueue && mp_currentQueue.length > 0)) {
+                         console.log("MP: mp_togglePlayPause: Song loaded or queue exists. Calling mp_playAudio()."); // Specific log
+                         mp_playAudio(); // This should attempt to play and trigger the 'play' event listener
+                     } else if (mp_musicLibrary.length > 0) {
+                          console.warn("MP: mp_togglePlayPause: Play button clicked, but no song loaded. Library has songs.");
+                          // Optional: If nothing loaded, play the first song in the library
+                          // mp_playSong(mp_musicLibrary[0].id); // Assuming you have a function like this
+                     } else {
+                         console.warn("MP: mp_togglePlayPause: Play button clicked, but no song loaded and no library/queue available.");
+                     }
+                }
+            } else {
+                console.error("MP: mp_togglePlayPause: audioPlayer element not found.");
+            }
+            // UI updates happen via 'play' and 'pause' audio events.
+            // Removed the redundant call to mp_updatePlaybackControls() here as events handle it.
+            // mp_updatePlaybackControls(); // REMOVED
         }
-        // If a song is loaded, toggle its state
-        if (mp_isPlaying) {
-            mp_pauseAudio();
-        } else {
-             mp_playAudio();
-        }
-    }
 
     // Plays the next song in the current queue
     function mp_playNextSong() {
@@ -2726,21 +2950,45 @@
     }
 
 
-    // Updates playback control buttons/UI state
+    // Updates playback control buttons/UI state for both main bar and hover overlay
     function mp_updatePlaybackControls() {
-        if (!mp_playbackBarInitialized) return; // Don't update if bar isn't set up
-        if (mp_playPauseButton) {
-            mp_playPauseButton.innerHTML = mp_isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
-            mp_playPauseButton.title = mp_isPlaying ? 'Pause' : 'Play';
-            // Disable play/pause if no src is loaded? Maybe not, allow playing first song.
-            mp_playPauseButton.disabled = (!mp_currentSong && mp_musicLibrary.length === 0);
+        // Update Main Playback Bar Controls (if initialized)
+        if (mp_playbackBarInitialized) {
+            if (mp_playPauseButton) {
+                mp_playPauseButton.innerHTML = mp_isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
+                mp_playPauseButton.title = mp_isPlaying ? 'Pause' : 'Play';
+                // Disable play/pause if no src is loaded? Maybe not, allow playing first song.
+                mp_playPauseButton.disabled = (!mp_currentSong && mp_musicLibrary.length === 0);
+            }
+            // Enable prev/next only if there's a valid queue with more than one song
+            const canNavigate = mp_currentQueue && mp_currentQueue.length > 1;
+            if (mp_prevButton) mp_prevButton.disabled = !canNavigate;
+            if (mp_nextButton) mp_nextButton.disabled = !canNavigate;
+        } else {
+             console.warn("MP: Main Playback Bar not initialized, skipping button update.");
         }
-        // Enable prev/next only if there's a valid queue with more than one song
-        const canNavigate = mp_currentQueue && mp_currentQueue.length > 1;
-        if (mp_prevButton) mp_prevButton.disabled = !canNavigate;
-        if (mp_nextButton) mp_nextButton.disabled = !canNavigate;
-
-        mp_updatePlayingIndicator(); // Ensure list indicators are updated
+    
+    
+        // --- Update Hover Overlay Controls (if initialized AND visible) ---
+        if (mp_hoverOverlayInitialized && audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
+            console.log("MP: Updating hover overlay controls.");
+            if (hoverOverlayPlayPauseBtn) {
+                 hoverOverlayPlayPauseBtn.innerHTML = mp_isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
+                 hoverOverlayPlayPauseBtn.title = mp_isPlaying ? 'Pause' : 'Play';
+                 hoverOverlayPlayPauseBtn.disabled = (!mp_currentSong && mp_musicLibrary.length === 0);
+            }
+            const canNavigate = mp_currentQueue && mp_currentQueue.length > 1;
+            if (hoverOverlayBackwardBtn) hoverOverlayBackwardBtn.disabled = !canNavigate;
+            if (hoverOverlayForwardBtn) hoverOverlayForwardBtn.disabled = !canNavigate;
+             // Note: Hover overlay doesn't need mp_updatePlayingIndicator as it's not a list of songs
+        } else {
+            // Optional: log if overlay is not initialized or not visible
+            // if (!mp_hoverOverlayInitialized) console.log("MP: Hover Overlay not initialized, skipping button update.");
+            // else if (audioControlHoverOverlay && audioControlHoverOverlay.style.display !== 'flex') console.log("MP: Hover Overlay not visible, skipping button update.");
+        }
+        // --- End Update Hover Overlay ---
+    
+        mp_updatePlayingIndicator(); // Ensure list indicators are updated (this only affects the main song lists)
     }
 
     // Formats time in seconds to M:SS
@@ -2751,18 +2999,49 @@
         return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
     }
 
-    // Updates seek bar progress and time display
+
+    // Updates seek bar progress and time display for both main bar and hover overlay
+// isSeeking is typically local to mp_initializePlaybackBar
+// isSeekingHover should be a variable accessible here, maybe declared globally
+// let isSeekingHover = false; // Example global declaration
+
     function mp_updateSeekBar() {
-        if (!mp_audioPlayer || !mp_audioPlayer.duration || isNaN(mp_audioPlayer.duration) || !mp_seekBar || !mp_currentTime) return;
+        if (!mp_audioPlayer || !mp_audioPlayer.duration || isNaN(mp_audioPlayer.duration)) return; // Basic check for valid audio state
+    
         const currentTime = mp_audioPlayer.currentTime;
         const duration = mp_audioPlayer.duration;
-        const percentage = (currentTime / duration) * 100;
-        mp_seekBar.value = isNaN(percentage) ? 0 : percentage;
-        mp_currentTime.textContent = mp_formatTime(currentTime);
-        // Update total duration only if it's still at 0:00, as it's set by loadedmetadata
-         if (mp_totalDuration && mp_totalDuration.textContent === '0:00' && duration > 0) {
-              mp_totalDuration.textContent = mp_formatTime(duration);
+        const percentage = (currentTime / duration) * 100; // Calculate percentage (0-100)
+    
+        // --- Update Main Playback Bar SeekBar ---
+        // Check the 'isSeeking' flag local to mp_initializePlaybackBar
+        // (Assuming 'isSeeking' is defined in a scope accessible here, e.g., local to mp_initializePlaybackBar)
+        if (mp_seekBar && typeof isSeeking !== 'undefined' && !isSeeking) {
+             mp_seekBar.value = isNaN(percentage) ? 0 : percentage; // Set value based on percentage
          }
+        if (mp_currentTime) {
+             mp_currentTime.textContent = mp_formatTime(currentTime);
+              // Update total duration only if it's still at 0:00 and duration is known
+              if (mp_totalDuration && mp_totalDuration.textContent === '0:00' && duration > 0) {
+                   mp_totalDuration.textContent = mp_formatTime(duration);
+              }
+        }
+    
+    
+        // --- Update Hover Overlay SeekBar (if initialized AND visible) ---
+        // Check the 'isSeekingHover' flag (assuming it's accessible, like a global var)
+        if (mp_hoverOverlayInitialized && audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
+            if (hoverOverlayScroller && typeof isSeekingHover !== 'undefined' && !isSeekingHover) {
+               hoverOverlayScroller.value = isNaN(percentage) ? 0 : percentage; // Set value based on percentage
+            }
+            if (hoverOverlayCurrentTime) {
+                 hoverOverlayCurrentTime.textContent = mp_formatTime(currentTime);
+                 // Also update total duration for hover overlay if needed
+                 if (hoverOverlayTotalDuration && hoverOverlayTotalDuration.textContent === '0:00' && duration > 0) {
+                      hoverOverlayTotalDuration.textContent = mp_formatTime(duration);
+                 }
+            }
+        }
+        // --- End Update Hover Overlay ---
     }
 
 
@@ -2803,6 +3082,128 @@
          if (mp_isInitialized && document.getElementById('mp_recentlyPlayedList')) {
              mp_renderRecentlyPlayed();
          }
+    }
+
+    // --- Sets up listeners and gets references for the music hover overlay ---
+    // --- Sets up listeners and gets references for the music hover overlay ---
+    function initializeMusicHoverOverlay() {
+        if (mp_hoverOverlayInitialized) return; // Run only once
+        console.log("MP: Initializing Music Hover Overlay Listeners...");
+    
+        // Get references AFTER DOM is loaded
+        musicIconAndHoverContainer = document.getElementById('musicIconAndHoverContainer');
+        audioControlHoverOverlay = document.getElementById('audioControlHoverOverlay');
+        hoverOverlaySongTitle = document.getElementById('hoverOverlaySongTitle');
+        // hoverOverlayNextSongLabel = document.getElementById('hoverOverlayNextSongLabel'); // Static label, no need for JS ref
+        hoverOverlayBackwardBtn = document.getElementById('hoverOverlayBackwardBtn');
+        hoverOverlayPlayPauseBtn = document.getElementById('hoverOverlayPlayPauseBtn');
+        hoverOverlayForwardBtn = document.getElementById('hoverOverlayForwardBtn');
+        hoverOverlayCurrentTime = document.getElementById('hoverOverlayCurrentTime');
+        hoverOverlayScroller = document.getElementById('hoverOverlayScroller');
+        hoverOverlayTotalDuration = document.getElementById('hoverOverlayTotalDuration');
+    
+        // Check if essential elements were found
+        if (!musicIconAndHoverContainer || !audioControlHoverOverlay || !hoverOverlaySongTitle ||
+            !hoverOverlayBackwardBtn || !hoverOverlayPlayPauseBtn || !hoverOverlayForwardBtn ||
+            !hoverOverlayCurrentTime || !hoverOverlayScroller || !hoverOverlayTotalDuration) {
+            console.error("MP: Failed to find one or more essential hover overlay elements. Cannot initialize overlay fully.");
+            return; // Stop initialization
+        }
+    
+        // --- Add Hover Listeners to the Container ---
+        let hideOverlayTimeout;
+    
+        musicIconAndHoverContainer.addEventListener('mouseenter', () => {
+            // Only show if a song is currently loaded or playing/paused
+            // Checking audioPlayer.paused is more reliable than just mp_currentSong for state
+            if (mp_currentSong || (mp_audioPlayer && mp_audioPlayer.src)) {
+                 clearTimeout(hideOverlayTimeout); // Cancel any pending hide
+                 audioControlHoverOverlay.style.display = 'flex'; // Show the overlay (using flex from CSS)
+    
+                 // --- *** Call Update Functions Immediately on Showing Overlay *** ---
+                 console.log("MP: Hover Overlay shown. Updating content.");
+                 // Update Song Title
+                 if (hoverOverlaySongTitle && mp_currentSong) {
+                      hoverOverlaySongTitle.textContent = `${mp_currentSong.artist} - ${mp_currentSong.title}`;
+                      hoverOverlaySongTitle.title = `${mp_currentSong.artist} - ${mp_currentSong.title}`;
+                 } else if (hoverOverlaySongTitle) {
+                     hoverOverlaySongTitle.textContent = "No song playing";
+                     hoverOverlaySongTitle.title = "";
+                 }
+    
+                 // Update Button States (Play/Pause, Next/Prev enabled/disabled)
+                 mp_updatePlaybackControls(); // This function updates buttons for both bars
+    
+                 // Update Time and Scroller
+                 mp_updateSeekBar(); // This function updates time and scroller for both bars if visible
+    
+                 // Ensure Total Duration is set if known
+                 if (mp_audioPlayer && !isNaN(mp_audioPlayer.duration) && mp_audioPlayer.duration > 0) {
+                     if(hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = mp_formatTime(mp_audioPlayer.duration);
+                 } else {
+                     if(hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = '0:00'; // Reset if no duration yet
+                 }
+                 // --- *** End Update on Showing Overlay *** ---
+    
+            } else {
+                 console.log("MP Hover Overlay: Not showing overlay, no song loaded or playing.");
+                 // Optionally hide it explicitly if it was somehow left visible but no song is playing/paused
+                 audioControlHoverOverlay.style.display = 'none';
+            }
+        });
+    
+        musicIconAndHoverContainer.addEventListener('mouseleave', () => {
+            // Add a small delay before hiding, allows moving mouse onto the overlay
+            hideOverlayTimeout = setTimeout(() => {
+                audioControlHoverOverlay.style.display = 'none'; // Hide the overlay
+            }, 200); // 200ms delay
+        });
+    
+        // Prevent the timeout from hiding the overlay if the mouse enters the overlay itself
+        audioControlHoverOverlay.addEventListener('mouseenter', () => {
+            clearTimeout(hideOverlayTimeout);
+        });
+    
+        audioControlHoverOverlay.addEventListener('mouseleave', () => {
+            hideOverlayTimeout = setTimeout(() => {
+                 audioControlHoverOverlay.style.display = 'none';
+             }, 200); // Keep the same delay
+        });
+    
+    
+        // --- Add Control Button Listeners for the Overlay ---
+        hoverOverlayPlayPauseBtn.addEventListener('click', mp_togglePlayPause);
+        hoverOverlayBackwardBtn.addEventListener('click', mp_playPrevSong);
+        hoverOverlayForwardBtn.addEventListener('click', mp_playNextSong);
+    
+        // --- Add Scroller Listener for the Overlay ---
+        // 'isSeekingHover' flag should be accessible to this function and its listeners.
+        // If it's not declared outside, declare it here:
+         let isSeekingHover = false; // Assuming it's local as per your original snippet
+    
+        hoverOverlayScroller.addEventListener('input', () => {
+             // Only update time if the hover seek bar is being dragged AND audio is ready
+             if (!mp_audioPlayer || !mp_audioPlayer.duration || isNaN(mp_audioPlayer.duration)) return; // Check for valid audio state
+             isSeekingHover = true; // Set seeking flag for this scroller
+    
+             const seekTime = (hoverOverlayScroller.value / 100) * mp_audioPlayer.duration; // Assuming max=100
+             if (!isNaN(seekTime)) {
+                 mp_audioPlayer.currentTime = seekTime;
+                  // Update time display immediately while scrubbing (hover overlay)
+                 if(hoverOverlayCurrentTime) hoverOverlayCurrentTime.textContent = mp_formatTime(seekTime);
+                  // The mp_updateSeekBar function will handle syncing the main seek bar on the next timeupdate event
+             }
+         });
+    
+         // Use 'change' to signal the end of scrubbing
+         hoverOverlayScroller.addEventListener('change', () => {
+              isSeekingHover = false; // Clear seeking flag for this scroller
+              // The timeupdate listener will sync both bars after scrubbing stops
+          });
+    
+    
+        mp_hoverOverlayInitialized = true;
+        console.log("MP: Music Hover Overlay Initialized.");
     }
 
     // --- Playlist Management & Modals ---
@@ -3111,10 +3512,11 @@
     // --- Initialization and Event Listeners ---
 
     // Sets up listeners for the persistent playback bar
+    // Sets up listeners for the persistent playback bar
     function mp_initializePlaybackBar() {
          if (mp_playbackBarInitialized) return; // Run only once
          console.log("MP: Initializing Playback Bar Listeners...");
-
+    
          // Get references AFTER DOM is loaded
          mp_playPauseButton = document.getElementById('mp_playPauseButton');
          mp_prevButton = document.getElementById('mp_prevButton');
@@ -3126,34 +3528,42 @@
          mp_volumeSlider = document.getElementById('mp_volumeSlider');
          mp_muteButton = document.getElementById('mp_muteButton');
          mp_volumePercentage = document.getElementById('mp_volumePercentage');
-
+    
          // Check if all elements were found
          if (!mp_playPauseButton || !mp_prevButton || !mp_nextButton || !mp_seekBar || !mp_volumeSlider || !mp_muteButton || !mp_audioPlayer || !mp_volumePercentage || !mp_currentTime || !mp_totalDuration || !mp_currentSongInfo) {
              console.error("MP: Failed to find one or more essential playback control elements. Cannot initialize bar fully.");
              return; // Stop initialization if elements missing
          }
-
-         // Attach listeners
+    
+         // Attach listeners for the main playback bar controls
          mp_playPauseButton.addEventListener('click', mp_togglePlayPause);
          mp_nextButton.addEventListener('click', mp_playNextSong);
          mp_prevButton.addEventListener('click', mp_playPrevSong);
-
-         // Prevent seek bar input during audio seeking
-         let isSeeking = false;
+    
+         // Prevent seek bar input during audio seeking (for the main bar)
+         // 'isSeeking' flag should be accessible to this function and its listeners.
+         // If it's not declared outside, declare it here: let isSeeking = false;
+          let isSeeking = false; // Assuming it's local as per your original code snippet
+    
          mp_seekBar.addEventListener('input', () => {
+              // Only update time if the main seek bar is being dragged AND audio is ready
               if (!mp_audioPlayer || !mp_audioPlayer.duration || isNaN(mp_audioPlayer.duration) || isSeeking) return;
-              const seekTime = (mp_seekBar.value / 100) * mp_audioPlayer.duration;
+    
+              const seekTime = (mp_seekBar.value / 100) * mp_audioPlayer.duration; // Assuming max=100
               if (!isNaN(seekTime)) {
                    mp_audioPlayer.currentTime = seekTime;
-                   // Update time display immediately while scrubbing
+                   // Update time display immediately while scrubbing (main bar)
                    if(mp_currentTime) mp_currentTime.textContent = mp_formatTime(seekTime);
+                   // Note: mp_updateSeekBar will handle updating the hover overlay scroller if needed
               }
          });
           mp_seekBar.addEventListener('change', () => { // Fires after user releases mouse
-              // Can potentially re-sync here if needed, but 'input' usually covers it.
+              // No specific action needed here if 'input' already updates audio time
+              // You could potentially re-sync the hover scroller here if desired, but mp_updateSeekBar should do it on timeupdate
           });
-
-
+    
+    
+         // Volume slider listener for the main bar
          mp_volumeSlider.addEventListener('input', () => {
              if (!mp_audioPlayer) return;
              const newVolume = mp_volumeSlider.value;
@@ -3162,29 +3572,55 @@
              if (newVolume > 0) {
                   mp_audioPlayer.muted = false;
              }
-             mp_updateVolumeControls(); // Update mute icon and percentage text
+             mp_updateVolumeControls(); // Update mute icon and percentage text (This function should handle both bars)
          });
-
+    
+         // Mute button listener for the main bar
          mp_muteButton.addEventListener('click', () => {
               if (!mp_audioPlayer) return;
               mp_audioPlayer.muted = !mp_audioPlayer.muted;
-              mp_updateVolumeControls(); // Update icon, percentage, and potentially slider visual state
+              mp_updateVolumeControls(); // Update icon, percentage, and potentially slider visual state (This function should handle both bars)
          });
-
-         // Audio element listeners
-          mp_audioPlayer.addEventListener('seeking', () => { isSeeking = true; });
-          mp_audioPlayer.addEventListener('seeked', () => { isSeeking = false; });
-         mp_audioPlayer.addEventListener('timeupdate', () => { if (!isSeeking) mp_updateSeekBar(); }); // Update seek bar only if not manually seeking
+    
+         // Audio element listeners (These handle core audio events and trigger UI updates)
+         // The 'isSeeking' flag used here is the one declared within this function.
+          mp_audioPlayer.addEventListener('seeking', () => { isSeeking = true; }); // Main bar seeking starts
+          mp_audioPlayer.addEventListener('seeked', () => { isSeeking = false; }); // Main bar seeking ends
+    
+         mp_audioPlayer.addEventListener('timeupdate', () => {
+              // Call the combined update function.
+              // mp_updateSeekBar internally checks the 'isSeeking' (main) and 'isSeekingHover' (hover) flags
+             mp_updateSeekBar();
+         });
+    
          mp_audioPlayer.addEventListener('loadedmetadata', () => {
              console.log("MP: loadedmetadata fired. Duration:", mp_audioPlayer.duration);
-             if (!isNaN(mp_audioPlayer.duration)) {
-                if(mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(mp_audioPlayer.duration);
+             const duration = mp_audioPlayer.duration;
+             if (!isNaN(duration)) {
+                 // Update Main Playback Bar
+                 if(mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(duration);
+                 if(mp_seekBar) mp_seekBar.max = 100; // Set max to 100 for percentage
+    
+                 // --- Update Hover Overlay (if initialized) ---
+                 if (mp_hoverOverlayInitialized) { // Check if initialized before accessing elements
+                     if(hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = mp_formatTime(duration);
+                     if(hoverOverlayScroller) hoverOverlayScroller.max = 100; // Set max to 100 for percentage
+                 }
+                 // --- End Update Hover Overlay ---
+    
              } else {
-                 if(mp_totalDuration) mp_totalDuration.textContent = '?:??'; // Indicate unknown duration
+                 // Handle unknown duration for both
+                  if(mp_totalDuration) mp_totalDuration.textContent = '?:??';
+                  // Also update hover overlay if initialized
+                  if (mp_hoverOverlayInitialized && hoverOverlayTotalDuration) { // Check if initialized
+                       hoverOverlayTotalDuration.textContent = '?:??';
+                  }
              }
-             mp_updateSeekBar(); // Update current time immediately
+             mp_updateSeekBar(); // Update current time immediately for both (handled inside mp_updateSeekBar)
          });
-         mp_audioPlayer.addEventListener('ended', mp_playNextSong);
+    
+         mp_audioPlayer.addEventListener('ended', mp_playNextSong); // Play next song when current one ends
+    
          mp_audioPlayer.addEventListener('error', (e) => {
              console.error("MP: Audio Player Error Event:", mp_audioPlayer.error, e);
              let errorMsg = "Unknown playback error.";
@@ -3197,18 +3633,33 @@
                       default: errorMsg = `An unknown error occurred (Code ${mp_audioPlayer.error.code})`;
                   }
              }
-             if(mp_currentSongInfo) mp_currentSongInfo.textContent = `Error: ${errorMsg}`;
-             showIndividualNotification("Playback Error", `Could not play "${mp_currentSong?.title || 'song'}": ${errorMsg}`, 6000);
-             // Don't stop playback completely? Maybe try next song? Depends on desired behavior.
-             // mp_stopPlaybackAndClearUI(); // Uncomment to stop everything on error
-             mp_playNextSong(); // Or try the next song
+             if(mp_currentSongInfo) mp_currentSongInfo.textContent = `Error: ${errorMsg}`; // Update main bar song info
+             showIndividualNotification("Playback Error", `Could not play "${mp_currentSong?.title || 'song'}": ${errorMsg}`, 6000); // Show notification
+             // Decide how to handle errors - stopping or skipping to next song
+             // mp_stopPlaybackAndClearUI(); // Option 1: Stop everything
+             mp_playNextSong(); // Option 2: Try playing the next song
          });
-         mp_audioPlayer.addEventListener('play', () => { mp_isPlaying = true; mp_updatePlaybackControls(); });
-         mp_audioPlayer.addEventListener('pause', () => { mp_isPlaying = false; mp_updatePlaybackControls(); });
-         mp_audioPlayer.addEventListener('volumechange', mp_updateVolumeControls);
-
-         mp_updateVolumeControls(); // Initial volume UI setup
-         mp_updatePlaybackControls(); // Initial button state
+    
+         // Update button states when playback starts/pauses
+     mp_audioPlayer.addEventListener('play', () => {
+          mp_isPlaying = true;
+          mp_updatePlaybackControls(); // Corrected function name
+          console.log("MP: Audio 'play' event. mp_isPlaying:", mp_isPlaying); // Add console log for debugging
+     });
+     mp_audioPlayer.addEventListener('pause', () => {
+          mp_isPlaying = false;
+          mp_updatePlaybackControls(); // Corrected function name
+          console.log("MP: Audio 'pause' event. mp_isPlaying:", mp_isPlaying); // Add console log for debugging
+     });
+    
+         // Update volume UI when volume changes (e.g., system volume controls)
+         mp_audioPlayer.addEventListener('volumechange', mp_updateVolumeControls); // This should handle both bars if needed
+    
+         // Initial UI setup based on current state (useful on page load if audio was playing before)
+         mp_updateVolumeControls(); // Initial volume UI setup (should handle both bars if needed)
+         mp_updatePlaybackControls(); // Initial button state (call the combined function)
+         mp_updateSeekBar(); // Initial time/scroller state
+    
          mp_playbackBarInitialized = true;
          console.log("MP: Playback Bar Initialized.");
      }
@@ -3893,7 +4344,7 @@
       console.log('Loading viewer with URL:', url, 'Custom title:', customTitle);
       // Allow launching with no URL to show the input box immediately
       // if (!url) return; // Removed this check
-
+    
       // Basic URL validation (only if a URL is provided)
       if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('about:')) {
           url = 'https://' + url; // Attempt to prepend https
@@ -3901,7 +4352,7 @@
           console.log('Prepended https to URL:', url);
       }
        // If no URL is provided initially, the iframe src will be empty or about:blank
-
+    
       try {
         if (url && !url.startsWith('about:')) { // Only validate if it's not about:blank
            new URL(url); // Validate if it's a proper URL now
@@ -3915,12 +4366,12 @@
         // Don't add search results to recents/library typically
         updateRecents = false;
       }
-
-      // Hide sidebar and main content container for iframe view
-       document.querySelector('.sidebar').style.display = 'none';
+    
+      // Hide main content container for iframe view - Sidebar is NO LONGER hidden here
+       // document.querySelector('.sidebar').style.display = 'none'; // REMOVED THIS LINE
        pageContent.style.display = 'none';
        pageTitle.style.display = 'none'; // Hide main title
-
+    
       // Create or get iframe container
       let iframeContainer = document.getElementById('iframe-viewer-container');
       if (!iframeContainer) {
@@ -3930,7 +4381,7 @@
          document.body.appendChild(iframeContainer); // Append directly to body
          console.log('Created iframe container.');
       }
-
+    
       iframeContainer.style.display = 'flex'; // Ensure it's visible
       iframeContainer.innerHTML = `
         <iframe src="${escapeHtml(url)}" frameborder="0" allowfullscreen></iframe>
@@ -3941,9 +4392,9 @@
           <button class="fullscreen-button" onclick="openFullscreen('${escapeHtml(url)}')" title="Open Fullscreen"><i class="fas fa-expand"></i></button>
           ${updateRecents ? `<button onclick="addToLibraryFromViewer('${escapeHtml(url)}')" title="Add to Library"><i class="fas fa-bookmark"></i></button>` : ''}
         </div>`;
-
+    
       console.log('Set iframe source to:', url);
-
+    
       if (updateRecents && url && url !== 'about:blank') {
          updateRecentlyViewed(url); // Only update recents if a valid URL was loaded
          console.log('Updated recently viewed.');
@@ -4724,7 +5175,7 @@ const pages = {
                          <input type="text" id="homeSearchInput" placeholder="Search or type a URL" onkeydown="if(event.key==='Enter') loadViewer()">
                      </div>
                      <div class="home-status">
-                        <p>Hidden: <span style="color: green;">True</span></p>
+                        <p>Hidden: <span style="color: red;">False</span></p>
                         <p>Installed: <span id="home-installed-version">v1.0.0</span></p>
                         <p>Latest: <span id="home-latest-version">Checking...</span></p>
                     </div>
@@ -5681,7 +6132,7 @@ function fetchNews() {
 
 
 
-    // --- UPDATED DOMContentLoaded listener ---
+// --- UPDATED DOMContentLoaded listener ---
     window.addEventListener('DOMContentLoaded', async () => { // Make it async
       console.log('DOMContentLoaded fired. Starting application initialization...');
 
@@ -5690,11 +6141,10 @@ function fetchNews() {
       loadPanicKeySettings(); // Load panic key settings
       console.log('Non-handle data and settings loaded.');
 
-      // *** NEW: Load handle and check permissions BEFORE loading music metadata ***
-      // This ensures mp_currentDirectoryHandle is set (or UI prompt shown) early
+      // NEW: Load handle and check permissions BEFORE loading music metadata
       await mp_loadHandleAndCheckPermissions();
       console.log('Directory handle loaded and permissions checked.');
-      // *** END NEW ***
+      // END NEW
 
       // Now load music metadata (library, playlists, recents) from LocalStorage
       mp_loadDataFromLocalStorage();
@@ -5711,6 +6161,19 @@ function fetchNews() {
       // Initialize the Music Player Playback Bar (safe to call now)
       mp_initializePlaybackBar();
       console.log('Music Player playback bar initialization called.');
+
+      // *** NEW: Initialize the Music Hover Overlay ***
+      initializeMusicHoverOverlay();
+      console.log('Music Hover Overlay initialization called.');
+      // *** END NEW ***
+
+      // *** ADDED: Explicitly hide the hover overlay on load ***
+      const audioControlHoverOverlay = document.getElementById('audioControlHoverOverlay');
+      if (audioControlHoverOverlay) {
+          audioControlHoverOverlay.style.display = 'none';
+          console.log('Explicitly hid audioControlHoverOverlay on DOMContentLoaded.');
+      }
+      // *** END ADDED ***
 
       // Set up general event listeners (sidebar, modals, keys, etc.)
       setupEventListeners();
@@ -5729,7 +6192,6 @@ function fetchNews() {
 
       console.log('Application initialization completed.');
     });
-    // --- End of DOMContentLoaded listener ---
 
   </script>
 </body>
