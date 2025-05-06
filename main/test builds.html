@@ -103,24 +103,29 @@
 
     .content {
       flex: 1;
-      padding: 2rem;
+      padding: 2rem; /* Keep your desired padding */
       display: flex;
       flex-direction: column;
-      /* Removed align-items: center; to allow flexible layout */
-      overflow-y: auto;
-      margin-left: 0; /* Adjust margin since sidebar is fixed */
-      transition: margin-left var(--transition-speed) ease;
-      z-index: 5; /* Content above Vanta */
-      position: relative; /* Needed for z-index */
-      background-color: transparent; /* Let Vanta show through */
-      width: 100%; /* Ensure content takes full width */
+      overflow-y: auto; /* Allow vertical scrolling for content */
+      z-index: 5;
+      position: relative;
+      background-color: transparent;
       box-sizing: border-box;
-      color: var(--text-light); /* Ensure text color is set for the content area */
+      color: var(--text-light);
+      /* Always allocate space for the sidebar, transition margin */
+      margin-left: 60px;
+      width: calc(100% - 60px);
+      transition: margin-left var(--transition-speed) ease, width var(--transition-speed) ease; /* Transition both properties */
     }
 
     .sidebar.open ~ .content {
         margin-left: 60px; /* Push content when sidebar is open */
     }
+
+     .sidebar:not(.open) ~ .content {
+        margin-left: 0;
+        width: 100%;
+     }
 
 
     h1 {
@@ -233,53 +238,56 @@
     }
 
     .iframe-container {
-      position: absolute;
-      top: 0;
-      left: 0; /* Starts from the very left */
-      right: 0;
-      bottom: 60px; /* Space for bottom controls */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-       width: 100%; /* Take full width */
-       height: calc(100% - 60px); /* Adjust height */
-       z-index: 20; /* Above sidebar and content when viewing */
-       background: var(--bg-dark); /* Background for iframe view */
+       position: absolute;
+       top: 0;
+       left: 0;
+       right: 0;
+       bottom: 60px;
+       display: flex;
+       justify-content: center;
+       align-items: center;
+       width: 100%;
+       height: calc(100% - 60px);
+       z-index: 20;
+       background: var(--bg-dark);
     }
 
     .iframe-container iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+       width: 100%;
+       height: 100%;
+       border: none;
     }
 
     .bottom-controls {
-      position: fixed; /* Fixed to bottom */
-      bottom: 0;
-      left: 0; /* Starts from the very left */
-      right: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
       padding: 10px;
-      background-color: var(--bg-dark); /* Use variable */
-      border-top: 1px solid #444; /* Keep static or make a variable */
-      z-index: 25; /* Above iframe */
+      background-color: var(--bg-dark);
+      border-top: 1px solid #444;
       box-sizing: border-box;
+      width: 100%;
+      flex-shrink: 0; /* Prevent shrinking in flex column */
+       margin-top: auto; /* Push to the bottom of its flex container */
     }
 
-
+     /* Adjust input within bottom controls */
     .bottom-controls input[type="text"] {
       flex: 1;
       padding: 8px;
       border-radius: 4px;
-      border: 1px solid #ccc; /* Keep static or make a variable */
+      border: 1px solid #ccc;
       margin-right: 10px;
-      background-color: var(--card-bg); /* Use variable */
-      color: var(--text-light); /* Use variable */
+      background-color: var(--card-bg);
+      color: var(--text-light);
+       padding-left: 8px; /* Remove space for icon */
+       height: auto; /* Remove fixed height */
+       font-size: 0.9rem; /* Adjust font size */
+       margin-bottom: 0; /* Remove margin-bottom */
     }
 
+     /* Adjust button within bottom controls */
     .bottom-controls button {
       padding: 8px 16px;
       border: none;
@@ -287,16 +295,13 @@
       cursor: pointer;
       display: flex;
       align-items: center;
-      background-color: var(--accent); /* Use variable */
-      color: black; /* Changed color, or use var(--bg-dark) */
+      background-color: var(--accent);
+      color: black;
+       font-weight: normal;
+       margin-top: 0; /* Remove margin-top */
     }
     .bottom-controls button:hover {
        filter: brightness(1.2);
-    }
-
-
-    .fullscreen-button i {
-      margin-right: 5px;
     }
 
     .bottom-icons {
@@ -311,6 +316,25 @@
 
     .bottom-icons .icon {
       margin-top: 1rem;
+    }
+      
+    .viewer-page-content {
+        display: flex;
+        flex-direction: column; /* Stack iframe and controls vertically */
+        width: 100%;
+        height: 100%; /* Take full height of the .content area */
+        background-color: var(--bg-dark); /* Use background color for the viewer area */
+        box-sizing: border-box;
+        padding: 0; /* Remove padding if not needed within the viewer */
+         flex-grow: 1; /* Allow this container to fill available space in .content */
+    }
+
+    .viewer-page-content iframe {
+       width: 100%;
+       flex-grow: 1; /* Ensures the iframe takes up available space */
+       height: 0; /* Add this line - common flexbox optimization */
+       border: none;
+       display: block; /* Remove any potential extra space below iframe */
     }
 
     .modal {
@@ -3914,9 +3938,13 @@
     }
 
     function escapeHtml(unsafe) {
-        // ... (Your existing escapeHtml function) ...
-        if (typeof unsafe !== 'string') return '';
-        return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        if (!unsafe) return '';
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
     }
 
     function loadData() {
@@ -4335,65 +4363,71 @@
       }
     }
     
-    function loadViewerFromLibrary(url = '', customTitle = 'Viewer', displayUrl = url, updateRecents = true) {
-      console.log('Loading viewer with URL:', url, 'Custom title:', customTitle);
-      // Allow launching with no URL to show the input box immediately
-      // if (!url) return; // Removed this check
-    
-      // Basic URL validation (only if a URL is provided)
-      if (url && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('about:')) {
-          url = 'https://' + url; // Attempt to prepend https
-          displayUrl = url; // Update display URL as well
-          console.log('Prepended https to URL:', url);
+    function loadViewerUrl(url = '', customTitle = 'Viewer', displayUrl = url, updateRecents = true) {
+      console.log('Loading URL in Viewer page iframe:', url, 'Custom title:', customTitle);
+
+      const iframe = document.getElementById('mainViewerIframe');
+      const urlInput = document.getElementById('viewerUrlSearch'); // Get the input from the new structure
+
+      if (!iframe) {
+          console.error("Viewer iframe (#mainViewerIframe) not found. Cannot load URL.");
+          // Optionally switch back to Home or display an error message on the page
+          // switchPage('Home');
+          return;
       }
-       // If no URL is provided initially, the iframe src will be empty or about:blank
-    
-      try {
-        if (url && !url.startsWith('about:')) { // Only validate if it's not about:blank
-           new URL(url); // Validate if it's a proper URL now
-        }
-      } catch (e) {
-        // If still invalid, try searching it
-        console.warn("Invalid URL, attempting search:", url, e);
-        url = `https://www.google.com/search?q=${encodeURIComponent(url)}`;
-        displayUrl = url;
-        customTitle = `Search Results for "${customTitle}"`;
-        // Don't add search results to recents/library typically
-        updateRecents = false;
+
+      // Basic URL validation and prepend https if missing
+      let finalUrl = url;
+      if (finalUrl && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('about:')) {
+          finalUrl = 'https://' + finalUrl;
+          displayUrl = finalUrl; // Update display URL as well
+          console.log('Prepended https to URL:', finalUrl);
       }
-    
-      // Hide main content container for iframe view - Sidebar is NO LONGER hidden here
-       // document.querySelector('.sidebar').style.display = 'none'; // REMOVED THIS LINE
-       pageContent.style.display = 'none';
-       pageTitle.style.display = 'none'; // Hide main title
-    
-      // Create or get iframe container
-      let iframeContainer = document.getElementById('iframe-viewer-container');
-      if (!iframeContainer) {
-         iframeContainer = document.createElement('div');
-         iframeContainer.id = 'iframe-viewer-container';
-         iframeContainer.className = 'iframe-container'; // Use existing class for styling
-         document.body.appendChild(iframeContainer); // Append directly to body
-         console.log('Created iframe container.');
-      }
-    
-      iframeContainer.style.display = 'flex'; // Ensure it's visible
-      iframeContainer.innerHTML = `
-        <iframe src="${escapeHtml(url)}" frameborder="0" allowfullscreen></iframe>
-        <div class="bottom-controls" id="iframe-bottom-controls">
-          <button onclick="goBackToAppView()" title="Back to App"><i class="fas fa-arrow-left"></i></button>
-          <input type="text" id="urlSearch" placeholder="Enter URL or Search" value="${escapeHtml(displayUrl)}" onkeydown="if(event.key==='Enter') goToUrl()">
-          <button class="go-button" onclick="goToUrl()" title="Go"><i class="fas fa-check"></i></button>
-          <button class="fullscreen-button" onclick="openFullscreen('${escapeHtml(url)}')" title="Open Fullscreen"><i class="fas fa-expand"></i></button>
-          ${updateRecents ? `<button onclick="addToLibraryFromViewer('${escapeHtml(url)}')" title="Add to Library"><i class="fas fa-bookmark"></i></button>` : ''}
-        </div>`;
-    
-      console.log('Set iframe source to:', url);
-    
-      if (updateRecents && url && url !== 'about:blank') {
-         updateRecentlyViewed(url); // Only update recents if a valid URL was loaded
+
+      // If no URL provided, load about:blank and clear the input
+       if (!finalUrl) {
+           finalUrl = 'about:blank';
+           displayUrl = ''; // Clear input if starting blank
+            updateRecents = false; // Don't add about:blank to recents
+            customTitle = 'Viewer'; // Reset title
+       } else {
+            // Attempt to validate if it's not about:blank
+            try {
+                if (!finalUrl.startsWith('about:')) {
+                   new URL(finalUrl); // Validate if it's a proper URL now
+                }
+            } catch (e) {
+               // If still invalid, try searching it
+               console.warn("Invalid URL, attempting search:", finalUrl, e);
+               finalUrl = `https://www.google.com/search?q=${encodeURIComponent(finalUrl)}`;
+               // Decide what to show in the input: the search query or the resulting URL?
+               // Showing the original query is probably more useful to the user.
+               displayUrl = url; // Show the user's initial input in the box
+               customTitle = `Search Results for "${customTitle}"`;
+               // Don't add search results to recents/library typically
+               updateRecents = false;
+            }
+       }
+
+      // Set the iframe source
+      iframe.src = escapeHtml(finalUrl);
+      console.log('Set iframe source to:', finalUrl);
+
+       // Update the URL input box
+       if (urlInput) {
+            urlInput.value = escapeHtml(displayUrl);
+            console.log('Updated URL search input value:', displayUrl);
+       }
+
+      // Update recently viewed if applicable
+      if (updateRecents && finalUrl && finalUrl !== 'about:blank') {
+         updateRecentlyViewed(finalUrl);
          console.log('Updated recently viewed.');
       }
+
+      // Optionally update the page title if you want the viewer title to reflect the site
+      // This depends on how you want your page titles to work
+      // document.title = customTitle + " - Underground"; // Or similar logic
     }
     
     function goBackToAppView() {
@@ -4438,73 +4472,60 @@
     }
     
     function updateRecentlyViewed(url) {
-      console.log('Updating recently viewed with URL:', url);
-      let recentlyViewed = JSON.parse(localStorage.getItem('recentlyViewed')) || [];
-      // Remove existing entry if present to move it to the top
-      recentlyViewed = recentlyViewed.filter(item => item !== url);
-      recentlyViewed.unshift(url); // Add to the beginning
-      localStorage.setItem('recentlyViewed', JSON.stringify(recentlyViewed.slice(0, 10))); // Keep latest 10
-       console.log('Recently viewed updated:', recentlyViewed.slice(0, 10));
-       // Don't update library page here, it happens when Library page is switched to
-    }
-    
-    function goToUrl() {
-      console.log('goToUrl() called.');
-      const urlInput = document.getElementById('urlSearch'); // In the iframe controls
-      const url = urlInput ? urlInput.value.trim() : ''; // Get value, default to empty
-      const iframe = document.querySelector('#iframe-viewer-container iframe');
-
-      if (url) {
-        let finalUrl = url;
-         // Simple validation and prepend https if missing
-         if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('about:')) {
-             finalUrl = 'https://' + finalUrl;
-             console.log('Prepended https to input URL:', finalUrl);
-         }
-
-        try {
-            if (!finalUrl.startsWith('about:')) {
-                new URL(finalUrl); // Validate
-            }
-             // If valid or about:blank, set the iframe src
-            if (iframe) {
-               iframe.src = escapeHtml(finalUrl);
-               updateRecentlyViewed(finalUrl); // Update recents for valid URLs
-                // Update the input box to show the cleaned URL
-               urlInput.value = escapeHtml(finalUrl);
-               console.log('Navigated iframe to:', finalUrl);
-            }
-        } catch (e) {
-             // If still invalid, attempt search
-             console.warn("Invalid URL, attempting search:", finalUrl, e);
-             const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(finalUrl)}`;
-             if (iframe) {
-                 iframe.src = escapeHtml(searchUrl);
-                 // Don't add search results to recents
-                 // Update input box to show the search query
-                 urlInput.value = `Search: ${escapeHtml(finalUrl)}`;
-                 console.log('Navigated iframe to search results for:', finalUrl);
-             }
+        if (!url || url === 'about:blank') {
+            console.log("Skipping updateRecentlyViewed for empty or about:blank URL.");
+            return; // Don't add empty or blank URLs
         }
 
+        console.log('Updating recently viewed with URL:', url);
+        const maxRecents = 10; // Set the maximum number of recently viewed items
 
-      } else {
-        // If input is empty, load about:blank
-         if (iframe) {
-             iframe.src = 'about:blank';
-              // Clear input box value when blank
-             urlInput.value = '';
-             console.log('Navigated iframe to about:blank.');
-         }
-      }
+        // Get existing recents from localStorage
+        let recents = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+
+        // Remove the URL if it already exists (to bring it to the top)
+        recents = recents.filter(item => item !== url);
+
+        // Add the new URL to the beginning of the array
+        recents.unshift(url);
+
+        // Trim the array to the maximum size
+        if (recents.length > maxRecents) {
+            recents = recents.slice(0, maxRecents);
+        }
+
+        // Save the updated recents back to localStorage
+        localStorage.setItem('recentlyViewed', JSON.stringify(recents));
+        console.log('Recently viewed updated:', recents);
+
+        // Optional: If the Library page is currently active, refresh its display
+        if (currentPage === 'Library') { // Assuming you have a global 'currentPage' variable tracking the active page
+             displayLibrary(); // Call the function that renders the library list
+             console.log('Refreshed Library page display.');
+        }
     }
     
-    function openFullscreen(url) {
-        console.log('Attempting fullscreen for URL:', url);
-        const iframe = document.querySelector('#iframe-viewer-container iframe');
-        if (iframe && iframe.requestFullscreen) {
+    function goToViewerUrl() {
+      console.log('goToViewerUrl() called.');
+      const urlInput = document.getElementById('viewerUrlSearch'); // Get input from Viewer page structure
+      const url = urlInput ? urlInput.value.trim() : ''; // Allow empty string
+
+       // Call the shared loading function
+      loadViewerUrl(url, url, url, true); // Pass URL 3 times (URL, Title, Display URL), update recents
+    }
+    
+    function openViewerFullscreen() {
+        console.log('Attempting fullscreen for Viewer page iframe.');
+        const iframe = document.getElementById('mainViewerIframe'); // Get iframe from Viewer page structure
+
+        if (!iframe) {
+             console.error("Viewer iframe (#mainViewerIframe) not found. Cannot request fullscreen.");
+             return;
+        }
+
+        if (iframe.requestFullscreen) {
             iframe.requestFullscreen().catch(err => {
-                console.error("Fullscreen failed:", err);
+                console.error("Fullscreen failed:", err, iframe.src);
                 // Fallback: open in new tab if fullscreen API fails
                 if (iframe.src && iframe.src !== 'about:blank') {
                     window.open(iframe.src, '_blank');
@@ -4513,11 +4534,11 @@
             });
         } else {
              // Fallback for browsers not supporting requestFullscreen on iframe directly
-             if (iframe && iframe.src && iframe.src !== 'about:blank') {
+             if (iframe.src && iframe.src !== 'about:blank') {
                  window.open(iframe.src, '_blank');
                  console.log('Browser does not support iframe fullscreen, opening in new tab.');
              } else {
-                 console.warn('Cannot open fullscreen: iframe or iframe source is not available.');
+                 console.warn('Cannot open fullscreen: Viewer iframe source is not available or is about:blank.');
              }
         }
     }
@@ -4914,21 +4935,39 @@
        }
      }
     
-function loadGame(name, url) {
+    function loadGame(name, url) {
       console.log('loadGame() called for:', name, url);
       const game = games.find(g => g.name === name);
-      const useProxy = game && game.proxied && game.proxiedUrl && game.proxiedUrl !== 'none';
-      const targetUrl = useProxy ? game.proxiedUrl : url;
-      const displayUrl = useProxy ? "Proxy Active" : url;
-
-      if (useProxy) {
-        console.log('Proxy mode active. Loading proxied game in viewer:', game.proxiedUrl);
-        // Removed the window.open and setInterval logic
-        loadViewerFromLibrary(game.proxiedUrl, name, displayUrl, true); // Pass true to update recents
-      } else {
-        console.log('Direct game load:', url);
-        loadViewerFromLibrary(url, name, displayUrl, true); // Pass true to update recents
+      // Ensure the game object was found before accessing properties
+      if (!game) {
+          console.error("Game not found:", name);
+          // Optionally show a notification or switch back to the Games page
+          // showNotification('Error', `Game "${escapeHtml(name)}" not found.`, 'error');
+          // switchPage('Games');
+          return;
       }
+
+      const useProxy = game.proxied && game.proxiedUrl && game.proxiedUrl !== 'none';
+      const targetUrl = useProxy ? game.proxiedUrl : url;
+      // Determine the URL displayed in the input box
+      const displayUrl = useProxy ? "Proxy Active" : url; // Or maybe just the game name? "Playing: " + name
+
+      // Always switch to the Viewer page first
+      switchPage('Viewer');
+
+      // Add a small delay to allow the Viewer page HTML structure to be added to the DOM
+      // before attempting to find the iframe and load the URL.
+      setTimeout(() => {
+           if (useProxy) {
+             console.log('Proxy mode active. Loading proxied game in viewer page:', game.proxiedUrl);
+             // Pass game name as custom title, update recents
+             loadViewerUrl(game.proxiedUrl, name, displayUrl, true);
+           } else {
+             console.log('Direct game load in viewer page:', url);
+              // Pass game name as custom title, update recents
+             loadViewerUrl(url, name, displayUrl, true);
+           }
+      }, 50); // 50ms delay - adjust if you experience issues
     }
 
 
@@ -5201,7 +5240,17 @@ const pages = {
                 </div>
               </div>
             </div>`,
-        Viewer: `<div class="panel"><h2>Viewer</h2><p>Click the globe icon or use the search bar on the Home page to launch the viewer.</p></div>`, // Simplified Viewer page, main viewing happens in iframe overlay
+        Viewer: `
+            <div class="viewer-page-content">
+                <iframe id="mainViewerIframe" src="about:blank" frameborder="0" allowfullscreen></iframe>
+                <div class="bottom-controls" id="viewer-bottom-controls">
+                    <input type="text" id="viewerUrlSearch" placeholder="Enter URL or Search" onkeydown="if(event.key==='Enter') goToViewerUrl()">
+                    <button class="go-button" onclick="goToViewerUrl()" title="Go"><i class="fas fa-check"></i></button>
+                    <button class="fullscreen-button" onclick="openViewerFullscreen()" title="Open Fullscreen"><i class="fas fa-expand"></i></button>
+                    <button onclick="addToLibraryFromViewerPage()" title="Add to Library"><i class="fas fa-bookmark"></i></button>
+                </div>
+            </div>
+        `,
         Games: ``, // Placeholder - content is dynamically generated
         Music: `
           <div class="music-player-grid">
@@ -5493,19 +5542,16 @@ const pages = {
       const page = this.getAttribute('data-page');
       console.log('Sidebar icon clicked for page:', page);
 
-
-      if (page === 'Viewer') {
-          // Clicking the Viewer icon now launches the overlay directly
-          // Call loadViewerFromLibrary with no URL to open the controls only
-          loadViewerFromLibrary();
-          console.log('Viewer icon clicked, launching viewer overlay.');
-          // Do NOT call switchPage here, as we are staying on the current background page
-          // No need to change active icon as the overlay covers everything
-      } else {
-          // For all other icons, perform normal page switching
-          switchPage(page);
-           console.log('Non-Viewer icon clicked, calling switchPage.');
-      }
+        if (page === 'Viewer') {
+            // Clicking the Viewer icon now switches to the Viewer page
+            switchPage('Viewer'); // <--- Changed to switchPage
+            console.log('Viewer icon clicked, switching to Viewer page.');
+            // The switchPage function will handle setting the content and active icon
+        } else {
+            // For all other icons, perform normal page switching
+            switchPage(page);
+             console.log('Non-Viewer icon clicked, calling switchPage.');
+        }
     }
 
     function handleTooltipShow(e) {
@@ -5524,45 +5570,102 @@ const pages = {
     function addToLibraryFromHome() {
         console.log('addToLibraryFromHome() called.');
         const urlInput = document.getElementById('homeSearchInput'); // Get input from Home page
-        const url = urlInput ? urlInput.value.trim() : null;
-        addToLibrary(url);
-        // Keep the text in the input box on the Home page
+        const url = urlInput ? urlInput.value.trim() : ''; // Allow empty string
+
+        if (url) {
+            // If a URL is entered, switch to the Viewer page and load it
+             switchPage('Viewer');
+             // Add a small delay to allow the Viewer page HTML structure to be added to the DOM
+             setTimeout(() => {
+                  // Load the URL in the viewer, use URL as title, display URL, update recents
+                  loadViewerUrl(url, url, url, true);
+             }, 50); // 50ms delay - adjust if you experience issues
+
+            // Clear the search input on the Home page after submitting to the viewer
+            // Decide if you want to clear it or keep it. Clearing might be better UX.
+            if (urlInput) {
+                urlInput.value = '';
+            }
+
+        } else {
+            // If no URL is entered, just show the Viewer page with the input box empty
+            switchPage('Viewer');
+             console.log("No URL entered, switching to empty Viewer page.");
+             // No need to call loadViewerUrl with empty URL, the Viewer page HTML already loads about:blank
+        }
     }
 
-    function addToLibraryFromViewer(url) {
-         console.log('addToLibraryFromViewer() called with URL:', url);
-         addToLibrary(url); // Add the URL currently in the viewer
+// This function is triggered by the "Add to Library" button on the Viewer page
+    // This replaces the old addToLibraryFromViewer function.
+    function addToLibraryFromViewerPage() {
+         console.log('addToLibraryFromViewerPage() called.');
+         // Get the iframe element from the Viewer page structure
+         const iframe = document.getElementById('mainViewerIframe');
+         // Get the current URL loaded in the iframe
+         const url = iframe ? iframe.src : null;
+
+         // Check if the URL is valid before attempting to add
+         if (url && url !== 'about:blank') {
+              // Call the shared addToLibrary function with the iframe's URL
+              addToLibrary(url);
+         } else {
+              // If the URL is not valid, show a notification
+              showNotification('Error', 'Cannot add "about:blank" or empty URL to library.', 'error');
+              console.warn("Attempted to add 'about:blank' or empty URL to library.");
+         }
     }
 
-
+    // Function to add a URL to the main library list (using localStorage)
+    // This function is called by addToLibraryFromViewerPage, addToLibraryFromHome, etc.
     function addToLibrary(url) {
-      console.log('addToLibrary() called with URL:', url);
-      if (!url) {
-        alert('Please enter a URL first.');
-        console.warn('addToLibrary failed: No URL provided.');
-        return;
-      }
-       let finalUrl = url;
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-         finalUrl = 'https://' + url;
-         console.log('Prepended https to URL for library:', finalUrl);
-       }
+        // Basic validation
+        if (!url || url === 'about:blank') {
+            showNotification('Error', 'Cannot add empty or blank URL to library.', 'error');
+            console.warn("Attempted to add empty or about:blank URL to library.");
+            return;
+        }
+         // Optional: Prevent adding search result pages directly
+         if (url.startsWith('https://www.google.com/search?q=')) {
+             showNotification('Info', 'Cannot add search result pages directly to library.', 'info');
+             console.warn("Attempted to add Google search results URL to library.");
+             return;
+         }
 
-      if (!library.includes(finalUrl)) {
-          library.push(finalUrl);
-          localStorage.setItem('library', JSON.stringify(library));
-          alert('Added to Library favorites!');
-          console.log('Added to library:', finalUrl);
-          // Update library view if currently visible
-          if (pageTitle.textContent === 'Library') {
-              updateLibraryPage();
-               console.log('Library page is active, updating view.');
-          }
-      } else {
-          alert('This URL is already in your Library favorites.');
-          console.log('URL already in library:', finalUrl);
-      }
+
+        console.log('Attempting to add to library:', url);
+
+        // Get existing library items from localStorage. Initialize as empty array if not found.
+        let libraryItems = JSON.parse(localStorage.getItem('libraryItems') || '[]');
+
+        // Check if the URL already exists in the library using .some()
+        const exists = libraryItems.some(item => item.url === url);
+
+        if (exists) {
+            // If the item already exists, show an info notification
+            showNotification('Info', 'This item is already in your library.', 'info');
+            console.log('Item already exists in library.');
+        } else {
+            // If the item does not exist, create a new item object
+            const newItem = {
+                url: url,
+                title: url // Default title is the URL. You might add logic to fetch the title later.
+            };
+            // Add the new item to the library list
+            libraryItems.push(newItem);
+
+            // Save the updated library array back to localStorage as a JSON string
+            localStorage.setItem('libraryItems', JSON.stringify(libraryItems));
+            console.log('Added to library:', newItem);
+
+            // Show a success notification
+            showNotification('Success', 'Item added to library!', 'success');
+
+            // (Optional code to refresh display on the Library page is omitted as requested)
+        }
     }
+
+    // Make sure you have the showNotification and escapeHtml functions defined as well.
+    // Example placeholder implementations are included in the previous response if needed.
 
 
     function removeLibraryItem(event, index) {
