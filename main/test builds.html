@@ -1280,9 +1280,14 @@
 
      /* Adjust scrollable list height in the main playlist box */
     #playlists-list-box .scrollable-list {
-        /* Adjust max-height if needed, or let flex-grow handle it */
-         /* max-height: 300px; */
-         min-height: 100px;
+        display: grid; /* Use CSS Grid */
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Responsive grid: min item width 150px, auto-fill container */
+        gap: 15px; /* Gap between grid items */
+        padding-right: 0; /* Remove padding if scrollbar is overlayed or styled */
+        overflow-y: auto; /* Enable vertical scrolling */
+        /* Set min and max height for the scrollable area */
+        min-height: 180px; /* Ensure at least one card's height is accommodated */
+        max-height: 375px; /* Roughly allows two rows of 180px cards (180*2 + 15 gap) before scrolling */
     }
 
     /* Renamed .music-box to .music-section-box for clarity */
@@ -1924,18 +1929,18 @@
     /* Style for each individual playlist "card" (was .list-item) */
     /* Target list items specifically in the playlists box */
     #playlists-list-box .list-item {
-        display: flex;
-        flex-direction: column; /* Stack content vertically within the card */
-        background-color: var(--card-bg); /* Use card background */
-        border-radius: var(--border-radius);
-        overflow: hidden; /* Hide anything outside the card */
-        text-align: center; /* Center text and images */
-        cursor: pointer; /* Make the whole card clickable */
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        padding: 0; /* Remove padding here, add padding inside content divs */
-        border: 1px solid transparent; /* Add a subtle border for hover/focus */
-         margin-bottom: 0; /* Remove margin-bottom as gap handles spacing */
-         min-height: 180px; /* Ensure a minimum size for the card (adjust as needed based on image/text size) */
+        display: flex; /* Use flexbox for content within the item */
+        flex-direction: column; /* Stack content vertically within the card (image above info) */
+        background-color: var(--card-bg); /* Use card background variable for the card */
+        border-radius: var(--border-radius); /* Apply rounded corners to the card */
+        overflow: hidden; /* Hide anything outside the card's rounded corners */
+        text-align: center; /* Center text and images within the card */
+        cursor: pointer; /* Indicate the card is clickable */
+        transition: transform 0.2s ease, box-shadow 0.2s ease; /* Add smooth transition for hover effects */
+        padding: 0; /* Remove padding here, padding is added to the info area */
+        border: 1px solid transparent; /* Add a subtle border for hover/focus highlight */
+         margin-bottom: 0; /* Remove margin-bottom as grid gap handles spacing */
+         min-height: 180px; /* Minimum height for each card (adjust as needed) */
     }
     
     #playlists-list-box .list-item:hover,
@@ -1949,64 +1954,60 @@
     
     /* Container for the album art image */
     .playlist-card-image-area {
-        width: 100%;
-        height: 100px; /* Fixed height for the image area (adjust as needed) */
-        overflow: hidden;
-        display: flex; /* Use flex to center the image/icon */
+        width: 100%; /* Make the image area fill the width of the card */
+        height: 100px; /* Fixed height for the image area, creating a rectangular box */
+        overflow: hidden; /* Hide content that exceeds this area */
+        display: flex; /* Use flex to center the image/icon inside */
         align-items: center;
         justify-content: center;
-        background-color: var(--bg-dark); /* Darker background for image area */
-        /* Optional: border-top-left-radius/border-top-right-radius if needed */
+        background-color: var(--bg-dark); /* Darker background for the image area */
     }
     
-    /* Style for the album art image within the card */
     .playlist-card-image-area img {
         display: block; /* Remove potential extra space below image */
         width: 100%; /* Make image fill the width of its container */
         height: 100%; /* Make image fill the height of its container */
-        object-fit: cover; /* Cover the area */
-        /* No border-radius here, let the container handle it */
+        object-fit: cover; /* Ensures the image covers the box area without distortion */
     }
     
-    /* Style for placeholder icon in the image area */
+    /* Style for placeholder icon in the image area (if no album art) */
     .playlist-card-image-area i.placeholder-icon {
-        font-size: 3em; /* Larger icon */
-        color: var(--text-muted);
+        font-size: 3em; /* Larger icon size */
+        color: var(--text-muted); /* Muted color for the placeholder */
     }
     
     /* Container for the text (name and count) and controls */
     .playlist-card-info {
         display: flex; /* Use flex for horizontal arrangement of text and settings icon */
-        align-items: center;
-        gap: 8px; /* Space between text and icon */
-        padding: 10px; /* Add padding inside the info area */
-        flex-grow: 1; /* Allow info area to take available vertical space below the image */
-        width: 100%; /* Ensure it takes full width */
-        box-sizing: border-box; /* Include padding in width */
+        align-items: center; /* Aligns icon and text span vertically in the center */
+        gap: 8px; /* Space between the text and the icon */
+        /* ADJUSTED: Increased top padding to move text and icon down */
+        padding: 15px 10px 10px 10px; /* Add padding inside the info area */
+        flex-grow: 1; /* Allows this area to take the remaining vertical space in the card */
+        width: 100%; /* Ensure it takes full width of the card */
+        box-sizing: border-box; /* Include padding in the element's total width */
          /* Optional: justify-content: space-between; if you want the text left and icon right */
     }
     
     /* Style for the playlist name and song count text span */
     .playlist-card-info span {
-        flex-grow: 1; /* Allow text to take space */
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        text-align: left; /* Align text to the left */
+        flex-grow: 1; /* Allows the text span to take up available horizontal space */
+        overflow: hidden; /* Hides overflowing text */
+        text-overflow: ellipsis; /* Shows ellipsis (...) for overflowing text */
+        white-space: nowrap; /* Prevents text from wrapping */
+        text-align: left; /* Aligns text to the left within its span */
         font-size: 0.9em; /* Adjust font size */
         font-weight: bold;
         color: var(--text-light); /* Ensure text is visible using theme variable */
-        /* Cursor is on the whole card now, not just the span */
     }
     
     /* Style for the settings icon in the card */
     .playlist-card-info .fa-cog {
         cursor: pointer; /* Keep the cursor pointer for the icon */
-        color: var(--text-muted); /* Use theme muted color */
-        transition: color 0.2s;
-        flex-shrink: 0; /* Prevent icon from shrinking */
-        /* Remove margin-right if using gap on parent */
-         font-size: 1em; /* Adjust icon size */
+        color: var(--text-muted); /* Use theme muted color for the icon */
+        transition: color 0.2s; /* Smooth color transition on hover */
+        flex-shrink: 0; /* Prevent the icon from shrinking */
+        font-size: 1em; /* Adjust icon size */
     }
     
     /* Ensure settings icon color changes on hover */
@@ -2022,7 +2023,12 @@
     /* Specific style for the centered placeholder text in the grid when empty */
     #playlists-list-box .scrollable-list .placeholder-text {
         grid-column: 1 / -1; /* Make the placeholder span across all grid columns */
+        color: var(--text-muted); /* Added from your general .placeholder-text style */
+        font-style: italic; /* Added from your general .placeholder-text style */
+        text-align: center; /* Added from your general .placeholder-text style */
+        margin-top: 20px; /* Added from your general .placeholder-text style */
     }
+
         
         /* Style for a placeholder icon if no album art */
         .playlist-info i.placeholder-icon {
@@ -2033,6 +2039,109 @@
             width: 30px; /* Give it a fixed width for alignment */
             text-align: center; /* Center the icon */
         }
+    /* --- New Styles for Playlist Grid Layout --- */
+    
+    /* This rule defines the scrollable container for the playlist grid */
+    #playlists-list-box .scrollable-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Responsive grid */
+        gap: 15px; /* Gap between playlist cards */
+        padding-right: 0; /* Remove padding if scrollbar is overlayed or styled */
+        overflow-y: auto; /* Enable vertical scrolling */
+        /* NEW/ADJUSTED: Set min and max height for the scrollable area */
+        min-height: 180px; /* Ensure at least one card's height is accommodated */
+        max-height: 375px; /* Roughly allows two rows of 180px cards (180*2 + 15 gap) before scrolling */
+    }
+    
+    /* Style for each individual playlist "card" */
+    #playlists-list-box .list-item {
+        display: flex;
+        flex-direction: column;
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        padding: 0; /* Padding is handled by inner elements */
+        border: 1px solid transparent;
+        margin-bottom: 0; /* Gap handles spacing */
+        min-height: 180px; /* Minimum height for each card */
+    }
+    
+    #playlists-list-box .list-item:hover,
+    #playlists-list-box .list-item:focus-visible {
+        transform: translateY(-5px); /* Lift the card slightly on hover */
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Add a shadow on hover */
+        border-color: var(--accent); /* Highlight the border with the accent color */
+        outline: none; /* Remove default outline for better focus-visible styling */
+    }
+    
+    .playlist-card-image-area {
+        width: 100%; /* Make the image area fill the width of the card */
+        /* CHANGE: Remove fixed height and add aspect-ratio to make it square based on width */
+        height: auto;
+        aspect-ratio: 1 / 1; /* Makes the height equal to the width */
+        overflow: hidden; /* Hide content that exceeds this area */
+        display: flex; /* Use flex to center the image/icon inside */
+        align-items: center;
+        justify-content: center;
+        background-color: var(--bg-dark); /* Darker background for the image area */
+    }
+    
+    .playlist-card-image-area img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Ensures the image covers the box area */
+    }
+    
+    .playlist-card-image-area i.placeholder-icon {
+        font-size: 3em;
+        color: var(--text-muted);
+    }
+    
+    .playlist-card-info {
+        display: flex; /* Use flex for horizontal arrangement of text and settings icon */
+        align-items: center; /* Vertically aligns text and icon in the center */
+        gap: 8px; /* Space between the text and the icon */
+        /* Keep padding for internal spacing */
+        padding: 15px 10px 10px 10px; /* Add padding inside the info area */
+        flex-grow: 1; /* Allows this area to take the remaining vertical space in the card */
+        width: 100%; /* Ensure it takes full width of the card */
+        box-sizing: border-box; /* Include padding in the element's total width */
+        /* NEW: Push this element to the bottom of the flex container (.list-item) */
+        margin-top: auto;
+    }
+    
+    .playlist-card-info span {
+        flex-grow: 1; /* Allows the text span to take up available horizontal space */
+        overflow: hidden; /* Hides overflowing text */
+        text-overflow: ellipsis; /* Shows ellipsis (...) for overflowing text */
+        white-space: nowrap; /* Prevents text from wrapping */
+        text-align: left; /* Aligns text to the left within its span */
+        font-size: 0.9em; /* Adjust font size */
+        font-weight: bold;
+        color: var(--text-light); /* Ensure text is visible using theme variable */
+    }   
+    
+    .playlist-card-info .fa-cog {
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: color 0.2s;
+        flex-shrink: 0;
+        font-size: 1em;
+    }
+    
+    .playlist-card-info .fa-cog:hover {
+        color: var(--accent);
+    }
+    
+    #playlists-list-box .list-item:hover .playlist-card-info span {
+        color: var(--accent);
+    }
+    
+    /* Specific style for the centered placeholder text in the grid when empty *
 
 
 
@@ -6843,75 +6952,123 @@ const pages = {
 
 
     // --- App Reset ---
-function resetApp() {
-      console.log('Reset App requested.');
-      if (confirm("Reset App? This deletes all custom games, library favorites, viewed history, all settings, and music player data (library, recents, playlists, and stored folder reference).")) {
-        console.log('Reset confirmed.');
-        // Clear localStorage
-        localStorage.clear();
-        console.log('localStorage cleared.');
-
-        // Reset state variables
-        games = []; // Will be repopulated by loadData
-        library = [];
-        favoriteGames = [];
-        currentTheme = 'default';
-        localStorage.setItem('theme', 'default'); // Set default theme immediately
-        showingFavorites = false; // Reset favorite view state
-        panicKey = null; // Clear panic key variable
-        panicUrl = null; // Clear panic URL variable
-        console.log('App state variables reset.');
-
-        // Stop music playback and clear related UI/variables
-        mp_stopPlaybackAndClearUI();
-        mp_musicLibrary = [];
-        mp_recentlyPlayed = [];
-        mp_playlists = {};
-        mp_currentDirectoryHandle = null; // Clear directory handle variable
-        console.log('Music player state variables reset.');
-
-
-        // --- NEW: Delete IndexedDB Database ---
-        console.log('Attempting to delete IndexedDB database:', MP_DB_NAME);
-        try {
-             if (mp_db) { // Close any open connection first
-                  mp_db.close();
-                  mp_db = null;
-                  console.log('Closed existing IndexedDB connection before deletion.');
-             }
-             const deleteRequest = indexedDB.deleteDatabase(MP_DB_NAME);
-
-             deleteRequest.onsuccess = () => {
-                 console.log("IndexedDB database deleted successfully");
-             };
-
-             deleteRequest.onerror = (event) => {
-                 console.error("Error deleting IndexedDB database:", event.target.error);
-                 alert(`Error deleting music library data: ${event.target.error.message || event.target.error}. You may need to clear site data manually via browser settings.`);
-             };
-
-             deleteRequest.onblocked = () => {
-                  console.warn("IndexedDB database deletion blocked. Database may be in use.");
-                  alert("Music library data deletion is blocked. Please ensure all tabs of this app are closed and try again.");
-             };
-        } catch (err) {
-            console.error("Error initiating IndexedDB database deletion:", err);
-             alert(`Error initiating music library data deletion: ${err.message}. You may need to clear site data manually via browser settings.`);
+    // --- App Reset ---
+    async function resetApp() { // Make the function async to use await for DB deletion
+        console.log('Reset App requested.');
+        if (confirm("Reset App? This deletes all custom games, library favorites, viewed history, all settings, and music player data (library, recents, playlists, and stored folder reference). This action cannot be undone.")) {
+            console.log('Reset confirmed.');
+    
+            // 1. Stop Music Playback (if any)
+            mp_stopPlaybackAndClearUI();
+            console.log('Music playback stopped and UI cleared.');
+    
+            // 2. Clear localStorage
+            localStorage.clear();
+            console.log('localStorage cleared.');
+    
+            // 3. Reset in-memory state variables
+            games = []; // Will be repopulated by loadData with defaults
+            library = [];
+            favoriteGames = [];
+            currentThemeName = 'default'; // Reset theme name variable
+            showingFavorites = false;
+            panicKey = null;
+            panicUrl = null;
+    
+            // Reset music player specific in-memory states
+            mp_musicLibrary = [];
+            mp_recentlyPlayed = [];
+            mp_playlists = {};
+            mp_currentSong = null;
+            mp_currentSongIndex = -1;
+            mp_currentQueue = [];
+            mp_currentDirectoryHandle = null; // Clear the stored directory handle
+            mp_isInitialized = false; // Reset music player initialization flag
+            // mp_playbackBarInitialized and mp_hoverOverlayInitialized might also need reset if they prevent re-init
+            mp_playbackBarInitialized = false;
+            mp_hoverOverlayInitialized = false;
+    
+            console.log('In-memory app state variables reset.');
+    
+            // 4. Delete IndexedDB Database
+            console.log('Attempting to delete IndexedDB database:', MP_DB_NAME);
+            let dbDeletedSuccessfully = false;
+            try {
+                if (mp_db) { // Close any open connection first
+                    mp_db.close();
+                    mp_db = null;
+                    console.log('Closed existing IndexedDB connection before deletion.');
+                }
+                // Wrap IDB delete in a promise to use await
+                await new Promise((resolve, reject) => {
+                    const deleteRequest = indexedDB.deleteDatabase(MP_DB_NAME);
+    
+                    deleteRequest.onsuccess = () => {
+                        console.log("IndexedDB database deleted successfully.");
+                        dbDeletedSuccessfully = true;
+                        resolve();
+                    };
+    
+                    deleteRequest.onerror = (event) => {
+                        console.error("Error deleting IndexedDB database:", event.target.error);
+                        // Don't alert here, will alert after all operations
+                        reject(event.target.error);
+                    };
+    
+                    deleteRequest.onblocked = (event) => {
+                        console.warn("IndexedDB database deletion blocked. Database may be in use.", event);
+                        // Don't alert here
+                        reject(new Error("Database deletion blocked. Please close other tabs of this app."));
+                    };
+                });
+            } catch (err) {
+                console.error("Error during IndexedDB database deletion process:", err);
+                // The alert will be handled after attempting other resets
+            }
+    
+            // 5. Re-load default data and re-initialize UI
+            // This order ensures that defaults are set up before trying to switch pages or re-init components.
+    
+            loadData(); // This loads default games, sets theme from (now cleared) localStorage (so defaults to 'default')
+            applyAppSettings({ tabTitle: 'Underground', faviconUrl: '' }); // Apply default appearance
+            loadPanicKeySettings(); // This will load null/empty from cleared localStorage
+    
+            // Explicitly set default theme and re-initialize Vanta
+            setTheme('default'); // Applies default CSS variables and updates currentThemeName
+            if (typeof initializeVanta === 'function') {
+                initializeVanta(); // Re-initialize Vanta with default theme
+            }
+    
+            // Re-initialize music player components as their state was reset
+            // These might need to be re-initialized because their `mp_isInitialized` flags were reset
+            if (typeof mp_initializePlaybackBar === 'function') {
+                 mp_initializePlaybackBar(); // Initialize playback bar (will find no songs initially)
+            }
+            if (typeof initializeMusicHoverOverlay === 'function') {
+                 initializeMusicHoverOverlay();
+            }
+            // The Music page content itself will be rebuilt when switchPage('Music') is called.
+    
+            // Hide playback controls bar explicitly as there's no music
+            if (mp_playbackControlsBar) {
+                mp_playbackControlsBar.style.display = 'none';
+            }
+    
+    
+            // 6. Switch to the home page to reflect reset state
+            switchPage('Home'); // Go to home page, this will also re-render its content including news, etc.
+    
+            // 7. Final Notification to User
+            if (dbDeletedSuccessfully) {
+                alert("App has been reset to default settings. All data has been cleared.");
+            } else {
+                alert("App settings have been reset, but there was an issue clearing all music library data. You may need to clear site data manually via browser settings if music issues persist.");
+            }
+            console.log('App reset process complete.');
+    
+        } else {
+            console.log('Reset cancelled by user.');
         }
-        // --- END NEW ---
-
-
-        // Reload data (which includes defaults) and re-initialize UI
-        loadData(); // This will set the default theme class and reload default games
-        setTheme('default'); // Explicitly call setTheme to update Vanta.js etc.
-        initializeVanta(); // Re-initialize Vanta with default theme (although setTheme should handle this after init)
-        switchPage('Home'); // Go to home page
-
-        alert("App has been reset.");
-        console.log('App reset complete.');
-      } else {
-          console.log('Reset cancelled.');
-      }
     }
     
     let panicKey = null;
