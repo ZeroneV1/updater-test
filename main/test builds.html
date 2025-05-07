@@ -1373,6 +1373,11 @@
         color: var(--text-light);
         position: relative; /* For potential ::before elements or icons */
     }
+      
+    .list-item .playlist-info i.fa-cog:hover {
+        color: var(--accent);
+    }
+
 
     .list-item:hover,
     .list-item:focus-visible { /* Added :focus-visible for keyboard accessibility */
@@ -1702,6 +1707,37 @@
          text-align: center;
          margin-top: 20px;
      }
+    /* Highlight style for list items in modals */
+    
+    /* Optional: Style for checkbox itself */
+    #mp_removeSongsModalList input[type="checkbox"],
+    #mp_createPlaylistSongList input[type="checkbox"] {
+        /* You can add custom checkbox styling here if desired */
+        /* For now, we'll rely on the list item highlighting */
+        margin-right: 8px; /* Ensure spacing */
+        vertical-align: middle;
+    }
+    
+    /* Style for modal search inputs */
+    /* Re-use existing styles for inputs within music-section-box if they are general enough */
+    /* Or add specific styles if needed */
+    .mp-modal-body input[type="search"] {
+        background: var(--bg-dark); /* Darker background for contrast */
+        border: 1px solid var(--sidebar-dark); /* Subtler border */
+        color: var(--text-light);
+        padding: 0.6rem 0.8rem; /* Adjust padding */
+        width: 100%;
+        margin-bottom: 15px; /* Space below the search bar */
+        border-radius: var(--border-radius); /* Consistent border radius */
+        font-size: 1rem;
+        height: auto; /* Remove fixed height */
+        box-sizing: border-box; /* Include padding and border in element's total width */
+    }
+    .mp-modal-body input[type="search"]:focus {
+        border-color: var(--accent);
+        outline: none;
+        box-shadow: 0 0 0 2px var(--accent-transparent, rgba(0, 255, 132, 0.3)); /* Focus ring */
+    }
 
     /* Container for the music icon and its hover overlay */
     /* Positioned relative to the sidebar, so its absolute child can be placed */
@@ -1710,6 +1746,37 @@
         /* You might need to add specific positioning here if you want the overlay
            to appear differently when the sidebar is open/closed. For simplicity,
            we'll position the overlay relative to the icon's fixed spot. */
+    }
+      
+    /* Style for list items selected for an action in modals */
+    #mp_removeSongsModalList .list-item.selected-for-action,
+    #mp_createPlaylistSongList .list-item.selected-for-action {
+        background-color: var(--accent); /* Use the accent color */
+        color: var(--bg-dark) !important; /* Ensure text color contrasts with accent */
+        font-weight: bold; /* Make text bold */
+        border-color: var(--accent); /* Accent border */
+    }
+    
+    /* Optional: Hover effect for selected items */
+    #mp_removeSongsModalList .list-item.selected-for-action:hover,
+    #mp_createPlaylistSongList .list-item.selected-for-action:hover {
+         background-color: var(--accent); /* Keep accent on hover when selected */
+         filter: brightness(0.9); /* Slightly darken on hover */
+    }
+    
+    /* Ensure default list-item hover doesn't override selected style */
+    #mp_removeSongsModalList .list-item:hover,
+    #mp_createPlaylistSongList .list-item:hover {
+        background-color: var(--sidebar-dark); /* Keep the default hover background */
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+    
+    /* Remove padding/margins added specifically for checkboxes if any */
+    #mp_removeSongsModalList .list-item span,
+    #mp_createPlaylistSongList .list-item span {
+        /* Adjust padding if needed after removing checkboxes */
+        padding-left: 0;
     }
     
     
@@ -1832,6 +1899,140 @@
         text-align: center;
         font-variant-numeric: tabular-nums; /* Helps keep numbers aligned */
     }
+      
+    /* Style for the small album art image in the playlist list */
+    .playlist-info img {
+        width: 30px; /* Small fixed width */
+        height: 30px; /* Small fixed height */
+        object-fit: cover; /* Ensure the image covers the area without distortion */
+        margin-right: 10px; /* Space between image and text/icon */
+        border-radius: var(--border-radius); /* Optional: match border radius */
+        flex-shrink: 0; /* Prevent image from shrinking */
+    }
+/* --- New Styles for Playlist Grid Layout --- */
+
+    /* Modify the container for playlists to be a grid */
+    #playlists-list-box .scrollable-list { /* Target the scrollable list div inside the playlists box */
+        display: grid; /* Use CSS Grid */
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Responsive grid: min item width 150px, auto-fill container */
+        gap: 15px; /* Gap between grid items */
+        padding-right: 0; /* Remove padding needed for scrollbar when it was a simple list */
+        overflow-y: auto; /* Keep scrolling for the grid */
+        /* Inherits max-height/min-height from general .scrollable-list style */
+    }
+    
+    /* Style for each individual playlist "card" (was .list-item) */
+    /* Target list items specifically in the playlists box */
+    #playlists-list-box .list-item {
+        display: flex;
+        flex-direction: column; /* Stack content vertically within the card */
+        background-color: var(--card-bg); /* Use card background */
+        border-radius: var(--border-radius);
+        overflow: hidden; /* Hide anything outside the card */
+        text-align: center; /* Center text and images */
+        cursor: pointer; /* Make the whole card clickable */
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        padding: 0; /* Remove padding here, add padding inside content divs */
+        border: 1px solid transparent; /* Add a subtle border for hover/focus */
+         margin-bottom: 0; /* Remove margin-bottom as gap handles spacing */
+         min-height: 180px; /* Ensure a minimum size for the card (adjust as needed based on image/text size) */
+    }
+    
+    #playlists-list-box .list-item:hover,
+    #playlists-list-box .list-item:focus-visible {
+        transform: translateY(-5px); /* Lift slightly on hover */
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* Add shadow on hover */
+        border-color: var(--accent); /* Highlight border on hover */
+        outline: none; /* Remove default outline for focus-visible */
+    }
+    
+    
+    /* Container for the album art image */
+    .playlist-card-image-area {
+        width: 100%;
+        height: 100px; /* Fixed height for the image area (adjust as needed) */
+        overflow: hidden;
+        display: flex; /* Use flex to center the image/icon */
+        align-items: center;
+        justify-content: center;
+        background-color: var(--bg-dark); /* Darker background for image area */
+        /* Optional: border-top-left-radius/border-top-right-radius if needed */
+    }
+    
+    /* Style for the album art image within the card */
+    .playlist-card-image-area img {
+        display: block; /* Remove potential extra space below image */
+        width: 100%; /* Make image fill the width of its container */
+        height: 100%; /* Make image fill the height of its container */
+        object-fit: cover; /* Cover the area */
+        /* No border-radius here, let the container handle it */
+    }
+    
+    /* Style for placeholder icon in the image area */
+    .playlist-card-image-area i.placeholder-icon {
+        font-size: 3em; /* Larger icon */
+        color: var(--text-muted);
+    }
+    
+    /* Container for the text (name and count) and controls */
+    .playlist-card-info {
+        display: flex; /* Use flex for horizontal arrangement of text and settings icon */
+        align-items: center;
+        gap: 8px; /* Space between text and icon */
+        padding: 10px; /* Add padding inside the info area */
+        flex-grow: 1; /* Allow info area to take available vertical space below the image */
+        width: 100%; /* Ensure it takes full width */
+        box-sizing: border-box; /* Include padding in width */
+         /* Optional: justify-content: space-between; if you want the text left and icon right */
+    }
+    
+    /* Style for the playlist name and song count text span */
+    .playlist-card-info span {
+        flex-grow: 1; /* Allow text to take space */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left; /* Align text to the left */
+        font-size: 0.9em; /* Adjust font size */
+        font-weight: bold;
+        color: var(--text-light); /* Ensure text is visible using theme variable */
+        /* Cursor is on the whole card now, not just the span */
+    }
+    
+    /* Style for the settings icon in the card */
+    .playlist-card-info .fa-cog {
+        cursor: pointer; /* Keep the cursor pointer for the icon */
+        color: var(--text-muted); /* Use theme muted color */
+        transition: color 0.2s;
+        flex-shrink: 0; /* Prevent icon from shrinking */
+        /* Remove margin-right if using gap on parent */
+         font-size: 1em; /* Adjust icon size */
+    }
+    
+    /* Ensure settings icon color changes on hover */
+    .playlist-card-info .fa-cog:hover {
+        color: var(--accent); /* Use theme accent color on hover */
+    }
+    
+    /* When the card is hovered, make the text accent color */
+    #playlists-list-box .list-item:hover .playlist-card-info span {
+        color: var(--accent); /* Use theme accent color for text on card hover */
+    }
+    
+    /* Specific style for the centered placeholder text in the grid when empty */
+    #playlists-list-box .scrollable-list .placeholder-text {
+        grid-column: 1 / -1; /* Make the placeholder span across all grid columns */
+    }
+        
+        /* Style for a placeholder icon if no album art */
+        .playlist-info i.placeholder-icon {
+            font-size: 1.5em; /* Size similar to the image */
+            margin-right: 10px; /* Space between icon and text/icon */
+            color: var(--text-muted); /* Muted color for placeholder */
+            flex-shrink: 0; /* Prevent icon from shrinking */
+            width: 30px; /* Give it a fixed width for alignment */
+            text-align: center; /* Center the icon */
+        }
 
 
 
@@ -1935,11 +2136,13 @@
     </div>
 </div>
 
-<div id="mp_removeSongsModal" class="mp-modal"> <div class="mp-modal-content">
+<div id="mp_removeSongsModal" class="mp-modal">
+    <div class="mp-modal-content">
         <span class="mp-modal-close" onclick="mp_closeModal('mp_removeSongsModal')">&times;</span>
         <h3>Remove Songs</h3>
         <div class="mp-modal-body">
             <p>Select songs to remove permanently from the library.</p>
+            <input type="search" id="mp_removeSongsSearch" placeholder="Search songs to remove" aria-label="Search songs to remove">
             <div class="scrollable-list" id="mp_removeSongsModalList" style="max-height: 300px;">
                 </div>
         </div>
@@ -1950,13 +2153,15 @@
     </div>
 </div>
 
-<div id="mp_createPlaylistModal" class="mp-modal"> <div class="mp-modal-content">
+<div id="mp_createPlaylistModal" class="mp-modal">
+    <div class="mp-modal-content">
          <span class="mp-modal-close" onclick="mp_closeModal('mp_createPlaylistModal')">&times;</span>
          <h3>Create New Playlist</h3>
          <div class="mp-modal-body">
               <input type="text" id="mp_newPlaylistName" placeholder="Playlist Name">
               <h4>Add Songs (Optional):</h4>
-              <div class="scrollable-list" id="mp_createPlaylistSongList" style="max-height: 200px; border: 1px solid var(--text-muted); padding: 5px;">
+              <input type="search" id="mp_createPlaylistSearch" placeholder="Search songs to add" aria-label="Search songs to add to playlist">
+                <div class="scrollable-list" id="mp_createPlaylistSongList" style="max-height: 200px; padding: 5px;">
                  <p class="placeholder-text">Loading library...</p>
               </div>
          </div>
@@ -1989,6 +2194,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.fog.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
+
 
 <script>
     // DOM Elements
@@ -2237,12 +2444,14 @@
 
 
     // --- START IndexedDB Helper Functions ---
-    const MP_DB_NAME = 'underground_music_db';
-    const MP_DB_VERSION = 1;
-    const MP_STORE_NAME = 'fileHandles';
-    const MP_KEY_DIR_HANDLE = 'mainDirectoryHandle'; // Key for the directory handle
+    const MP_KEY_DIR_HANDLE = 'songs'; // Key for the directory handle
+    const MP_DB_NAME = 'musicPlayerDB';
+    const MP_DB_VERSION = 2; // Make sure this version number is correct based on your upgrade history
+    const MP_HANDLE_STORE_NAME = 'fileHandles'; // Object store name for the directory handle
+    const MP_SONG_STORE_NAME = 'songs';
 
-    let mp_db = null; // Database connection variable
+// Global variable for the database connection
+    let mp_db = null;
 
     // Opens or creates the IndexedDB database
     function mp_dbOpen() {
@@ -2279,9 +2488,20 @@
             request.onupgradeneeded = (event) => {
                 console.log("MP_DB: Upgrade needed or database creation.");
                 const db = event.target.result;
-                if (!db.objectStoreNames.contains(MP_STORE_NAME)) {
-                    console.log(`MP_DB: Creating object store: ${MP_STORE_NAME}`);
-                    db.createObjectStore(MP_STORE_NAME);
+
+                // Object store for Directory Handle (existing)
+                if (!db.objectStoreNames.contains(MP_HANDLE_STORE_NAME)) {
+                    console.log(`MP_DB: Creating object store: ${MP_HANDLE_STORE_NAME}`);
+                    db.createObjectStore(MP_HANDLE_STORE_NAME);
+                }
+
+                // NEW: Object store for Song Metadata
+                if (!db.objectStoreNames.contains(MP_SONG_STORE_NAME)) {
+                    console.log(`MP_DB: Creating object store: ${MP_SONG_STORE_NAME}`);
+                    // Create an object store for songs, using 'id' as the keyPath
+                    db.createObjectStore(MP_SONG_STORE_NAME, { keyPath: 'id' });
+                     // Optional: Create an index for filename if you often search by filename
+                     // store.createIndex('by_fileName', 'fileName', { unique: false });
                 }
             };
         });
@@ -2334,6 +2554,240 @@
              return Promise.reject(error);
         });
     }
+// Saves multiple song objects to the 'songs' object store in IndexedDB
+    function mp_dbPutSongs(songs) {
+        console.log(`MP_DB: Attempting to put ${songs.length} songs into '${MP_SONG_STORE_NAME}'.`);
+        if (!songs || songs.length === 0) {
+            console.log("MP_DB: No songs to put.");
+            return Promise.resolve();
+        }
+        return mp_dbOpen().then(db => {
+            return new Promise((resolve, reject) => {
+                 if (!db || !db.objectStoreNames.contains(MP_SONG_STORE_NAME)) {
+                     console.error(`MP_DB: Database not ready or Object store "${MP_SONG_STORE_NAME}" not found for putSongs.`);
+                     reject(`Database not ready or Object store "${MP_SONG_STORE_NAME}" not found.`);
+                     return;
+                 }
+                 const transaction = db.transaction([MP_SONG_STORE_NAME], 'readwrite');
+                 const store = transaction.objectStore(MP_SONG_STORE_NAME);
+                 let successCount = 0;
+                 let errorCount = 0;
+
+                 songs.forEach(song => {
+                     const request = store.put(song); // Put each song object
+
+                     request.onsuccess = () => {
+                         successCount++;
+                         // console.log(`MP_DB: Put song ${song.id} successfully. Total success: ${successCount}`); // Verbose
+                     };
+                     request.onerror = (event) => {
+                         errorCount++;
+                         console.error(`MP_DB: Error putting song ${song.id}:`, event.target.error);
+                         // Continue processing other songs despite error
+                     };
+                 });
+
+                 transaction.oncomplete = () => {
+                     console.log(`MP_DB: Transaction completed for putting songs. Success: ${successCount}, Errors: ${errorCount}`);
+                     resolve(successCount); // Resolve with number of successful saves
+                 };
+                 transaction.onerror = (event) => {
+                     console.error("MP_DB: Transaction error during putSongs:", event.target.error);
+                     reject(`Transaction error during putSongs: ${event.target.error}`);
+                 };
+                 transaction.onabort = (event) => {
+                     console.warn("MP_DB: Transaction aborted during putSongs:", event.target.error);
+                     reject(`Transaction aborted during putSongs: ${event.target.error}`);
+                 };
+            });
+        }).catch(error => {
+             console.error(`MP_DB: Error in mp_dbPutSongs process:`, error);
+             return Promise.reject(error);
+        });
+    }
+
+    // Gets all song objects from the 'songs' object store in IndexedDB
+    function mp_dbGetAllSongs() {
+        console.log(`MP_DB: Attempting to get all songs from '${MP_SONG_STORE_NAME}'.`);
+        return mp_dbOpen().then(db => {
+            return new Promise((resolve, reject) => {
+                 if (!db || !db.objectStoreNames.contains(MP_SONG_STORE_NAME)) {
+                      console.warn(`MP_DB: Database not ready or Object store "${MP_SONG_STORE_NAME}" not found during getAllSongs. Returning empty array.`);
+                     resolve([]); // Return empty array if DB/store doesn't exist
+                     return;
+                 }
+                 const transaction = db.transaction([MP_SONG_STORE_NAME], 'readonly');
+                 const store = transaction.objectStore(MP_SONG_STORE_NAME);
+                 const request = store.getAll();
+
+                 request.onsuccess = () => {
+                     console.log(`MP_DB: Successfully got ${request.result.length} songs from '${MP_SONG_STORE_NAME}'.`);
+                     resolve(request.result); // request.result is an array of all objects
+                 };
+
+                 request.onerror = (event) => {
+                     console.error(`MP_DB: Error getting all songs:`, event.target.error);
+                     reject(`Error getting all songs: ${event.target.error}`);
+                 };
+
+                 transaction.onerror = (event) => {
+                     console.error("MP_DB: Transaction error during getAllSongs:", event.target.error);
+                     reject(`Transaction error during getAllSongs: ${event.target.error}`);
+                 };
+            });
+         }).catch(error => {
+             console.error(`MP_DB: Error in mp_dbGetAllSongs process:`, error);
+             return Promise.reject(error);
+        });
+    }
+
+     // Deletes a song by ID from the 'songs' object store
+     function mp_dbDeleteSong(songId) {
+         console.log(`MP_DB: Attempting to delete song with ID: ${songId} from '${MP_SONG_STORE_NAME}'.`);
+         return mp_dbOpen().then(db => {
+             return new Promise((resolve, reject) => {
+                 if (!db || !db.objectStoreNames.contains(MP_SONG_STORE_NAME)) {
+                     console.warn(`MP_DB: Database not ready or Object store "${MP_SONG_STORE_NAME}" not found during deleteSong.`);
+                     resolve(); // Resolve as if deleted if store doesn't exist
+                     return;
+                 }
+                 const transaction = db.transaction([MP_SONG_STORE_NAME], 'readwrite');
+                 const store = transaction.objectStore(MP_SONG_STORE_NAME);
+                 const request = store.delete(songId);
+
+                 request.onsuccess = () => {
+                     console.log(`MP_DB: Successfully deleted song with ID: ${songId}.`);
+                     resolve();
+                 };
+                 request.onerror = (event) => {
+                     console.error(`MP_DB: Error deleting song with ID ${songId}:`, event.target.error);
+                     reject(`Error deleting song: ${event.target.error}`);
+                 };
+                  transaction.onerror = (event) => {
+                      console.error("MP_DB: Transaction error during deleteSong:", event.target.error);
+                      reject(`Transaction error during deleteSong: ${event.target.error}`);
+                  };
+             });
+         }).catch(error => {
+             console.error(`MP_DB: Error in mp_dbDeleteSong process for ID ${songId}:`, error);
+             return Promise.reject(error);
+         });
+     }
+
+    // Deletes multiple songs by ID from the 'songs' object store
+    function mp_dbDeleteSongs(songIds) {
+        console.log(`MP_DB: Attempting to delete ${songIds.length} songs from '${MP_SONG_STORE_NAME}'.`);
+         if (!songIds || songIds.length === 0) {
+            console.log("MP_DB: No song IDs to delete.");
+            return Promise.resolve(0);
+         }
+        return mp_dbOpen().then(db => {
+            return new Promise((resolve, reject) => {
+                 if (!db || !db.objectStoreNames.contains(MP_SONG_STORE_NAME)) {
+                     console.warn(`MP_DB: Database not ready or Object store "${MP_SONG_STORE_NAME}" not found for deleteSongs.`);
+                     resolve(0); // Resolve with 0 deleted if store doesn't exist
+                     return;
+                 }
+                 const transaction = db.transaction([MP_SONG_STORE_NAME], 'readwrite');
+                 const store = transaction.objectStore(MP_SONG_STORE_NAME);
+                 let deleteCount = 0;
+                 let errorCount = 0;
+
+                 songIds.forEach(songId => {
+                     const request = store.delete(songId);
+
+                     request.onsuccess = () => {
+                         deleteCount++;
+                         // console.log(`MP_DB: Deleted song ${songId}. Total deleted: ${deleteCount}`); // Verbose
+                     };
+                     request.onerror = (event) => {
+                         errorCount++;
+                         console.error(`MP_DB: Error deleting song ${songId}:`, event.target.error);
+                         // Continue despite error
+                     };
+                 });
+
+                 transaction.oncomplete = () => {
+                     console.log(`MP_DB: Transaction completed for deleting songs. Deleted: ${deleteCount}, Errors: ${errorCount}`);
+                     resolve(deleteCount); // Resolve with number of successful deletes
+                 };
+                 transaction.onerror = (event) => {
+                     console.error("MP_DB: Transaction error during deleteSongs:", event.target.error);
+                     reject(`Transaction error during deleteSongs: ${event.target.error}`);
+                 };
+                 transaction.onabort = (event) => {
+                     console.warn("MP_DB: Transaction aborted during deleteSongs:", event.target.error);
+                     reject(`Transaction aborted during deleteSongs: ${event.target.error}`);
+                 };
+            });
+        }).catch(error => {
+             console.error(`MP_DB: Error in mp_dbDeleteSongs process:`, error);
+             return Promise.reject(error);
+        });
+    }
+// Loads the directory handle from IndexedDB and checks its permission status
+// Loads the directory handle from IndexedDB and checks its permission status
+    async function mp_loadHandleAndCheckPermissions() {
+        console.log("MP: Attempting to load directory handle from IndexedDB.");
+        mp_currentDirectoryHandle = null; // Reset the global handle variable
+        let storedHandle = null;
+
+        try {
+            const db = await mp_dbOpen();
+            // Check if the database and the handle object store exist
+            if (db && db.objectStoreNames.contains(MP_HANDLE_STORE_NAME)) {
+                 const transaction = db.transaction([MP_HANDLE_STORE_NAME], 'readonly');
+                 const store = transaction.objectStore(MP_HANDLE_STORE_NAME);
+                 // --- THIS LINE IS CRUCIAL: Get the key 'directoryHandle' from the handle store ---
+                 const request = store.get('directoryHandle');
+
+                 storedHandle = await new Promise((resolve, reject) => {
+                     request.onsuccess = (event) => {
+                         console.log("MP_DB: Successfully got value for key: directoryHandle", event.target.result !== undefined ? "Found" : "Not Found");
+                         resolve(event.target.result);
+                     };
+                     request.onerror = (event) => {
+                         console.error(`MP_DB: Error getting key 'directoryHandle':`, event.target.error);
+                         reject(event.target.error);
+                     };
+                      transaction.onerror = (event) => {
+                          console.error("MP_DB: Transaction error during get 'directoryHandle':", event.target.error);
+                          reject(event.target.error);
+                      };
+                 });
+            } else {
+                 console.warn(`MP_DB: Database not ready or Object store "${MP_HANDLE_STORE_NAME}" not found for handle loading.`);
+                 // If the store doesn't exist, there's no handle to load, resolve with null
+                 storedHandle = null;
+            }
+
+            if (storedHandle) {
+                console.log("MP: Directory handle loaded from IndexedDB. Checking permissions...");
+                // Check permission status without prompting the user immediately
+                const permissionStatus = await storedHandle.queryPermission({ mode: 'read' });
+                console.log("MP: Directory handle permission status:", permissionStatus);
+
+                if (permissionStatus === 'granted') {
+                    mp_currentDirectoryHandle = storedHandle; // Assign to global variable if granted
+                    console.log("MP: Directory handle permission granted.");
+                } else {
+                    console.warn("MP: Directory handle permission not granted on load.");
+                     // Update UI to show permission prompt needed
+                    mp_updatePermissionUI(false, storedHandle); // Pass handle to show prompt button
+                }
+            } else {
+                console.log("MP: No directory handle found in IndexedDB.");
+                 // Update UI to show folder selection needed
+                 mp_updatePermissionUI(false, null);
+            }
+
+        } catch (error) {
+            console.error("MP: Error loading directory handle or checking permissions:", error);
+             // On any error during this process, assume no handle is available
+             mp_currentDirectoryHandle = null;
+             mp_updatePermissionUI(false, null);
+        }
+    }
 
     // Gets a value from the object store by key
     function mp_dbGet(key) {
@@ -2376,7 +2830,16 @@
         });
     }
     // --- END IndexedDB Helper Functions ---
-
+// Helper function to convert ArrayBuffer to Base64 string (needed for album art)
+    function arrayBufferToBase64(buffer) {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return window.btoa(binary);
+    }
 
     // --- START Permission UI Function ---
     // *** MOVED EARLIER IN SCRIPT ***
@@ -2451,7 +2914,7 @@
             } else {
                 // No handle found or permission was denied - just prompt to select folder
                 permissionPromptDiv.innerHTML = `
-                     <p style="margin-bottom: 0; color: var(--text-muted);">Select your music folder to load songs.</p>
+                     <p style="margin-bottom: 0; color: var(--text-muted);">Select your music folder to load songs. folder > song name - title</p>
                  `;
             }
         }
@@ -2461,7 +2924,7 @@
 
     // --- START Function to load handle and check permissions ---
     async function mp_loadHandleAndCheckPermissions() {
-        console.log("MP: Attempting to load directory handle from IndexedDB...");
+        console.log("MP: Attempting to load directory handle from IndexedDB");
         try {
             const savedHandle = await mp_dbGet(MP_KEY_DIR_HANDLE);
 
@@ -2560,36 +3023,81 @@
     }
 
     // Called by the "Select Folder" button
+// Handles the user clicking "Select Folder" and choosing a directory
     async function mp_selectMusicDirectory() {
-        console.log("MP: Select Music Directory button clicked.");
-        const dirHandle = await mp_requestDirectoryAccess();
-        if (dirHandle) {
-            mp_currentDirectoryHandle = dirHandle; // Store for this session
+        console.log("MP: Select Folder button clicked.");
+        try {
+            // Use the File System Access API to show directory picker
+            const directoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' }); // Request read/write initially
+            console.log("MP: Directory selected:", directoryHandle.name);
 
-            // *** Save handle to IndexedDB ***
-            try {
-                await mp_dbPut(MP_KEY_DIR_HANDLE, dirHandle);
-                console.log("MP: Successfully saved directory handle to IndexedDB.");
-                // Update UI immediately to remove prompt
-                mp_updatePermissionUI(true); // Call this AFTER it's defined
-            } catch (error) {
-                const errorDetails = error instanceof Error ? error.message : String(error);
-                console.error("MP: Failed to save directory handle to IndexedDB:", error);
-                alert(`Error saving directory reference: ${errorDetails}. It might not persist across reloads.`);
-                 // Even if save fails, keep handle for current session and show permission granted UI for now
-                 mp_updatePermissionUI(true);
+            // Request persistent permission for read access
+            const permissionStatus = await directoryHandle.requestPermission({ mode: 'read' });
+            console.log("MP: Read permission request result:", permissionStatus);
+
+            if (permissionStatus === 'granted') {
+                mp_currentDirectoryHandle = directoryHandle; // Store the handle globally
+                console.log("MP: Read permission granted for selected directory.");
+
+                // --- Save the directory handle to IndexedDB ---
+                try {
+                    const db = await mp_dbOpen();
+                    if (db && db.objectStoreNames.contains(MP_HANDLE_STORE_NAME)) {
+                         const transaction = db.transaction([MP_HANDLE_STORE_NAME], 'readwrite');
+                         const store = transaction.objectStore(MP_HANDLE_STORE_NAME);
+                         const request = store.put(directoryHandle, 'directoryHandle'); // Store handle with a fixed key
+
+                         request.onsuccess = () => {
+                              console.log("MP_DB: Directory handle saved to IndexedDB.");
+                         };
+                         request.onerror = (event) => {
+                             console.error("MP_DB: Error saving directory handle:", event.target.error);
+                              alert("Error saving directory access for persistence.");
+                         };
+                          transaction.onerror = (event) => {
+                              console.error("MP_DB: Transaction error during handle save:", event.target.error);
+                               alert("Error saving directory access for persistence.");
+                          };
+                    } else {
+                         console.error(`MP_DB: Object store "${MP_HANDLE_STORE_NAME}" not found for handle saving.`);
+                         alert("Error saving directory access for persistence: Database not ready.");
+                    }
+                } catch (dbError) {
+                     console.error("MP: Error in mp_selectMusicDirectory DB save process:", dbError);
+                      alert("Error saving directory access for persistence.");
+                }
+                // --- End Save Handle ---
+
+
+                // Update UI to show permission status
+                mp_updatePermissionUI(true); // Permission granted
+
+                // Process the files in the selected directory
+                await mp_processDirectoryHandle(directoryHandle);
+                console.log("MP: Directory processing initiated after selection.");
+
+            } else {
+                console.warn("MP: Read permission denied for selected directory.");
+                mp_currentDirectoryHandle = null; // Ensure handle is null if permission denied
+                 mp_updatePermissionUI(false, directoryHandle); // Update UI to show permission prompt needed (pass the handle)
+                alert("Permission to read the selected directory was denied. Music will not be loaded persistently.");
             }
 
-            // Now process the directory
-            await mp_processDirectoryHandle(dirHandle);
-        } else {
-             console.log("MP: No directory handle obtained from mp_requestDirectoryAccess.");
-              // Optional: update UI to indicate no folder selected if needed
-             mp_updatePermissionUI(false); // Ensure prompt reflects no folder state
+        } catch (error) {
+            console.error("MP: Error selecting directory:", error);
+             mp_currentDirectoryHandle = null;
+             mp_updatePermissionUI(false, null);
+            if (error.name === 'AbortError') {
+                console.log("MP: Directory picker aborted by user.");
+            } else {
+                 alert(`An error occurred while selecting the directory: ${error.message}`);
+            }
         }
     }
 
     // Processes files from the directory handle (recursive)
+// Processes files from the directory handle (recursive) and extracts metadata including album art
+// Processes files from the directory handle (recursive) and extracts metadata including album art
     async function mp_processDirectoryHandle(dirHandle) {
         if (!dirHandle) {
             console.error("MP: mp_processDirectoryHandle called with null handle.");
@@ -2599,23 +3107,48 @@
         const processingPromises = [];
         let fileCount = 0;
         const processedPaths = new Set(); // To avoid processing duplicates if structure is odd
-
+    
         // Clear existing library before processing to avoid duplicates from multiple selections/scans
+        // We will repopulate it with updated song objects including metadata
         mp_musicLibrary = [];
         console.log("MP: Cleared existing music library before processing directory.");
-
-
+    
+        // Function to read tags asynchronously for a single file
+        const readTagsAsync = (file) => {
+            return new Promise((resolve, reject) => {
+                // Check if jsmediatags is available
+                if (typeof jsmediatags === 'undefined') {
+                     console.warn("MP: jsmediatags library not loaded. Skipping tag reading for:", file.name);
+                     resolve(null); // Resolve with null if library is missing
+                     return;
+                 }
+                jsmediatags.read(file, {
+                    onSuccess: function(tag) {
+                        // tag.tags will contain the metadata, including tag.tags.picture
+                        resolve(tag.tags);
+                    },
+                    onError: function(error) {
+                        console.warn("MP: Error reading tags for", file.name, ":", error.type, error.info);
+                        resolve(null); // Resolve with null if tags can't be read
+                    }
+                });
+            });
+        };
+    
+    
         async function processEntry(entryHandle, currentPath = '') {
              // --- Permission Check within Recursion ---
              try {
                   if (entryHandle.kind === 'directory') {
                        // Check permission for the directory *before* trying to iterate its values
+                       // Use queryPermission to avoid prompting here; actual prompt happens via UI button
                        if (await entryHandle.queryPermission({ mode: 'read' }) !== 'granted') {
                            console.warn(`MP: Read permission not granted for subdirectory: ${currentPath ? currentPath + '/' : ''}${entryHandle.name}. Skipping.`);
                            return; // Skip this directory
                        }
                   } else if (entryHandle.kind === 'file') {
                       // Check permission for the file *before* trying to getFile()
+                      // Use queryPermission
                       if (await entryHandle.queryPermission({ mode: 'read' }) !== 'granted') {
                            console.warn(`MP: Read permission not granted for file: ${currentPath ? currentPath + '/' : ''}${entryHandle.name}. Skipping.`);
                            return; // Skip this file
@@ -2626,19 +3159,76 @@
                   return; // Skip on permission check error
              }
              // --- End Permission Check ---
-
-
+    
+    
              const entryPath = currentPath ? `${currentPath}/${entryHandle.name}` : entryHandle.name;
-             if (processedPaths.has(entryPath)) return; // Skip if already processed
+             if (processedPaths.has(entryPath)) {
+                 // console.log(`MP: Skipping already processed path: ${entryPath}`); // Optional verbose log
+                 return; // Skip if already processed
+             }
              processedPaths.add(entryPath);
-
+    
              try {
                  if (entryHandle.kind === 'file') {
-                     const file = await entryHandle.getFile();
-                     if (file.type.startsWith('audio/')) {
+                     // Check if it's an audio file before processing
+                     if (entryHandle.name.toLowerCase().endsWith('.mp3') || entryHandle.name.toLowerCase().endsWith('.wav') || entryHandle.name.toLowerCase().endsWith('.aac') || entryHandle.name.toLowerCase().endsWith('.ogg')) {
+                        const file = await entryHandle.getFile();
+                         // Skip files that appear to be too small to be valid audio
+                         if (file.size < 1024) { // e.g., less than 1KB
+                              console.warn(`MP: Skipping potentially invalid small file: ${entryHandle.name} (${file.size} bytes)`);
+                              return; // Skip this file
+                         }
                          fileCount++;
-                         // Don't await here, let them run in parallel
-                         processingPromises.push(mp_processPersistentSongFile(file, entryHandle));
+                         console.log("MP: Processing file:", file.name); // Log file being processed
+    
+                        // --- Asynchronously read tags ---
+                         const tags = await readTagsAsync(file);
+    
+                        let artist = "Unknown Artist";
+                        let title = file.name.replace(/\.(mp3|wav|aac|ogg)$/i, '').trim(); // Fallback to filename
+                        let albumArtUrl = null; // To store the data URL of album art
+    
+                        if (tags) {
+                            // Prefer tags if available
+                            artist = tags.artist || artist;
+                            title = tags.title || title;
+    
+                            // Process album art
+                            if (tags.picture) {
+                                try {
+                                    const picture = tags.picture;
+                                    const base64String = arrayBufferToBase64(picture.data);
+                                    albumArtUrl = `data:${picture.format};base64,${base64String}`;
+                                    console.log(`MP: Extracted album art for "${file.name}". Format: ${picture.format}`);
+                                } catch (artErr) {
+                                    console.warn(`MP: Error processing album art for "${file.name}":`, artErr);
+                                    albumArtUrl = null; // Ensure it's null on error
+                                }
+                            }
+                        } else {
+                             console.log(`MP: No readable tags found for "${file.name}". Using filename info.`);
+                        }
+    
+                        // Generate a stable ID based on file path relative to the directory handle
+                        // This assumes file names within the selected folder are unique enough
+                        const songId = entryPath; // Use relative path as ID
+    
+                        // Create the song object
+                         const song = {
+                             id: songId,
+                             fileName: entryHandle.name, // Just the filename
+                             filePath: entryPath, // Full path relative to selected directory
+                             artist: artist,
+                             title: title,
+                             fileSize: file.size,
+                            //  handle: entryHandle, // DO NOT store handles directly in objects that are stringified
+                             albumArtUrl: albumArtUrl // Store the album art data URL
+                         };
+                         mp_musicLibrary.push(song); // Add to the main library array
+                         // console.log(`MP: Added song to library: "${song.title}" by ${song.artist}`); // Optional verbose log
+    
+                     } else {
+                         // console.log(`MP: Skipping non-audio file: ${entryHandle.name}`); // Optional verbose log
                      }
                  } else if (entryHandle.kind === 'directory') {
                       // console.log(`MP: Entering subdirectory: ${entryPath}`); // Optional verbose log
@@ -2656,70 +3246,135 @@
                   } else {
                        console.error(`MP: Error processing entry ${entryPath}:`, err);
                   }
+                  // Continue processing other files despite errors on one
               }
          }
-
+    
         try {
+             // Note: Recursive processing with await inside the loop inherently waits
+             // We don't need Promise.all on a separate array if await is used directly
              await processEntry(dirHandle); // Start processing from root handle
-             await Promise.all(processingPromises);
-             console.log(`MP: Directory processing complete. ${processingPromises.length} audio files potentially added/updated.`);
+             console.log(`MP: Directory processing complete. ${mp_musicLibrary.length} audio files added/updated.`);
         } catch (processErr) {
              console.error("MP: Error during overall directory processing:", processErr);
              // Handle top-level errors if needed
         }
-
-        mp_saveDataToLocalStorage(); // Save the potentially updated library metadata
+    
+        // ***** CORRECTED LINE *****
+        await mp_saveMusicData(); // Save the potentially updated library metadata to IndexedDB
+        // **************************
+    
         // Render lists only if the music page is currently active/initialized
-        if (mp_isInitialized && document.getElementById('mp_songsList')) {
-             console.log("MP: Rendering lists after directory processing.");
-             mp_renderSongsList();
-             mp_renderRecentlyPlayed(); // Update recents too
-             mp_renderPlaylists(); // And playlists
-        } else {
-            console.log("MP: Music page not active/initialized, skipping list render after directory processing.");
-        }
+        // Use a small delay to ensure DOM is ready after processing might take time
+        setTimeout(() => {
+            if (mp_isInitialized && document.getElementById('mp_songsList')) {
+                 console.log("MP: Rendering lists after directory processing.");
+                 mp_renderSongsList();
+                 mp_renderRecentlyPlayed(); // Update recents too
+                 mp_renderPlaylists(); // And playlists
+                 // Ensure playback bar is shown if there's music
+                 if (mp_playbackControlsBar) mp_playbackControlsBar.style.display = 'flex';
+            } else {
+                console.log("MP: Music page not active/initialized, skipping list render after directory processing.");
+                 // Ensure playback bar is hidden if no music
+                 if (mp_playbackControlsBar) mp_playbackControlsBar.style.display = 'none';
+            }
+        }, 100); // Short delay
     }
 
 
     // Processes a single file, stores metadata
-    async function mp_processPersistentSongFile(file, fileHandle = null) { // fileHandle might be useful later but not stored now
-        const songId = `mp-song-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-        let { artist, title } = mp_parseFileName(file.name);
+// Processes a single file, stores metadata (primarily for fallback file input)
+     // Updated to use jsmediatags for tag reading
+     async function mp_processPersistentSongFile(file, fileHandle = null) { // Keep fileHandle param for clarity, even if null
+         // This is for the file input fallback
+         console.log("MP: Processing single file (fallback):", file.name);
 
-        // Check if already exists *in the current batch being processed* (mp_musicLibrary)
-        if (mp_musicLibrary.some(s => s.fileName === file.name && s.fileSize === file.size)) {
-            // console.log(`MP: Song "${file.name}" seems to already exist by name/size. Skipping.`);
-            return;
-        }
+         // Generate a stable ID based on file name and size for fallback
+         const songId = `mp-fallback-${file.name}-${file.size}`;
 
-        const song = {
-            id: songId, artist: artist, title: title,
-            fileName: file.name, fileSize: file.size,
-            // DO NOT store fileHandle here, retrieve it on demand using the directory handle + fileName
-        };
-        mp_musicLibrary.push(song);
-        // console.log(`MP: Added metadata: ${artist} - ${title}`); // Optional verbose log
-    }
+         // Use jsmediatags for metadata if available, otherwise fallback to filename parsing
+         let artist = "Unknown Artist";
+         let title = file.name.replace(/\.(mp3|wav|aac|ogg)$/i, '').trim(); // Fallback to filename
+         let albumArtUrl = null;
+
+         // --- Asynchronously read tags for the single file ---
+         const tags = await new Promise((resolve) => {
+              if (typeof jsmediatags === 'undefined') {
+                  console.warn("MP: jsmediatags library not loaded. Skipping tag reading for single file:", file.name);
+                  resolve(null);
+                  return;
+              }
+              jsmediatags.read(file, {
+                  onSuccess: function(tag) { resolve(tag.tags); },
+                  onError: function(error) {
+                      console.warn("MP: Error reading tags for single file", file.name, ":", error.type, error.info);
+                      resolve(null);
+                  }
+              });
+         });
+
+         if (tags) {
+             artist = tags.artist || artist;
+             title = tags.title || title;
+             if (tags.picture) {
+                 try {
+                     const picture = tags.picture;
+                     const base64String = arrayBufferToBase64(picture.data);
+                     albumArtUrl = `data:${picture.format};base64,${base64String}`;
+                      console.log(`MP: Extracted album art for single file "${file.name}". Format: ${picture.format}`);
+                 } catch (artErr) {
+                      console.warn(`MP: Error processing album art for single file "${file.name}":`, artErr);
+                      albumArtUrl = null;
+                 }
+             }
+         } else {
+              console.log(`MP: No readable tags found for single file "${file.name}". Using filename info.`);
+         }
+
+         const song = {
+             id: songId,
+             fileName: file.name, // Just the filename
+             filePath: file.name, // Use filename as path for fallback
+             artist: artist,
+             title: title,
+             fileSize: file.size,
+             // No handle for fallback file
+             albumArtUrl: albumArtUrl // Store the album art data URL
+         };
+
+         // Check if song with the same name and size already exists in the library
+         // (This check is needed here for the fallback, the directory processor clears and repopulates)
+         if (!mp_musicLibrary.some(s => s.fileName === song.fileName && s.fileSize === song.fileSize && s.filePath === song.filePath)) {
+             mp_musicLibrary.push(song); // Add to the main library array
+             console.log(`MP: Added single file to library (fallback): "${song.title}" by ${song.artist}`);
+         } else {
+             console.log(`MP: Skipping duplicate single file: ${song.fileName}`);
+         }
+     }
 
     // Fallback for standard file input
-    async function mp_handleFileSelect(event) {
+    // Modify mp_handleFileSelect to call mp_processPersistentSongFile
+    // Fallback for standard file input
+    // Modify mp_handleFileSelect to call mp_processPersistentSongFile
+    async function mp_handleFileSelect(event) { // Added async
         console.log("MP: Using file input fallback.");
         mp_currentDirectoryHandle = null; // Not using directory handle here
-        // Clear IndexedDB handle if file input is used? Maybe not, user might switch back.
-        // await mp_dbPut(MP_KEY_DIR_HANDLE, null); // Optional: uncomment to clear handle on file input use
         mp_updatePermissionUI(false); // Update UI to show folder selection is needed for persistence
-
+    
         const files = event.target.files;
         if (!files || files.length === 0) return;
         console.log(`MP: Processing ${files.length} files from input...`);
         const processingPromises = [];
-
-         // Clear library when loading via file input to avoid mixing persistent/non-persistent
-         mp_musicLibrary = [];
-         console.log("MP: Cleared existing library before processing file input.");
-
+    
+        // Clear library when loading via file input to avoid mixing persistent/non-persistent
+        mp_musicLibrary = [];
+        console.log("MP: Cleared existing library before processing file input.");
+    
+    
         Array.from(files).forEach(file => {
             if (file.type.startsWith('audio/')) {
+                // Use the updated mp_processPersistentSongFile which includes tag reading
                 processingPromises.push(mp_processPersistentSongFile(file, null)); // No handle here
             } else {
                 console.warn(`MP: Skipping non-audio file: ${file.name}`);
@@ -2727,9 +3382,17 @@
         });
         await Promise.all(processingPromises);
         console.log("MP: File input processing complete.");
-        mp_saveDataToLocalStorage(); // Save metadata
+    
+        // ***** CORRECTED LINE *****
+        await mp_saveMusicData(); // Save metadata using the proper function
+        // **************************
+    
         if (mp_isInitialized && document.getElementById('mp_songsList')) { // Check if page is active
+            console.log("MP: Rendering songs list after file input processing.");
             mp_renderSongsList();
+            // No need to re-render recents/playlists as they aren't affected by this process typically
+        } else {
+             console.log("MP: Music page not active/initialized, skipping list render after file input.");
         }
         event.target.value = null; // Allow selecting same files again
     }
@@ -2796,6 +3459,60 @@
     
         mp_updatePlaybackControls(); // Update both sets of buttons (will disable them)
         mp_updatePlayingIndicator(); // Clear playing indicators in lists
+    }
+// Loads music data from IndexedDB (songs) and LocalStorage (recents, playlists)
+    async function mp_loadMusicData() {
+        console.log("MP: Loading music data from IndexedDB and LocalStorage.");
+        try {
+            // Load songs from IndexedDB
+            mp_musicLibrary = await mp_dbGetAllSongs();
+            console.log(`MP: Loaded ${mp_musicLibrary.length} songs from IndexedDB.`);
+
+            // Load recents and playlists from LocalStorage
+            const recentlyPlayedData = localStorage.getItem('mp_recentlyPlayed');
+            const playlistsData = localStorage.getItem('mp_playlists');
+
+            mp_recentlyPlayed = recentlyPlayedData ? JSON.parse(recentlyPlayedData) : [];
+            mp_playlists = playlistsData ? JSON.parse(playlistsData) : {};
+
+            console.log(`MP: Loaded ${mp_recentlyPlayed.length} recents and ${Object.keys(mp_playlists).length} playlists from LocalStorage.`);
+
+        } catch (error) {
+            console.error("MP: Error loading music data:", error);
+            // Fallback to empty state if loading fails
+            mp_musicLibrary = [];
+            mp_recentlyPlayed = [];
+            mp_playlists = {};
+            console.warn("MP: Music data loading failed. Initializing with empty state.");
+            // Don't alert here, as it might happen on every load if something is wrong.
+            // The UI should indicate that the library is empty.
+        }
+    }
+
+    // Saves music data to IndexedDB (songs) and LocalStorage (recents, playlists)
+    // This function is called after processing or changes
+    async function mp_saveMusicData() {
+        console.log("MP: Saving music data to IndexedDB and LocalStorage.");
+        try {
+            // Save the *entire* current in-memory mp_musicLibrary to IndexedDB
+            // This will add new songs and update existing ones (if they have the same ID)
+            // Note: This replaces ALL songs in the DB with the current in-memory state.
+            // A more efficient approach for large libraries might be to only put changed/new songs.
+            // But for simplicity, saving the full list works for now.
+            await mp_dbPutSongs(mp_musicLibrary);
+            console.log(`MP: Saved ${mp_musicLibrary.length} songs to IndexedDB.`);
+
+            // Save recents and playlists to LocalStorage
+            localStorage.setItem('mp_recentlyPlayed', JSON.stringify(mp_recentlyPlayed));
+            localStorage.setItem('mp_playlists', JSON.stringify(mp_playlists));
+             console.log(`MP: Saved ${mp_recentlyPlayed.length} recents and ${Object.keys(mp_playlists).length} playlists to LocalStorage.`);
+
+        } catch (error) {
+            console.error("MP: Error saving music data:", error);
+            // Don't alert here, as it might happen frequently.
+            console.warn("MP: Music data saving failed. Some changes might not be saved.");
+        }
+        // Note: Saving the directory handle happens separately in mp_selectMusicDirectory
     }
 
 
@@ -3282,7 +3999,7 @@
     // --- Sets up listeners and gets references for the music hover overlay ---
     function initializeMusicHoverOverlay() {
         if (mp_hoverOverlayInitialized) return; // Run only once
-        console.log("MP: Initializing Music Hover Overlay Listeners...");
+        console.log("MP: Initializing Music Hover Overlay Listeners");
     
         // Get references AFTER DOM is loaded
         musicIconAndHoverContainer = document.getElementById('musicIconAndHoverContainer');
@@ -3406,30 +4123,63 @@
     // mp_populateViewPlaylistModal, mp_openViewPlaylistModal, mp_openModal, mp_closeModal,
     // mp_openRemoveSongsModal, mp_removeSelectedSongs functions here...)
     // ... (Make sure they are included) ...
-    function mp_populateCreatePlaylistModalSongs() {
+    function mp_populateCreatePlaylistModalSongs(filter = '') { // Added filter parameter
         const modalList = document.getElementById('mp_createPlaylistSongList');
         if (!modalList) return;
-        modalList.innerHTML = '';
-        if (mp_musicLibrary.length === 0) {
-            modalList.innerHTML = '<p class="placeholder-text">No songs in library.</p>';
+        modalList.innerHTML = ''; // Clear previous list
+    
+        const lowerFilter = filter.toLowerCase(); // Convert filter to lowercase
+    
+        // Filter the library based on the search input
+        const filteredLibrary = mp_musicLibrary.filter(song =>
+            song.title.toLowerCase().includes(lowerFilter) ||
+            song.artist.toLowerCase().includes(lowerFilter) ||
+            song.fileName.toLowerCase().includes(lowerFilter)
+        ).sort((a, b) => `${a.artist} - ${a.title}`.localeCompare(`${b.artist} - ${b.title}`)); // Sort consistently
+    
+        if (filteredLibrary.length === 0) {
+            modalList.innerHTML = `<p class="placeholder-text">${mp_musicLibrary.length === 0 ? 'No songs in library.' : (filter ? 'No songs match search.' : 'No songs in library.')}</p>`;
         } else {
-            const sortedLibrary = [...mp_musicLibrary].sort((a, b) => `${a.artist} - ${a.title}`.localeCompare(`${b.artist} - ${b.title}`));
-            sortedLibrary.forEach(song => {
+            const fragment = document.createDocumentFragment();
+            filteredLibrary.forEach(song => {
                 const div = document.createElement('div');
                 div.className = 'list-item';
-                div.style.cursor = 'default';
-                div.innerHTML = `
-                    <input type="checkbox" id="mp_createpl_${song.id}" value="${song.id}">
-                    <label for="mp_createpl_${song.id}" title="${escapeHtml(song.artist)} - ${escapeHtml(song.title)}">${escapeHtml(song.artist)} - ${escapeHtml(song.title)}</label>`;
-                modalList.appendChild(div);
+                div.style.cursor = 'pointer'; // Make item clickable
+                div.dataset.songId = song.id; // Store the song ID on the list item
+    
+                // Create span for the text content (no checkbox or label)
+                const textSpan = document.createElement('span');
+                textSpan.textContent = `${escapeHtml(song.artist)} - ${escapeHtml(song.title)}`;
+                textSpan.title = `${escapeHtml(song.artist)} - ${escapeHtml(song.title)} (${escapeHtml(song.fileName)})`; // Add full title on hover
+                textSpan.style.flexGrow = '1'; // Allow span to take space
+                textSpan.style.overflow = 'hidden';
+                textSpan.style.textOverflow = 'ellipsis';
+                textSpan.style.whiteSpace = 'nowrap';
+    
+                // Append the text span
+                div.appendChild(textSpan);
+    
+                // Add click listener to the div (list item) to toggle selection highlight
+                div.addEventListener('click', () => {
+                    div.classList.toggle('selected-for-action'); // Toggle the new highlight class
+                });
+    
+                fragment.appendChild(div);
             });
+            modalList.appendChild(fragment);
         }
+         console.log(`MP: Populated Create Playlist modal song list with ${filteredLibrary.length} songs (filter: "${filter}").`);
     }
 
     function mp_openCreatePlaylistModal() {
         const nameInput = document.getElementById('mp_newPlaylistName');
         if (nameInput) nameInput.value = '';
-        mp_populateCreatePlaylistModalSongs();
+    
+        // Get the search input for the modal
+        const searchInput = document.getElementById('mp_createPlaylistSearch');
+        if (searchInput) searchInput.value = ''; // Clear search input on open
+    
+        mp_populateCreatePlaylistModalSongs(); // Populate with no filter initially
         mp_openModal('mp_createPlaylistModal');
     }
 
@@ -3438,8 +4188,12 @@
         const name = nameInput ? nameInput.value.trim() : '';
         if (!name) { alert("MP: Please enter a playlist name."); return; }
         if (mp_playlists[name]) { alert(`MP: Playlist "${name}" already exists.`); return; }
-        const checkboxes = document.querySelectorAll('#mp_createPlaylistSongList input[type="checkbox"]:checked');
-        const initialSongIds = Array.from(checkboxes).map(cb => cb.value);
+    
+        // Find list items with the 'selected-for-action' class
+        const selectedListItems = document.querySelectorAll('#mp_createPlaylistSongList .list-item.selected-for-action');
+        // Get the song IDs from the data-song-id attribute
+        const initialSongIds = Array.from(selectedListItems).map(item => item.dataset.songId);
+    
         mp_playlists[name] = initialSongIds;
         mp_saveDataToLocalStorage();
         if(mp_isInitialized && document.getElementById('mp_playlistsList')) mp_renderPlaylists();
@@ -3526,30 +4280,82 @@
 
     function mp_openRemoveSongsModal() {
         const modalList = document.getElementById('mp_removeSongsModalList');
-        if (!modalList) return;
-        modalList.innerHTML = '';
-        if (mp_musicLibrary.length === 0) {
-            modalList.innerHTML = '<p class="placeholder-text">No songs in library.</p>';
-        } else {
-            const sortedLibrary = [...mp_musicLibrary].sort((a, b) => `${a.artist} - ${a.title}`.localeCompare(`${b.artist} - ${b.title}`));
-            sortedLibrary.forEach(song => {
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                div.style.cursor = 'default';
-                div.innerHTML = `
-                    <input type="checkbox" id="mp_remove_${song.id}" value="${song.id}">
-                    <label for="mp_remove_${song.id}" title="${escapeHtml(song.artist)} - ${escapeHtml(song.title)}">${escapeHtml(song.artist)} - ${escapeHtml(song.title)}</label>`;
-                modalList.appendChild(div);
-            });
-        }
+        if (!modalList) return; // Exit if element not ready
+        modalList.innerHTML = ''; // Clear previous list
+    
+        // Get the search input for the modal
+        const searchInput = document.getElementById('mp_removeSongsSearch');
+        if (searchInput) searchInput.value = ''; // Clear search input on open
+    
+        // Populate the list with no filter initially and add click listeners
+        mp_populateRemoveSongsModal(document.getElementById('mp_removeSongsSearch')?.value || ''); // Call populate function
+    
         mp_openModal('mp_removeSongsModal');
     }
+    
+    // NEW Function: mp_populateRemoveSongsModal to handle filtering and rendering
+    function mp_populateRemoveSongsModal(filter = '') {
+        const modalList = document.getElementById('mp_removeSongsModalList');
+        if (!modalList) return;
+        modalList.innerHTML = ''; // Clear previous list
+    
+        const lowerFilter = filter.toLowerCase(); // Convert filter to lowercase
+    
+        // Filter the library based on the search input
+        const filteredLibrary = mp_musicLibrary.filter(song =>
+            song.title.toLowerCase().includes(lowerFilter) ||
+            song.artist.toLowerCase().includes(lowerFilter) ||
+            song.fileName.toLowerCase().includes(lowerFilter)
+        ).sort((a, b) => `${a.artist} - ${a.title}`.localeCompare(`${b.artist} - ${b.title}`)); // Sort consistently
+    
+    
+        if (filteredLibrary.length === 0) {
+            modalList.innerHTML = `<p class="placeholder-text">${mp_musicLibrary.length === 0 ? 'No songs in library.' : (filter ? 'No songs match search.' : 'No songs in library.')}</p>`;
+        } else {
+            const fragment = document.createDocumentFragment();
+            filteredLibrary.forEach(song => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.style.cursor = 'pointer'; // Make item clickable
+                 div.dataset.songId = song.id; // Store the song ID on the list item
+    
+                // Create span for the text content (no checkbox or label)
+                const textSpan = document.createElement('span');
+                textSpan.textContent = `${escapeHtml(song.artist)} - ${escapeHtml(song.title)}`;
+                textSpan.title = `${escapeHtml(song.artist)} - ${escapeHtml(song.title)} (${escapeHtml(song.fileName)})`; // Add full title on hover
+                textSpan.style.flexGrow = '1'; // Allow span to take space
+                textSpan.style.overflow = 'hidden';
+                textSpan.style.textOverflow = 'ellipsis';
+                textSpan.style.whiteSpace = 'nowrap';
+    
+                // Append the text span
+                div.appendChild(textSpan);
+    
+                // Add click listener to the div (list item) to toggle selection highlight
+                div.addEventListener('click', () => {
+                    div.classList.toggle('selected-for-action'); // Toggle the new highlight class
+                });
+    
+                fragment.appendChild(div);
+            });
+            modalList.appendChild(fragment);
+        }
+         console.log(`MP: Populated Remove Songs modal list with ${filteredLibrary.length} songs (filter: "${filter}").`);
+    }
 
-    function mp_removeSelectedSongs() {
-        const checkboxes = document.querySelectorAll('#mp_removeSongsModalList input[type="checkbox"]:checked');
-        const idsToRemove = Array.from(checkboxes).map(cb => cb.value);
-        if (idsToRemove.length === 0) { alert("MP: No songs selected."); return; }
+    
+    // mp_removeSelectedSongs logic remains the same - it reads checked checkboxes
+    // No change needed for mp_removeSelectedSongs if you keep using checkboxes.
 
+    async function mp_removeSelectedSongs() { // Make it async
+        const selectedListItems = document.querySelectorAll('#mp_removeSongsModalList .list-item.selected-for-action');
+        const idsToRemove = Array.from(selectedListItems).map(item => item.dataset.songId);
+    
+        if (idsToRemove.length === 0) {
+            alert("MP: No songs selected.");
+            return;
+        }
+    
         if (confirm(`MP: Remove ${idsToRemove.length} song(s)? This cannot be undone.`)) {
             let stoppedPlayback = false;
             // Check if playing song is being removed
@@ -3557,27 +4363,36 @@
                  mp_stopPlaybackAndClearUI(); // Stop playback and revoke URL
                  stoppedPlayback = true;
             }
-
-            // Remove from library
+    
+            // Remove from in-memory library
             const initialLibLength = mp_musicLibrary.length;
             mp_musicLibrary = mp_musicLibrary.filter(song => !idsToRemove.includes(song.id));
             const removedLibCount = initialLibLength - mp_musicLibrary.length;
-
-            // Remove from recently played
+    
+            // Remove from in-memory recently played
             const initialRecentLength = mp_recentlyPlayed.length;
             mp_recentlyPlayed = mp_recentlyPlayed.filter(id => !idsToRemove.includes(id));
             const removedRecentCount = initialRecentLength - mp_recentlyPlayed.length;
-
-            // Remove from all playlists
+    
+            // Remove from in-memory all playlists
             let removedPlaylistCount = 0;
             Object.keys(mp_playlists).forEach(pName => {
                  const initialPListLength = mp_playlists[pName].length;
                  mp_playlists[pName] = mp_playlists[pName].filter(id => !idsToRemove.includes(id));
                  removedPlaylistCount += (initialPListLength - mp_playlists[pName].length);
             });
-
-            mp_saveDataToLocalStorage(); // Save changes
-
+    
+            try {
+                // ***** MODIFIED SECTION *****
+                await mp_dbDeleteSongs(idsToRemove); // Delete from IndexedDB first
+                await mp_saveMusicData(); // Then save all updated states (library to IDB, recents/playlists to LS)
+                // **************************
+                console.log(`MP: Removed ${removedLibCount} from library, ${removedRecentCount} from recents, ${removedPlaylistCount} from playlists. Data saved.`);
+            } catch (error) {
+                console.error("MP: Error during song removal and saving:", error);
+                alert("An error occurred while removing songs. Changes might not be fully saved.");
+            }
+    
             // Re-render lists if they are currently displayed
             if (mp_isInitialized) {
                 if (document.getElementById('mp_songsList')) mp_renderSongsList();
@@ -3585,9 +4400,6 @@
                 if (document.getElementById('mp_playlistsList')) mp_renderPlaylists();
             }
             mp_closeModal('mp_removeSongsModal');
-            console.log(`MP: Removed ${removedLibCount} from library, ${removedRecentCount} from recents, ${removedPlaylistCount} from playlists.`);
-             // If playback was stopped, maybe try to play the *next* available song? Or just leave stopped.
-             // if (stoppedPlayback && mp_musicLibrary.length > 0) { mp_playNextSong(); } // Optional: Auto-play next
         }
     }
 
@@ -3664,59 +4476,118 @@ function mp_createListItem(song, onClickCallback) {
     }
 
     function mp_renderRecentlyPlayed() {
-        if (!mp_recentlyPlayedList) return; // Exit if element not ready
-        mp_recentlyPlayedList.innerHTML = ''; // Clear previous list
-
+        const recentlyPlayedList = document.getElementById('mp_recentlyPlayedList');
+        const searchInput = document.getElementById('mp_recentlyPlayedSearch'); // Get the search input
+        if (!recentlyPlayedList) return; // Exit if element not ready
+    
+        const filter = searchInput ? searchInput.value.toLowerCase() : ''; // Get filter value
+        recentlyPlayedList.innerHTML = ''; // Clear previous list
+    
         if (mp_recentlyPlayed.length === 0) {
-            mp_recentlyPlayedList.innerHTML = '<p class="placeholder-text">Play a song to see it here</p>';
+            recentlyPlayedList.innerHTML = '<p class="placeholder-text">Play a song to see it here</p>';
             return;
         }
-
+    
         const fragment = document.createDocumentFragment();
         mp_recentlyPlayed.forEach(songId => {
             const song = mp_findSongById(songId);
             if (song) {
-                // Pass the correct callback function
-                const listItem = mp_createListItem(song, () => mp_playSongFromLibrary(song.id));
-                fragment.appendChild(listItem);
+                // Add filtering logic here
+                const songText = `${song.artist} - ${song.title} ${song.fileName}`.toLowerCase();
+                if (songText.includes(filter)) {
+                    // Pass the correct callback function
+                    const listItem = mp_createListItem(song, () => mp_playSongFromLibrary(song.id));
+                    fragment.appendChild(listItem);
+                }
             } else {
                  console.warn("MP: Recently played song ID not found in library:", songId);
             }
         });
-        mp_recentlyPlayedList.appendChild(fragment);
+    
+        if (fragment.children.length === 0 && filter) {
+             recentlyPlayedList.innerHTML = '<p class="placeholder-text">No recently played songs match search</p>';
+        } else {
+            recentlyPlayedList.appendChild(fragment);
+        }
+    
         mp_updatePlayingIndicator(); // Update playing class
     }
 
     function mp_renderPlaylists() {
-        if (!mp_playlistsList) return; // Exit if element not ready
-        mp_playlistsList.innerHTML = ''; // Clear previous list
+        const playlistsList = document.getElementById('mp_playlistsList');
+        if (!playlistsList) return; // Exit if element not ready
+        playlistsList.innerHTML = ''; // Clear previous list
         const playlistNames = Object.keys(mp_playlists).sort((a, b) => a.localeCompare(b)); // Sort names
-
+    
         if (playlistNames.length === 0) {
-            mp_playlistsList.innerHTML = '<p class="placeholder-text">Create a playlist to see it here</p>';
+            playlistsList.innerHTML = '<p class="placeholder-text" style="grid-column: 1 / -1;">Create a playlist to see it here</p>'; // Center placeholder in grid
             return;
         }
-
+    
         const fragment = document.createDocumentFragment();
         playlistNames.forEach(name => {
             const songCount = mp_playlists[name]?.length || 0;
             const listItem = document.createElement('div');
-            listItem.className = 'list-item';
-            listItem.style.cursor = 'default'; // Container not clickable
+            // Use a new class name for clarity if you prefer, or stick to list-item
+            // listItem.className = 'playlist-card';
+            listItem.className = 'list-item'; // Keep list-item class to match existing CSS rules if not renaming
+            listItem.setAttribute('role', 'option'); // Keep list item roles for accessibility
+            listItem.setAttribute('tabindex', '0'); // Make it focusable
+    
+            // Add click listener to the entire card (excluding the settings icon)
+            listItem.onclick = (event) => {
+                // Check if the click target was the settings icon or its parent
+                if (event.target.closest('.fa-cog')) {
+                    event.stopPropagation(); // Prevent the card click if settings icon was clicked
+                    return;
+                }
+                mp_playPlaylist(name); // Play the playlist when the card is clicked
+            };
+            // Add keyboard accessibility for Enter/Space keys
+            listItem.onkeydown = (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault(); // Prevent page scroll on Space
+                     // Trigger the card click behavior (play playlist)
+                     mp_playPlaylist(name);
+                }
+            };
+    
+    
+            // --- Get Album Art for the first song ---
+            let albumArtContentHtml = ''; // HTML for the image or placeholder
+            const songIds = mp_playlists[name] || [];
+            const firstSongId = songIds.length > 0 ? songIds[0] : null;
+            const firstSong = firstSongId ? mp_findSongById(firstSongId) : null;
+    
+            // Generate HTML for the image area
+            if (firstSong && firstSong.albumArtUrl) {
+                 albumArtContentHtml = `<img src="${escapeHtml(firstSong.albumArtUrl)}" alt="Album art for ${escapeHtml(firstSong.title)}" title="${escapeHtml(firstSong.artist)} - ${escapeHtml(firstSong.title)}">`;
+             } else {
+                 // Placeholder if first song has no art, playlist empty, or first song missing
+                 albumArtContentHtml = `<i class="fas fa-music placeholder-icon" title="${firstSong ? 'No album art' : (songIds.length === 0 ? 'Empty Playlist' : 'Missing song')}"></i>`;
+             }
+            // --- End of getting album art ---
+    
+    
+            // --- Generate the new HTML structure ---
             listItem.innerHTML = `
-                <div class="playlist-info">
-                    <span style="flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;"
-                          onclick="mp_openViewPlaylistModal('${escapeHtml(name)}')"
-                          title="View ${escapeHtml(name)}">
-                        ${escapeHtml(name)} (${songCount} ${songCount === 1 ? 'song' : 'songs'})
-                    </span>
-                    <div class="playlist-controls" style="flex-shrink: 0;">
-                        <button onclick="event.stopPropagation(); mp_playPlaylist('${escapeHtml(name)}')" title="Play ${escapeHtml(name)}"><i class="fas fa-play"></i></button>
-                    </div>
+                <div class="playlist-card-image-area">
+                    ${albumArtContentHtml} </div>
+                <div class="playlist-card-info">
+                     <i class="fas fa-cog"
+                        title="Edit Playlist"
+                        onclick="event.stopPropagation(); mp_openViewPlaylistModal('${escapeHtml(name)}')">
+                     </i>
+    
+                     <span>
+                         ${escapeHtml(name)} (${songCount} ${songCount === 1 ? 'song' : 'songs'})
+                     </span>
                 </div>`;
+    
             fragment.appendChild(listItem);
         });
-        mp_playlistsList.appendChild(fragment);
+        playlistsList.appendChild(fragment);
+         console.log("MP: Rendered playlists list as grid cards.");
     }
 
 
@@ -3878,32 +4749,33 @@ function mp_createListItem(song, onClickCallback) {
     function mp_initializeMusicPlayerPage() {
         console.log("MP: mp_initializeMusicPlayerPage called. Setting timeout for DOM ready.");
     
-        // Use a minimal timeout to ensure the DOM is fully ready after switchPage transition
-        // This timeout should be slightly longer than the CSS fade-out transition if possible
-        setTimeout(async () => { // Keep the async keyword
+        setTimeout(async () => {
             console.log("MP: Timeout fired. Attempting to get music page elements...");
-    
-            // --- Get elements specific to the music page grid ---
-            // mp_fileInput is NOT part of the dynamically loaded HTML, so don't try to get it here
-            // mp_fileInput = document.getElementById('mp_fileInput'); // REMOVE or COMMENT OUT this line here
     
             mp_songsList = document.getElementById('mp_songsList');
             mp_recentlyPlayedList = document.getElementById('mp_recentlyPlayedList');
             mp_playlistsList = document.getElementById('mp_playlistsList');
             mp_songSearch = document.getElementById('mp_songSearch');
+            const mp_recentlyPlayedSearch = document.getElementById('mp_recentlyPlayedSearch');
+    
+            // Get modal search inputs
+            const mp_createPlaylistSearch = document.getElementById('mp_createPlaylistSearch'); // Get new element
+            const mp_removeSongsSearch = document.getElementById('mp_removeSongsSearch'); // Get new element
     
             // --- Check if ALL essential elements for RENDERING the Music page were found AFTER the timeout ---
-            // Removed mp_fileInput from this essential check
-            if (!mp_songsList || !mp_recentlyPlayedList || !mp_playlistsList || !mp_songSearch) {
+            // Add modal search inputs to the check
+            if (!mp_songsList || !mp_recentlyPlayedList || !mp_playlistsList || !mp_songSearch || !mp_recentlyPlayedSearch || !mp_createPlaylistSearch || !mp_removeSongsSearch) {
                 console.error("MP: Failed to find one or more essential music page elements AFTER timeout. Cannot initialize page fully.");
                 console.error("Missing element(s):",
                     !mp_songsList ? '#mp_songsList' : '',
                     !mp_recentlyPlayedList ? '#mp_recentlyPlayedList' : '',
                     !mp_playlistsList ? '#mp_playlistsList' : '',
-                    !mp_songSearch ? '#mp_songSearch' : ''
+                    !mp_songSearch ? '#mp_songSearch' : '',
+                    !mp_recentlyPlayedSearch ? '#mp_recentlyPlayedSearch' : '',
+                    !mp_createPlaylistSearch ? '#mp_createPlaylistSearch (Modal)' : '', // Add modal checks
+                    !mp_removeSongsSearch ? '#mp_removeSongsSearch (Modal)' : '' // Add modal checks
                 );
                 mp_isInitialized = false; // Ensure flag is false if elements are missing
-                // Optional: Display a user-friendly error message on the page if this happens
                 const musicPageContainer = document.querySelector('.music-page-container');
                 if (musicPageContainer) {
                     musicPageContainer.innerHTML = '<div class="panel" style="text-align: center; color: red;">Error loading Music Player. Some elements were not found. Please check the console for details.</div>';
@@ -3913,16 +4785,24 @@ function mp_createListItem(song, onClickCallback) {
             console.log("MP: Successfully found all essential music page elements for rendering.");
     
             // --- Attach listeners only if NOT already initialized (moved inside timeout) ---
-            // The listener for mp_fileInput should be attached elsewhere (see step 2)
             if (!mp_isInitialized) {
                 console.log("MP: Initializing Music Player Page Content Listeners (first time)...");
                 // mp_fileInput.addEventListener('change', mp_handleFileSelect); // REMOVE or COMMENT OUT this line here
                 mp_songSearch.addEventListener('input', () => {
-                    // Throttle rendering? For now, render directly.
                     mp_renderSongsList(mp_songSearch.value);
                 });
-                // Add event listeners for playlist items if needed (e.g., play on click)
-                // This might be better handled dynamically in mp_renderPlaylists or using delegation
+                mp_recentlyPlayedSearch.addEventListener('input', () => {
+                    mp_renderRecentlyPlayed();
+                });
+    
+                // Add listeners for modal search inputs
+                mp_createPlaylistSearch.addEventListener('input', () => { // Add this listener
+                    mp_populateCreatePlaylistModalSongs(mp_createPlaylistSearch.value);
+                });
+                mp_removeSongsSearch.addEventListener('input', () => { // Add this listener
+                    mp_populateRemoveSongsModal(mp_removeSongsSearch.value);
+                });
+    
     
                 mp_isInitialized = true; // Set flag after attaching listeners
                 console.log("MP: Music Page Listeners Initialized.");
@@ -3935,24 +4815,19 @@ function mp_createListItem(song, onClickCallback) {
             mp_renderSongsList(mp_songSearch.value); // Use current search value
             mp_renderRecentlyPlayed();
             mp_renderPlaylists();
-            // The await here is now valid inside the async arrow function
-            // Pass the handle itself to mp_updatePermissionUI so it can request permission if needed
             mp_updatePermissionUI(!!mp_currentDirectoryHandle, mp_currentDirectoryHandle && await mp_currentDirectoryHandle.queryPermission({mode:'read'}) === 'prompt' ? mp_currentDirectoryHandle : null); // Refresh permission UI state
     
-             // Ensure playback bar visibility is correct based on whether music exists or is playing
              if (mp_playbackControlsBar) {
-                 // Show the bar if there's a current song OR if there's anything in the library
                  if (mp_currentSong || mp_musicLibrary.length > 0) {
-                     mp_playbackControlsBar.style.display = 'flex'; // Or 'grid', depending on your bar's display
+                     mp_playbackControlsBar.style.display = 'flex';
                  } else {
                      mp_playbackControlsBar.style.display = 'none';
                  }
              }
     
-    
             console.log("MP: Music Player Page Initialization/Activation Complete.");
     
-        }, 150); // Increased delay slightly to 150ms to be safer
+        }, 150); // Match this delay to your CSS transition duration for fade-out
     }
 
     // --- END OF MUSIC PLAYER JAVASCRIPT ---
@@ -4520,7 +5395,7 @@ function mp_createListItem(song, onClickCallback) {
 
        // Return the full container HTML
        return `
-         <input type="text" id="gameSearch" placeholder="Search Games..." oninput="filterGames()" style="width: 90%; max-width: 400px; margin: 0 auto 1.5rem auto; display: block;">
+         <input type="text" id="gameSearch" placeholder="Search Games" oninput="filterGames()" style="width: 90%; max-width: 400px; margin: 0 auto 1.5rem auto; display: block;">
          <div class="games-header">
            <div class="action-card" onclick="showAddGameModal()">
              <i class="fas fa-plus"></i>
@@ -5059,7 +5934,7 @@ function mp_createListItem(song, onClickCallback) {
     
            // Return the full container HTML
            const gamesContent = `
-             <input type="text" id="gameSearch" placeholder="Search Games..." oninput="filterGames()" style="width: 90%; max-width: 400px; margin: 0 auto 1.5rem auto; display: block;">
+             <input type="text" id="gameSearch" placeholder="Search Games" oninput="filterGames()" style="width: 90%; max-width: 400px; margin: 0 auto 1.5rem auto; display: block;">
              <div class="games-header">
                <div class="action-card" onclick="showAddGameModal()">
                  <i class="fas fa-plus"></i>
@@ -5445,7 +6320,7 @@ const pages = {
         Library: `
             <div class="panel" style="width: 95%; max-width: 900px;">
               <h2>Library</h2>
-              <input type="text" id="librarySearch" placeholder="Search Favorites..." oninput="filterLibrary()">
+              <input type="text" id="librarySearch" placeholder="Search Favorites" oninput="filterLibrary()">
               <div class="library-columns">
                 <div class="library-column">
                   <h3><i class="fas fa-star" style="color:var(--accent); margin-right: 5px;"></i>Favorites</h3>
@@ -5472,7 +6347,7 @@ const pages = {
           <div class="music-main-column">
               <div class="music-section-box" id="music-library-box">
                   <h2><i class="fas fa-music-alt"></i> Your Library</h2>
-                  <input type="search" id="mp_songSearch" placeholder="Search all songs..." aria-label="Search all songs">
+                  <input type="search" id="mp_songSearch" placeholder="Search all songs" aria-label="Search all songs">
                   <div class="scrollable-list" id="mp_songsList" role="listbox" aria-label="All Songs">
                       <p class="placeholder-text">Upload songs to see your library</p>
                   </div>
@@ -5480,6 +6355,7 @@ const pages = {
 
               <div class="music-section-box" id="music-recents-box">
                   <h2><i class="fas fa-history"></i> Recently Played</h2>
+                  <input type="search" id="mp_recentlyPlayedSearch" placeholder="Search recently played" aria-label="Search recently played">
                   <div class="scrollable-list" id="mp_recentlyPlayedList" role="listbox" aria-label="Recently Played Songs">
                        <p class="placeholder-text">Play a song to see it here</p>
                   </div>
@@ -6495,6 +7371,7 @@ function fetchNews() {
 
 
 // --- UPDATED DOMContentLoaded listener ---
+// --- UPDATED DOMContentLoaded listener ---
 window.addEventListener('DOMContentLoaded', async () => { // Make it async
       console.log('DOMContentLoaded fired. Starting application initialization...');
 
@@ -6503,14 +7380,15 @@ window.addEventListener('DOMContentLoaded', async () => { // Make it async
       loadPanicKeySettings(); // Load panic key settings
       console.log('Non-handle data and settings loaded.');
 
-      // NEW: Load handle and check permissions BEFORE loading music metadata
+      // NEW: Attempt to load the directory handle from IndexedDB and check permissions
       await mp_loadHandleAndCheckPermissions();
-      console.log('Directory handle loaded and permissions checked.');
+      console.log('Directory handle load and initial permission check completed.');
       // END NEW
 
-      // Now load music metadata (library, playlists, recents) from LocalStorage
-      mp_loadDataFromLocalStorage();
-      console.log('Music Player metadata loaded from localStorage.');
+      // Now load music metadata (library, playlists, recents) from IndexedDB and LocalStorage
+      // This populates mp_musicLibrary from the LAST successful scan/save, even if permission is lost.
+      await mp_loadMusicData(); // *** Use the new async function ***
+      console.log('Music Player metadata loaded from IndexedDB/LocalStorage.');
 
       // --- ADD THE mp_fileInput LISTENER HERE ---
       mp_fileInput = document.getElementById('mp_fileInput'); // Get the element reference here
@@ -6522,7 +7400,7 @@ window.addEventListener('DOMContentLoaded', async () => { // Make it async
       }
       // --- END ADDITION ---
 
-      // Initialize Vanta.js
+      // Initialize Vanta.js (can run in parallel or after data load)
       setTimeout(() => {
            console.log('Attempting to initialize Vanta.js...');
            initializeVanta();
@@ -6530,7 +7408,7 @@ window.addEventListener('DOMContentLoaded', async () => { // Make it async
            else console.warn('Vanta effect is null after initialization.');
       }, 50);
 
-      // Initialize the Music Player Playback Bar (safe to call now)
+      // Initialize the Music Player Playback Bar (safe to call now as mp_musicLibrary is populated)
       mp_initializePlaybackBar();
       console.log('Music Player playback bar initialization called.');
 
@@ -6539,21 +7417,40 @@ window.addEventListener('DOMContentLoaded', async () => { // Make it async
       console.log('Music Hover Overlay initialization called.');
       // *** END NEW ***
 
-      // *** ADDED: Explicitly hide the hover overlay on load ***
-      const audioControlHoverOverlay = document.getElementById('audioControlHoverOverlay');
-      if (audioControlHoverOverlay) {
-          audioControlHoverOverlay.style.display = 'none';
-          console.log('Explicitly hid audioControlHoverOverlay on DOMContentLoaded.');
-      }
-      // *** END ADDED ***
 
       // Set up general event listeners (sidebar, modals, keys, etc.)
       setupEventListeners();
       console.log('General event listeners set up.');
 
-      // Switch to the initial page (handles page-specific setup like Home news/version, Music lists)
+      // Switch to the initial page and render content based on loaded data (from IndexedDB/LocalStorage)
+      // This happens *after* initial data load, and potentially after initial directory processing
+      // Initial rendering uses the mp_musicLibrary populated by mp_loadMusicData or mp_processDirectoryHandle
       switchPage(localStorage.getItem('lastActivePage') || 'Home');
       console.log('Initial page switched to:', localStorage.getItem('lastActivePage') || 'Home');
+
+
+      // --- NEW: If a directory handle was loaded and granted permission on load, process the directory ---
+      // This ensures the library is updated if files changed since the last visit
+      // This happens AFTER initial data load and initial UI render to show something quickly
+      if (mp_currentDirectoryHandle) {
+           console.log("MP: Directory handle available and permission granted on load. Starting background directory processing...");
+           // Process the directory (this will update IndexedDB with new/changed files and re-load the in-memory library)
+           // Wrap in a try...catch to prevent blocking if processing fails
+           mp_processDirectoryHandle(mp_currentDirectoryHandle).then(() => {
+               console.log("MP: Background directory processing on load completed.");
+               // Lists are re-rendered at the end of mp_processDirectoryHandle
+           }).catch(err => {
+               console.error("MP: Error during background directory processing on load:", err);
+               // The UI should show the permission prompt if needed by mp_processDirectoryHandle's permission checks
+               // The lists are already rendered based on the initial load
+           });
+      } else {
+           console.log("MP: No directory handle available or permission not granted on load. Skipping background directory processing.");
+           // The UI is already rendered based on the initial load from IndexedDB/LocalStorage.
+           // The permission UI will be updated if needed by mp_loadHandleAndCheckPermissions.
+      }
+      // --- END NEW ---
+
 
        // Periodic Checks (start after initial setup)
        setInterval(checkVersion, 60000);
