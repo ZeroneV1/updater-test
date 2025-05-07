@@ -1171,180 +1171,282 @@
     }
 
         /* Music Player Specific Layout */
-    .music-player-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: var(--padding, 15px); /* Use app padding or default */
+/* Base for the new music page layout */
+    .music-page-container {
+        display: flex;
+        flex-wrap: wrap; /* Allow columns to wrap on smaller screens */
+        gap: var(--padding, 20px); /* Increased gap for better separation */
         width: 100%;
-        /* Adjust height if needed, or let it grow naturally */
-        /* max-height: calc(100vh - 180px); /* Example: Limit height if needed */
-        overflow: hidden; /* Prevent grid from overflowing content area */
-        padding-bottom: 80px; /* Space for fixed controls bar if needed */
+        padding-bottom: 80px; /* Space for fixed controls bar */
     }
-    
-    .music-box {
-        background-color: var(--card-bg); /* Use theme card background */
+
+    .music-main-column {
+        flex: 2; /* Takes up more space */
+        min-width: 300px; /* Minimum width before wrapping */
+        display: flex;
+        flex-direction: row; /* Change from column to row */
+        flex-wrap: wrap; /* Add this to allow wrapping */
+        gap: var(--padding, 20px); /* Keep the gap */
+    }
+
+/* Ensure sidebar column stacks its children vertically */
+    .music-sidebar-column {
+        flex: 1;
+        min-width: 250px;
+        display: flex;
+        flex-direction: column; /* <<< Ensure this is column */
+        gap: var(--padding, 20px);
+    }
+      
+    .music-main-column .music-section-box { /* Target the boxes within the main column */
+        flex: 1; /* Allow boxes to grow and shrink */
+        min-width: 300px; /* Set a minimum width for each box before wrapping */
+        display: flex; /* Keep flex for inner content like lists */
+        flex-direction: column; /* Keep inner content stacked */
+        /* Remove fixed min-height if present, let content define height */
+    }
+    .music-main-column .music-section-box .scrollable-list { /* Target lists in the main column */
+        flex-grow: 1;
+        overflow-y: auto;
+        margin-top: 10px;
+        padding-right: 8px; /* From previous suggestion */
+        /* Calculate max-height based on desired number of items */
+        /* Assuming an item height of ~45-50px (padding + text + margin) */
+        /* For 8 items: 8 * ~48px = 384px. Adjust as needed. */
+        max-height: 384px; /* Adjust this value after testing item heights */
+        min-height: 100px; /* Keep a minimum height so it doesn't collapse */
+    }
+    /* Container for the side-by-side action boxes */
+    .music-sidebar-top-row {
+        display: flex; /* Arrange children horizontally */
+        gap: var(--padding, 20px); /* Space between the two boxes */
+        width: 100%; /* Take full width of the sidebar column */
+    }
+
+    /* Styling for the smaller action boxes */
+    .music-action-box {
+        flex: 1; /* Make boxes share space equally */
+        background-color: var(--card-bg);
         border-radius: var(--border-radius);
-        padding: var(--padding, 15px); /* Use app padding or default */
+        padding: 15px; /* Slightly reduced padding */
         display: flex;
         flex-direction: column;
-        overflow: hidden; /* Prevent content overflow */
-        color: var(--text-light); /* Ensure text color */
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* Match panel shadow */
-        min-height: 200px; /* Give boxes some minimum height */
+        color: var(--text-light);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        min-height: 150px; /* Adjust min-height as needed */
+        justify-content: space-between; /* Pushes button towards bottom if content is short */
     }
-    
-    .music-box h2 {
+
+    .music-action-box h2 {
         margin-top: 0;
+        margin-bottom: 10px; /* Reduced space */
+        color: var(--accent);
+        font-size: 1.1em; /* Smaller header */
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .music-action-box p {
+        font-size: 0.85em; /* Smaller text */
+        color: var(--text-muted);
         margin-bottom: 10px;
-        color: var(--accent); /* Use theme accent */
-        font-size: 1.2em;
+        line-height: 1.4;
+        flex-grow: 1; /* Allow paragraph to take up space */
     }
-    .music-box h4 { /* Style for subsection headings in modals */
-         margin-top: 15px;
-         margin-bottom: 5px;
-         color: var(--text-light);
-         font-size: 1em;
-         border-bottom: 1px solid var(--text-muted);
-         padding-bottom: 3px;
+
+    /* Style for smaller buttons within action boxes */
+    .music-action-box .button-small {
+        padding: 8px 12px; /* Smaller padding */
+        font-size: 0.9em; /* Smaller font */
+        width: 100%; /* Keep full width */
+        margin-top: 5px; /* Ensure some space above button */
+    }
+    /* Ensure the Permission Prompt UI (added via JS) fits nicely */
+    #mp_permission_prompt button {
+         font-size: 0.85em; /* Smaller button text */
+         padding: 5px 10px;
      }
-    
-    .music-box p {
-        font-size: 0.9em;
-        color: var(--text-muted); /* Use theme muted text */
+     #mp_permission_prompt p {
+         font-size: inherit; /* Inherit size from container */
+         margin-bottom: 5px;
+     }
+
+    /* Style for the Playlist List Box below the top row */
+    #playlists-list-box {
+       flex-grow: 1; /* Allow playlist box to take remaining vertical space */
+       /* Inherits base .music-section-box styles */
+    }
+
+     /* Adjust scrollable list height in the main playlist box */
+    #playlists-list-box .scrollable-list {
+        /* Adjust max-height if needed, or let flex-grow handle it */
+         /* max-height: 300px; */
+         min-height: 100px;
+    }
+
+    /* Renamed .music-box to .music-section-box for clarity */
+    .music-section-box {
+        background-color: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: var(--padding, 20px); /* Consistent padding */
+        display: flex;
+        flex-direction: column;
+        color: var(--text-light);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15); /* Softer shadow */
+        /* min-height: auto; Removed fixed min-height, let content define it */
+    }
+
+    .music-section-box h2 {
+        margin-top: 0;
+        margin-bottom: 15px; /* Increased space below header */
+        color: var(--accent);
+        font-size: 1.3em; /* Slightly larger header */
+        display: flex; /* For icon alignment */
+        align-items: center;
+        gap: 8px; /* Space between icon and text */
+    }
+
+    .music-section-box p {
+        font-size: 0.95em; /* Slightly larger paragraph text */
+        color: var(--text-muted);
         margin-bottom: 15px;
+        line-height: 1.6; /* Improved line height for readability */
     }
     
+    /* Input styling improvements */
+    .music-section-box input[type="search"] {
+        background: var(--bg-dark); /* Darker background for contrast */
+        border: 1px solid var(--sidebar-dark); /* Subtler border */
+        color: var(--text-light);
+        padding: 0.6rem 0.8rem; /* Adjust padding */
+        width: 100%;
+        margin-bottom: 15px;
+        border-radius: var(--border-radius); /* Consistent border radius */
+        font-size: 1rem;
+        height: auto; /* Remove fixed height */
+    }
+    .music-section-box input[type="search"]:focus {
+        border-color: var(--accent);
+        outline: none;
+        box-shadow: 0 0 0 2px var(--accent-transparent, rgba(0, 255, 132, 0.3)); /* Focus ring */
+    }
+
+
     .scrollable-list {
         flex-grow: 1;
         overflow-y: auto;
         margin-top: 10px;
-        padding-right: 5px; /* Space for scrollbar */
-        min-height: 100px; /* Min height for list areas */
+        padding-right: 8px; /* Slightly more space for scrollbar */
+        /* Consider a min-height if sections can become too short */
+        /* min-height: 150px; */
     }
     
-    /* Custom Scrollbar using Theme Variables */
+    /* Custom Scrollbar - keep existing or refine further */
     .scrollable-list::-webkit-scrollbar {
-        width: 8px;
+        width: 10px; /* Slightly wider */
     }
     .scrollable-list::-webkit-scrollbar-track {
-        background: rgba(0,0,0,0.1);
-        border-radius: 4px;
+        background: transparent; /* Cleaner track */
     }
     .scrollable-list::-webkit-scrollbar-thumb {
         background-color: var(--text-muted);
-        border-radius: 4px;
+        border-radius: var(--border-radius);
+        border: 2px solid var(--card-bg); /* Creates a "floating" thumb look */
     }
     .scrollable-list::-webkit-scrollbar-thumb:hover {
         background-color: var(--accent);
     }
-    
+
     .list-item {
-        padding: 8px 10px;
-        border-radius: 4px;
+        padding: 12px 15px; /* Increased padding for better touch targets and visual space */
+        border-radius: var(--border-radius); /* Consistent radius */
         cursor: pointer;
-        margin-bottom: 5px;
-        background-color: rgba(0, 0, 0, 0.1); /* Subtle dark background */
-        transition: background-color var(--transition-speed);
+        margin-bottom: 8px; /* Increased gap between items */
+        background-color: transparent; /* Cleaner default state */
+        border: 1px solid transparent; /* Placeholder for hover/focus border */
+        transition: background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 0.95em;
-        color: var(--text-light); /* Ensure text color */
-    }
-    
-    .list-item:hover {
-        background-color: rgba(255, 255, 255, 0.1); /* Lighter on hover */
-        color: var(--accent); /* Accent text on hover */
-    }
-    
-    .list-item.playing {
-        background-color: var(--accent); /* Use theme accent */
-        color: var(--bg-dark); /* Use theme dark for contrast */
-        font-weight: bold;
-    }
-    .list-item.playing:hover {
-         color: var(--bg-dark); /* Keep text color dark on hover when playing */
-    }
-    
-    
-    .list-item .playlist-info {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .list-item .playlist-controls button {
-        background: none;
-        border: none;
+        font-size: 1em; /* Larger font size */
         color: var(--text-light);
+        position: relative; /* For potential ::before elements or icons */
+    }
+
+    .list-item:hover,
+    .list-item:focus-visible { /* Added :focus-visible for keyboard accessibility */
+        background-color: var(--sidebar-dark); /* Or a slightly lighter version of card-bg */
+        border-color: var(--accent);
+        color: var(--accent);
+        outline: none; /* Handled by focus-visible style */
+    }
+
+    .list-item.playing {
+        background-color: var(--accent);
+        color: var(--bg-dark) !important; /* Ensure contrast, important if other styles conflict */
+        font-weight: bold;
+        border-color: var(--accent);
+    }
+    .list-item.playing:hover,
+    .list-item.playing:focus-visible {
+         background-color: var(--accent); /* Keep accent on hover/focus when playing */
+         filter: brightness(0.9);
+    }
+
+    /* General button styling within music page for consistency */
+    .music-section-box button.button-primary,
+    .music-section-box button.button-secondary {
+        /* Assuming you have global .button-primary, .button-secondary styles.
+           If not, define them based on your main 'button' styles but with more distinction.
+           Example:
+        */
+        padding: 10px 15px;
+        border: none;
+        border-radius: var(--border-radius);
         cursor: pointer;
-        font-size: 1em;
-        margin-left: 8px;
-        padding: 2px 5px;
+        font-weight: bold;
+        transition: all var(--transition-speed) ease;
+        display: inline-flex; /* For icon alignment */
+        align-items: center;
+        justify-content: center;
+        gap: 8px; /* Space between icon and text */
+        width: 100%; /* Make buttons full width in their sections */
+        box-sizing: border-box;
     }
-     .list-item .playlist-controls button:hover {
-         color: var(--accent);
-     }
-    
-    /* Make Music Player buttons use theme button styles */
-    .music-box button, #mp_playback_controls button, .mp-modal-content button {
-         /* Inherit general button styles from main app */
+    .music-section-box button.button-primary {
+        background-color: var(--accent);
+        color: var(--bg-dark); /* Ensure contrast */
     }
-    /* Style secondary buttons */
-    .music-box button.secondary, .mp-modal-content button.secondary {
-         background-color: #555;
-         color: var(--text-light);
+    .music-section-box button.button-primary:hover {
+        filter: brightness(1.15);
     }
-    .music-box button.secondary:hover, .mp-modal-content button.secondary:hover {
-         background-color: #777;
-         filter: none;
+    .music-section-box button.button-secondary {
+        background-color: var(--sidebar-dark);
+        color: var(--text-light);
     }
-    
-    /* Style inputs to match theme */
-    .music-box input[type="text"],
-    .music-box input[type="search"],
-    .mp-modal-content input[type="text"] {
-         /* Inherit general input styles from main app */
-         background: var(--card-bg); /* Use card background */
-         border: 1px solid var(--accent); /* Accent border */
-         color: var(--text-light); /* Light text */
-         padding: 0.5rem; /* Add padding if not inherited */
-          box-sizing: border-box; /* Include padding and border in element's total width */
-          width: 100%; /* Ensure it takes full width of its container */
-          margin-bottom: 10px; /* Add some space below it */
-          border-radius: 5px; /* Match other inputs */
-           height: var(--search-height); /* Use defined height */
-           font-size: 1rem; /* Adjust font size */
-           /* Remove or adjust padding-left if you don't need a search icon inside */
-           /* padding-left: calc(0.5rem + 24px); /* Space for search icon */
-    }
-    .music-box input[type="text"]:focus,
-    .music-box input[type="search"]:focus,
-    .mp-modal-content input[type="text"]:focus {
-          /* Inherit focus styles or define */
-          border-color: var(--text-light); /* Light border on focus */
-          outline: none;
+    .music-section-box button.button-secondary:hover {
+        background-color: #555; /* Slightly lighter for hover */
     }
     
     
     /* Playback Controls Bar Styles (Adapted) */
-    #mp_playback_controls { /* Target the specific ID */
+    #mp_playback_controls {
         position: fixed;
         bottom: 0;
-        left: 0; /* Keep this as the default for when sidebar is closed */
-        width: 100%; /* Keep this as the default for when sidebar is closed */
-        background-color: var(--sidebar-dark); /* Use sidebar dark for contrast */
-        padding: 10px 15px; /* Use app padding or default */
+        left: 0; /* Default for when sidebar is closed */
+        width: 100%; /* Default for when sidebar is closed */
+        background-color: var(--bg-dark); /* Darker, distinct background */
+        padding: 12px 20px; /* Adjusted padding for a sleeker look */
         box-sizing: border-box;
-        display: flex; /* Handled by JS, but ensure default is flex */
+        display: flex; /* This should be set by JS when a song loads */
         align-items: center;
         gap: 15px;
-        border-top: 1px solid #444;
-        z-index: 90; /* Below modals but above content/sidebar */
-        color: var(--text-light); /* Ensure text color */
-         /* Add a transition for 'left' and 'width' */
-        transition: left var(--transition-speed) ease, width var(--transition-speed) ease;
+        border-top: 1px solid var(--sidebar-dark); /* Softer border */
+        z-index: 100; /* Ensure it's above other page content but below modals */
+        color: var(--text-light);
+        transition: left var(--transition-speed) ease, width var(--transition-speed) ease, background-color var(--transition-speed) ease; /* Added background-color transition */
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.2); /* Subtle shadow at the top of the bar */
     }
     
     /* Add this new rule */
@@ -1354,38 +1456,57 @@
     }
     
     #mp_playback_controls .song-info {
-        flex-basis: 200px;
+        flex-basis: 250px; /* Allow more space for song info */
         flex-shrink: 1;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 0.9em;
+        font-size: 0.95em; /* Slightly larger */
+        font-weight: 500; /* Medium weight */
     }
     
     #mp_playback_controls .controls {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px; /* Slightly reduced gap for a tighter group */
     }
     
     #mp_playback_controls .controls button,
     #mp_playback_controls .volume-container button {
-        background: none;
+        background: none; /* Keep transparent */
         border: none;
-        color: var(--text-light);
-        font-size: 1.3em;
-        padding: 5px;
-        cursor: pointer;
+        color: var(--text-muted); /* Muted by default */
+        font-size: 1.4em; /* Consistent larger icons */
+        padding: 8px; /* Increased padding for better touch/click area */
+        border-radius: 50%; /* Make buttons round */
+        width: 40px; /* Explicit width */
+        height: 40px; /* Explicit height */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color var(--transition-speed), background-color var(--transition-speed);
     }
+      
     #mp_playback_controls .controls button:hover,
     #mp_playback_controls .volume-container button:hover {
-        color: var(--accent); /* Use theme accent on hover */
-        filter: none;
+        color: var(--accent);
+        background-color: rgba(255,255,255,0.05); /* Subtle background on hover */
     }
-    #mp_playback_controls .controls button:disabled {
-         color: var(--text-muted);
+      
+    #mp_playback_controls .controls button:disabled,
+    #mp_playback_controls .volume-container button:disabled {
+         color: #555; /* Darker muted for disabled */
          cursor: not-allowed;
-         opacity: 0.5;
+         opacity: 0.6;
+         background-color: transparent;
+    }
+      
+    #mp_playback_controls .controls button#mp_playPauseButton { /* Special styling for play/pause */
+        color: var(--accent); /* Make play/pause button always accent color */
+        transform: scale(1.1); /* Slightly larger */
+    }
+    #mp_playback_controls .controls button#mp_playPauseButton:hover {
+        filter: brightness(1.2);
     }
     
     
@@ -1399,65 +1520,69 @@
     #mp_playback_controls input[type="range"] {
         flex-grow: 1;
         cursor: pointer;
-        height: 5px;
-        background: #555;
+        height: 6px; /* Slightly thicker bar */
+        background: #444; /* Darker track */
         border-radius: 3px;
         -webkit-appearance: none;
         appearance: none;
+        transition: background var(--transition-speed);
     }
     #mp_playback_controls input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-        width: 14px;
-        height: 14px;
-        background: var(--accent); /* Use theme accent */
+        width: 16px; /* Larger thumb */
+        height: 16px;
+        background: var(--accent);
         border-radius: 50%;
         cursor: pointer;
+        border: 2px solid var(--bg-dark); /* Border to make it pop from the track */
+        box-shadow: 0 0 5px rgba(0, 255, 132, 0.5); /* Glow effect for accent */
     }
     #mp_playback_controls input[type="range"]::-moz-range-thumb {
-         width: 14px;
-         height: 14px;
+         width: 16px;
+         height: 16px;
          background: var(--accent);
          border-radius: 50%;
          cursor: pointer;
-         border: none;
+         border: 2px solid var(--bg-dark);
+         box-shadow: 0 0 5px rgba(0, 255, 132, 0.5);
     }
     
     
     #mp_playback_controls .time-display {
-        font-size: 0.85em;
-        color: var(--text-muted); /* Use theme muted text */
-        min-width: 45px; /* Reduced width */
+        font-size: 0.9em; /* Slightly larger time */
+        color: var(--text-muted);
+        min-width: 50px; /* Adjusted width */
         text-align: center;
+        font-variant-numeric: tabular-nums; /* Keeps numbers aligned */
     }
-    
+
     #mp_playback_controls .volume-container {
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 8px; /* Consistent gap */
     }
-    
-    #mp_playback_controls .volume-container button {
-         font-size: 1.1em;
-    }
-    
+
     #mp_playback_controls .volume-container input[type="range"] {
-        width: 80px;
-        height: 4px;
+        width: 100px; /* Slightly longer volume slider */
+        height: 6px;
     }
      #mp_playback_controls .volume-container input[type="range"]::-webkit-slider-thumb {
-         width: 12px;
-         height: 12px;
+         width: 14px; /* Slightly smaller thumb for volume */
+         height: 14px;
+         border-width: 1px; /* Thinner border for volume thumb */
      }
+      
      #mp_playback_controls .volume-container input[type="range"]::-moz-range-thumb {
-          width: 12px;
-          height: 12px;
+          width: 14px;
+          height: 14px;
+          border-width: 1px;
      }
     
     #mp_playback_controls .volume-percentage {
-         font-size: 0.8em;
+         font-size: 0.85em;
          color: var(--text-muted);
-         min-width: 30px;
+         min-width: 35px; /* Adjusted width */
          text-align: right;
     }
     
@@ -3469,13 +3594,30 @@
     // --- Rendering Functions ---
 
     // Helper to create list items
-    function mp_createListItem(song, onClickCallback) {
+function mp_createListItem(song, onClickCallback) {
         const listItem = document.createElement('div');
         listItem.className = 'list-item';
-        listItem.textContent = `${song.artist} - ${song.title}`;
+        listItem.setAttribute('role', 'option'); // Role for items in a listbox
+        listItem.setAttribute('tabindex', '0'); // Make it focusable
+
+        // Use a span for the text content for better control and potential icon addition
+        const textSpan = document.createElement('span');
+        textSpan.className = 'list-item-text';
+        textSpan.textContent = `${song.artist} - ${song.title}`;
+        
+        listItem.appendChild(textSpan);
+        
         listItem.title = `${song.artist} - ${song.title} (${song.fileName})`;
         listItem.dataset.songId = song.id;
-        listItem.onclick = onClickCallback; // Assign the callback directly
+
+        listItem.onclick = onClickCallback;
+        // Add keyboard accessibility for Enter/Space keys
+        listItem.onkeydown = (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault(); // Prevent page scroll on Space
+                onClickCallback();
+            }
+        };
         return listItem;
     }
 
@@ -3734,57 +3876,83 @@
      }
 
     function mp_initializeMusicPlayerPage() {
-        // Get elements specific to the music page grid - DO THIS EVERY TIME the page becomes active
-        mp_fileInput = document.getElementById('mp_fileInput');
-        mp_songsList = document.getElementById('mp_songsList');
-        mp_recentlyPlayedList = document.getElementById('mp_recentlyPlayedList');
-        mp_playlistsList = document.getElementById('mp_playlistsList');
-        mp_songSearch = document.getElementById('mp_songSearch');
+        console.log("MP: mp_initializeMusicPlayerPage called. Setting timeout for DOM ready.");
     
-        // Check if elements were found - If not, stop and report
-        if (!mp_fileInput || !mp_songsList || !mp_recentlyPlayedList || !mp_playlistsList || !mp_songSearch) {
-            console.error("MP: Failed to find one or more music page elements. Cannot initialize page fully.");
-            mp_isInitialized = false; // Ensure flag is false if elements are missing
-            return;
-        }
-    
-        // Attach listeners only if NOT already initialized
-        if (!mp_isInitialized) {
-            console.log("MP: Initializing Music Player Page Content Listeners (first time)...");
-            mp_fileInput.addEventListener('change', mp_handleFileSelect);
-            mp_songSearch.addEventListener('input', () => {
-                // Throttle rendering? For now, render directly.
-                mp_renderSongsList(mp_songSearch.value);
-            });
-            mp_isInitialized = true; // Set flag after attaching listeners
-            console.log("MP: Music Page Listeners Initialized.");
-        } else {
-            console.log("MP: Music Player page already initialized. Re-rendering lists.");
-        }
-    
-        // Always render the lists when the page is initialized/activated
         // Use a minimal timeout to ensure the DOM is fully ready after switchPage transition
-        setTimeout(async () => { // <--- Added 'async' here
-            console.log("MP: Rendering music lists...");
-            // Re-get elements inside timeout just to be absolutely sure they exist now
+        // This timeout should be slightly longer than the CSS fade-out transition if possible
+        setTimeout(async () => { // Keep the async keyword
+            console.log("MP: Timeout fired. Attempting to get music page elements...");
+    
+            // --- Get elements specific to the music page grid ---
+            // mp_fileInput is NOT part of the dynamically loaded HTML, so don't try to get it here
+            // mp_fileInput = document.getElementById('mp_fileInput'); // REMOVE or COMMENT OUT this line here
+    
             mp_songsList = document.getElementById('mp_songsList');
             mp_recentlyPlayedList = document.getElementById('mp_recentlyPlayedList');
             mp_playlistsList = document.getElementById('mp_playlistsList');
             mp_songSearch = document.getElementById('mp_songSearch');
-            if (mp_songsList && mp_recentlyPlayedList && mp_playlistsList && mp_songSearch) {
-                mp_renderSongsList(mp_songSearch.value); // Use current search value
-                mp_renderRecentlyPlayed();
-                mp_renderPlaylists();
-                // The await here is now valid inside the async arrow function
-                mp_updatePermissionUI(!!mp_currentDirectoryHandle, mp_currentDirectoryHandle && await mp_currentDirectoryHandle.queryPermission({mode:'read'}) === 'prompt' ? mp_currentDirectoryHandle : null); // Refresh permission UI state
-                console.log("MP: Music lists rendered.");
-            } else {
-                console.error("MP: Music page elements missing inside render timeout.");
+    
+            // --- Check if ALL essential elements for RENDERING the Music page were found AFTER the timeout ---
+            // Removed mp_fileInput from this essential check
+            if (!mp_songsList || !mp_recentlyPlayedList || !mp_playlistsList || !mp_songSearch) {
+                console.error("MP: Failed to find one or more essential music page elements AFTER timeout. Cannot initialize page fully.");
+                console.error("Missing element(s):",
+                    !mp_songsList ? '#mp_songsList' : '',
+                    !mp_recentlyPlayedList ? '#mp_recentlyPlayedList' : '',
+                    !mp_playlistsList ? '#mp_playlistsList' : '',
+                    !mp_songSearch ? '#mp_songSearch' : ''
+                );
+                mp_isInitialized = false; // Ensure flag is false if elements are missing
+                // Optional: Display a user-friendly error message on the page if this happens
+                const musicPageContainer = document.querySelector('.music-page-container');
+                if (musicPageContainer) {
+                    musicPageContainer.innerHTML = '<div class="panel" style="text-align: center; color: red;">Error loading Music Player. Some elements were not found. Please check the console for details.</div>';
+                }
+                return; // Stop initialization if elements are missing
             }
-        }, 50); // Adjust delay slightly if needed
+            console.log("MP: Successfully found all essential music page elements for rendering.");
+    
+            // --- Attach listeners only if NOT already initialized (moved inside timeout) ---
+            // The listener for mp_fileInput should be attached elsewhere (see step 2)
+            if (!mp_isInitialized) {
+                console.log("MP: Initializing Music Player Page Content Listeners (first time)...");
+                // mp_fileInput.addEventListener('change', mp_handleFileSelect); // REMOVE or COMMENT OUT this line here
+                mp_songSearch.addEventListener('input', () => {
+                    // Throttle rendering? For now, render directly.
+                    mp_renderSongsList(mp_songSearch.value);
+                });
+                // Add event listeners for playlist items if needed (e.g., play on click)
+                // This might be better handled dynamically in mp_renderPlaylists or using delegation
+    
+                mp_isInitialized = true; // Set flag after attaching listeners
+                console.log("MP: Music Page Listeners Initialized.");
+            } else {
+                console.log("MP: Music Player page already initialized listeners.");
+            }
+    
+            // --- Always render the lists and update UI states when the page is initialized/activated ---
+            console.log("MP: Rendering music lists and updating UI states...");
+            mp_renderSongsList(mp_songSearch.value); // Use current search value
+            mp_renderRecentlyPlayed();
+            mp_renderPlaylists();
+            // The await here is now valid inside the async arrow function
+            // Pass the handle itself to mp_updatePermissionUI so it can request permission if needed
+            mp_updatePermissionUI(!!mp_currentDirectoryHandle, mp_currentDirectoryHandle && await mp_currentDirectoryHandle.queryPermission({mode:'read'}) === 'prompt' ? mp_currentDirectoryHandle : null); // Refresh permission UI state
+    
+             // Ensure playback bar visibility is correct based on whether music exists or is playing
+             if (mp_playbackControlsBar) {
+                 // Show the bar if there's a current song OR if there's anything in the library
+                 if (mp_currentSong || mp_musicLibrary.length > 0) {
+                     mp_playbackControlsBar.style.display = 'flex'; // Or 'grid', depending on your bar's display
+                 } else {
+                     mp_playbackControlsBar.style.display = 'none';
+                 }
+             }
     
     
-        console.log("MP: Music Player Page Initialization/Activation Complete.");
+            console.log("MP: Music Player Page Initialization/Activation Complete.");
+    
+        }, 150); // Increased delay slightly to 150ms to be safer
     }
 
     // --- END OF MUSIC PLAYER JAVASCRIPT ---
@@ -5299,40 +5467,59 @@ const pages = {
             </div>
             `,
         Games: ``, // Placeholder - content is dynamically generated
-        Music: `
-          <div class="music-player-grid">
-              <div class="music-box">
-                  <h2>Add Music</h2>
-                  <p>Select audio files or a folder (requires folder permission for persistence).</p>
-                  <button onclick="mp_selectMusicDirectory()">Select Folder</button>
-                  <input type="file" id="mp_fileInput" multiple accept="audio/*" webkitdirectory directory style="display: none;">
-                  <div style="height: 10px;"></div> <button class="secondary" onclick="mp_openRemoveSongsModal()">Remove Songs</button>
-              </div>
-
-              <div class="music-box">
-                  <h2>Songs</h2>
-                  <input type="search" id="mp_songSearch" placeholder="Search all songs...">
-                  <div class="scrollable-list" id="mp_songsList">
+    Music: `
+      <div class="music-page-container">
+          <div class="music-main-column">
+              <div class="music-section-box" id="music-library-box">
+                  <h2><i class="fas fa-music-alt"></i> Your Library</h2>
+                  <input type="search" id="mp_songSearch" placeholder="Search all songs..." aria-label="Search all songs">
+                  <div class="scrollable-list" id="mp_songsList" role="listbox" aria-label="All Songs">
                       <p class="placeholder-text">Upload songs to see your library</p>
                   </div>
               </div>
 
-              <div class="music-box">
-                  <h2>Recently Played</h2>
-                  <div class="scrollable-list" id="mp_recentlyPlayedList">
+              <div class="music-section-box" id="music-recents-box">
+                  <h2><i class="fas fa-history"></i> Recently Played</h2>
+                  <div class="scrollable-list" id="mp_recentlyPlayedList" role="listbox" aria-label="Recently Played Songs">
                        <p class="placeholder-text">Play a song to see it here</p>
                   </div>
               </div>
+          </div>
 
-              <div class="music-box">
-                  <h2>Playlists</h2>
-                  <button onclick="mp_openCreatePlaylistModal()">Create New Playlist</button>
-                  <div class="scrollable-list" id="mp_playlistsList">
+          <div class="music-sidebar-column">
+              <div class="music-sidebar-top-row">
+                  <div class="music-action-box" id="add-music-box">
+                      <h2><i class="fas fa-folder-plus"></i> Add Music</h2>
+                      <p>Select folder or remove songs.</p>
+                      <button onclick="mp_selectMusicDirectory()" class="button-primary button-small">
+                          <i class="fas fa-folder-open"></i> Select Folder
+                      </button>
+                       <div style="height: 5px;"></div>
+                      <button onclick="mp_openRemoveSongsModal()" class="button-secondary button-small">
+                          <i class="fas fa-trash-alt"></i> Remove Songs
+                      </button>
+                       <div id="mp_permission_prompt" style="margin-top: 8px; font-size: 0.8em;"></div>
+                  </div>
+
+                  <div class="music-action-box" id="create-playlist-box">
+                      <h2><i class="fas fa-plus-circle"></i> New Playlist</h2>
+                      <p>Create a new playlist.</p>
+                      <button onclick="mp_openCreatePlaylistModal()" class="button-primary button-small">
+                          <i class="fas fa-plus-circle"></i> Create
+                      </button>
+                  </div>
+              </div>
+
+
+              <div class="music-section-box" id="playlists-list-box">
+                  <h2><i class="fas fa-list-music"></i> Playlists</h2>
+                  <div class="scrollable-list" id="mp_playlistsList" role="listbox" aria-label="Playlists">
                        <p class="placeholder-text">Create a playlist to see it here</p>
                   </div>
               </div>
           </div>
-        `,
+      </div>
+    `,
         Updater: `
             <div class="panel">
               <h2>Updater</h2>
@@ -6308,7 +6495,7 @@ function fetchNews() {
 
 
 // --- UPDATED DOMContentLoaded listener ---
-    window.addEventListener('DOMContentLoaded', async () => { // Make it async
+window.addEventListener('DOMContentLoaded', async () => { // Make it async
       console.log('DOMContentLoaded fired. Starting application initialization...');
 
       // Load localStorage data first (themes, games, library, non-handle settings)
@@ -6324,6 +6511,16 @@ function fetchNews() {
       // Now load music metadata (library, playlists, recents) from LocalStorage
       mp_loadDataFromLocalStorage();
       console.log('Music Player metadata loaded from localStorage.');
+
+      // --- ADD THE mp_fileInput LISTENER HERE ---
+      mp_fileInput = document.getElementById('mp_fileInput'); // Get the element reference here
+      if (mp_fileInput) {
+           mp_fileInput.addEventListener('change', mp_handleFileSelect);
+           console.log('MP: mp_fileInput change listener attached during DOMContentLoaded.');
+      } else {
+           console.warn('MP: mp_fileInput element not found during DOMContentLoaded. File fallback will not work.');
+      }
+      // --- END ADDITION ---
 
       // Initialize Vanta.js
       setTimeout(() => {
