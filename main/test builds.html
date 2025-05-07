@@ -103,10 +103,10 @@
 
     .content {
       flex: 1;
-      padding: 2rem; /* Keep your desired padding */
+      padding: 2rem; /* This padding is likely causing the space at the top */
       display: flex;
       flex-direction: column;
-      overflow-y: auto; /* Allow vertical scrolling for content */
+      overflow-y: auto;
       z-index: 5;
       position: relative;
       background-color: transparent;
@@ -115,7 +115,7 @@
       /* Always allocate space for the sidebar, transition margin */
       margin-left: 60px;
       width: calc(100% - 60px);
-      transition: margin-left var(--transition-speed) ease, width var(--transition-speed) ease; /* Transition both properties */
+      transition: margin-left var(--transition-speed) ease, width var(--transition-speed) ease;
     }
 
     .sidebar.open ~ .content {
@@ -242,12 +242,12 @@
        top: 0;
        left: 0;
        right: 0;
-       bottom: 60px;
+       bottom: 100%;
        display: flex;
        justify-content: center;
        align-items: center;
        width: 100%;
-       height: calc(100% - 60px);
+       height: 100;
        z-index: 20;
        background: var(--bg-dark);
     }
@@ -257,7 +257,35 @@
        height: 100%;
        border: none;
     }
+    
+    #page-content iframe#mainViewerIframe {
+       width: 100%;
+       flex-grow: 1; /* Ensures the iframe takes up available space */
+       height: 600px; /* Add this line - common flexbox optimization */
+       border: none;
+       display: block;
+       margin: 0; /* Remove any potential default margin */
+       padding: 0; /* Remove any potential default padding */
+    }
+      
+    #page-content {
+        flex-grow: 1; /* Make #page-content grow to fill available space */
+        display: flex; /* Ensure it is a flex container */
+        flex-direction: column; /* Keep its children stacked vertically */
+        /* Add other necessary styles for #page-content if they are not inherited */
+    }
 
+    /* Adjust .bottom-controls when it's directly inside page-content (Viewer page active) */
+    /* Use a more specific selector if needed, or rely on the existing .bottom-controls rule */
+     #page-content .bottom-controls#viewer-bottom-controls {
+        /* The existing .bottom-controls rule should largely work here */
+        /* You might add specific overrides if needed, but try without first */
+         flex-shrink: 0; /* Ensure controls don't shrink */
+         margin-top: auto; /* Push to bottom */
+         width: 100%; /* Ensure full width within #page-content */
+     }
+
+    /* Keep the general .bottom-controls styles */
     .bottom-controls {
       display: flex;
       align-items: center;
@@ -267,9 +295,41 @@
       background-color: var(--bg-dark);
       border-top: 1px solid #444;
       box-sizing: border-box;
-      width: 100%;
-      flex-shrink: 0; /* Prevent shrinking in flex column */
-       margin-top: auto; /* Push to the bottom of its flex container */
+      /* width: 100%; REMOVE width here, let the specific rule above control it */
+      /* flex-shrink: 0; REMOVE here, control on the specific rule */
+      /* margin-top: auto; REMOVE here, control on the specific rule */
+    }
+
+     /* Add or adjust styles for inputs within bottom controls */
+    #page-content .bottom-controls#viewer-bottom-controls input[type="text"] {
+         flex: 1;
+         padding: 8px;
+         border-radius: 4px;
+         border: 1px solid #ccc;
+         margin-right: 10px;
+         background-color: var(--card-bg);
+         color: var(--text-light);
+          padding-left: 8px;
+          height: auto;
+          font-size: 0.9rem;
+          margin-bottom: 0;
+    }
+
+     /* Add or adjust styles for buttons within bottom controls */
+    #page-content .bottom-controls#viewer-bottom-controls button {
+         padding: 8px 16px;
+         border: none;
+         border-radius: 4px;
+         cursor: pointer;
+         display: flex;
+         align-items: center;
+         background-color: var(--accent);
+         color: black;
+          font-weight: normal;
+          margin-top: 0;
+    }
+    #page-content .bottom-controls#viewer-bottom-controls button:hover {
+       filter: brightness(1.2);
     }
 
      /* Adjust input within bottom controls */
@@ -318,16 +378,6 @@
       margin-top: 1rem;
     }
       
-    .viewer-page-content {
-        display: flex;
-        flex-direction: column; /* Stack iframe and controls vertically */
-        width: 100%;
-        height: 100%; /* Take full height of the .content area */
-        background-color: var(--bg-dark); /* Use background color for the viewer area */
-        box-sizing: border-box;
-        padding: 0; /* Remove padding if not needed within the viewer */
-         flex-grow: 1; /* Allow this container to fill available space in .content */
-    }
 
     .viewer-page-content iframe {
        width: 100%;
@@ -1712,7 +1762,6 @@
     <div class="icon" data-page="Library" title="Library"><i class="fas fa-book"></i></div>
     <div class="icon" data-page="Viewer" title="Viewer"><i class="fas fa-globe"></i></div>
     <div class="icon" data-page="Games" title="Games"><i class="fas fa-gamepad"></i></div>
-    <div class="icon" data-page="Updater" title="Updater"><i class="fas fa-sync-alt"></i></div>
       
     <div id="musicIconAndHoverContainer" style="position: relative; z-index: 11;"> <div class="icon" data-page="Music" title="Music">
             <i class="fas fa-music"></i>
@@ -1733,6 +1782,7 @@
             </div>
         </div>
     </div>
+    <div class="icon" data-page="Updater" title="Updater"><i class="fas fa-sync-alt"></i></div>
 
     <div class="bottom-icons">
       <div class="icon" data-page="Settings" title="Settings"><i class="fas fa-cog"></i></div>
@@ -3959,7 +4009,6 @@
         const shouldOpenInAboutBlank = aboutBlankPref !== 'false';
         // Logic for about:blank handled elsewhere maybe
 
-        const defaultGames = [ /* Your default games */ ];
         const savedGames = localStorage.getItem('games');
         const userGames = savedGames ? JSON.parse(savedGames) : [];
         games = [...defaultGames];
@@ -4364,70 +4413,74 @@
     }
     
     function loadViewerUrl(url = '', customTitle = 'Viewer', displayUrl = url, updateRecents = true) {
-      console.log('Loading URL in Viewer page iframe:', url, 'Custom title:', customTitle);
-
-      const iframe = document.getElementById('mainViewerIframe');
-      const urlInput = document.getElementById('viewerUrlSearch'); // Get the input from the new structure
-
-      if (!iframe) {
-          console.error("Viewer iframe (#mainViewerIframe) not found. Cannot load URL.");
-          // Optionally switch back to Home or display an error message on the page
-          // switchPage('Home');
-          return;
-      }
-
-      // Basic URL validation and prepend https if missing
-      let finalUrl = url;
-      if (finalUrl && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('about:')) {
-          finalUrl = 'https://' + finalUrl;
-          displayUrl = finalUrl; // Update display URL as well
-          console.log('Prepended https to URL:', finalUrl);
-      }
-
-      // If no URL provided, load about:blank and clear the input
-       if (!finalUrl) {
-           finalUrl = 'about:blank';
-           displayUrl = ''; // Clear input if starting blank
+        console.log(`loadViewerUrl called. URL to load: "${url}", Custom Title: "${customTitle}", Display URL: "${displayUrl}"`);
+    
+        const iframe = document.getElementById('mainViewerIframe');
+        const urlInput = document.getElementById('viewerUrlSearch'); // Get the input from the Viewer page structure
+    
+        if (!iframe) {
+            console.error("CRITICAL: Viewer iframe (#mainViewerIframe) not found when loadViewerUrl was executed. Cannot load URL. This indicates the page structure might not be ready.");
+            // You could alert the user or try to recover, but the callback in switchPage should prevent this.
+            // alert("Error: The viewer component is not ready. Please try clicking the game again.");
+            return;
+        }
+        console.log("Successfully found iframe #mainViewerIframe.");
+    
+        // Basic URL validation and prepend https if missing
+        let finalUrl = url;
+        if (finalUrl && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('about:')) {
+            finalUrl = 'https://' + finalUrl;
+            displayUrl = finalUrl; // Update display URL as well if we modified it
+            console.log('Prepended "https://" to URL. New finalUrl:', finalUrl);
+        }
+    
+        // If no URL provided after potential modifications, load about:blank and clear the input
+        if (!finalUrl) {
+            finalUrl = 'about:blank';
+            displayUrl = ''; // Clear input if starting blank
             updateRecents = false; // Don't add about:blank to recents
             customTitle = 'Viewer'; // Reset title
-       } else {
-            // Attempt to validate if it's not about:blank
+            console.log('No valid URL provided, defaulting iframe to "about:blank".');
+        } else {
+            // Attempt to validate if it's not about:blank and not a data URI
             try {
-                if (!finalUrl.startsWith('about:')) {
-                   new URL(finalUrl); // Validate if it's a proper URL now
+                if (!finalUrl.startsWith('about:') && !finalUrl.startsWith('data:')) {
+                    new URL(finalUrl); // Validate if it's a proper URL now
+                    console.log(`URL "${finalUrl}" passed validation.`);
                 }
             } catch (e) {
-               // If still invalid, try searching it
-               console.warn("Invalid URL, attempting search:", finalUrl, e);
-               finalUrl = `https://www.google.com/search?q=${encodeURIComponent(finalUrl)}`;
-               // Decide what to show in the input: the search query or the resulting URL?
-               // Showing the original query is probably more useful to the user.
-               displayUrl = url; // Show the user's initial input in the box
-               customTitle = `Search Results for "${customTitle}"`;
-               // Don't add search results to recents/library typically
-               updateRecents = false;
+                // If still invalid, try searching it
+                console.warn(`Invalid URL "${finalUrl}", attempting Google search. Error:`, e.message);
+                const originalQueryForSearch = url; // Use the original 'url' param for the search query
+                finalUrl = `https://www.google.com/search?q=${encodeURIComponent(originalQueryForSearch)}`;
+                displayUrl = originalQueryForSearch; // Show the user's initial input in the box
+                customTitle = `Search Results for "${escapeHtml(customTitle)}"`; // Escape customTitle if it's from user input
+                updateRecents = false; // Don't add search results to recents typically
+                console.log(`Performing search. New finalUrl: "${finalUrl}", Display URL: "${displayUrl}"`);
             }
-       }
-
-      // Set the iframe source
-      iframe.src = escapeHtml(finalUrl);
-      console.log('Set iframe source to:', finalUrl);
-
-       // Update the URL input box
-       if (urlInput) {
+        }
+    
+        // Set the iframe source
+        console.log(`Setting iframe source to: "${finalUrl}"`);
+        iframe.src = escapeHtml(finalUrl); // Still escape, as it's generally safer for src attributes
+    
+        // Update the URL input box on the Viewer page
+        if (urlInput) {
             urlInput.value = escapeHtml(displayUrl);
-            console.log('Updated URL search input value:', displayUrl);
-       }
-
-      // Update recently viewed if applicable
-      if (updateRecents && finalUrl && finalUrl !== 'about:blank') {
-         updateRecentlyViewed(finalUrl);
-         console.log('Updated recently viewed.');
-      }
-
-      // Optionally update the page title if you want the viewer title to reflect the site
-      // This depends on how you want your page titles to work
-      // document.title = customTitle + " - Underground"; // Or similar logic
+            console.log('Updated Viewer URL search input value to:', displayUrl);
+        } else {
+            console.warn("Viewer URL input (#viewerUrlSearch) not found. Cannot update its value.");
+        }
+    
+        // Update recently viewed if applicable
+        if (updateRecents && finalUrl && finalUrl !== 'about:blank') {
+            updateRecentlyViewed(finalUrl); // Assuming updateRecentlyViewed is defined elsewhere
+            console.log('Updated recently viewed with URL:', finalUrl);
+        }
+    
+        // Optionally update the main document title if you want the viewer title to reflect the site
+        // document.title = customTitle + " - Underground"; // Example
+        console.log(`loadViewerUrl finished. Iframe src should be set to "${iframe.src}".`);
     }
     
     function goBackToAppView() {
@@ -4936,38 +4989,35 @@
      }
     
     function loadGame(name, url) {
-      console.log('loadGame() called for:', name, url);
-      const game = games.find(g => g.name === name);
-      // Ensure the game object was found before accessing properties
-      if (!game) {
-          console.error("Game not found:", name);
-          // Optionally show a notification or switch back to the Games page
-          // showNotification('Error', `Game "${escapeHtml(name)}" not found.`, 'error');
-          // switchPage('Games');
-          return;
-      }
-
-      const useProxy = game.proxied && game.proxiedUrl && game.proxiedUrl !== 'none';
-      const targetUrl = useProxy ? game.proxiedUrl : url;
-      // Determine the URL displayed in the input box
-      const displayUrl = useProxy ? "Proxy Active" : url; // Or maybe just the game name? "Playing: " + name
-
-      // Always switch to the Viewer page first
-      switchPage('Viewer');
-
-      // Add a small delay to allow the Viewer page HTML structure to be added to the DOM
-      // before attempting to find the iframe and load the URL.
-      setTimeout(() => {
-           if (useProxy) {
-             console.log('Proxy mode active. Loading proxied game in viewer page:', game.proxiedUrl);
-             // Pass game name as custom title, update recents
-             loadViewerUrl(game.proxiedUrl, name, displayUrl, true);
-           } else {
-             console.log('Direct game load in viewer page:', url);
-              // Pass game name as custom title, update recents
-             loadViewerUrl(url, name, displayUrl, true);
-           }
-      }, 50); // 50ms delay - adjust if you experience issues
+        console.log('loadGame() called for:', name, url);
+        const game = games.find(g => g.name === name);
+    
+        if (!game) {
+            console.error("Game not found in 'games' array:", name);
+            // Optionally show a user-facing error or switch to a default page
+            // showIndividualNotification('Error', `Game "${escapeHtml(name)}" not found.`, 'error');
+            // switchPage('Games'); // Or 'Home'
+            return;
+        }
+    
+        const useProxy = game.proxied && game.proxiedUrl && game.proxiedUrl !== 'none';
+        const targetUrl = useProxy ? game.proxiedUrl : url;
+        const displayUrl = useProxy ? "Proxy Active" : (game.name || url); // Display game name or URL
+    
+        console.log(`Preparing to load game: "${name}". Target URL: "${targetUrl}". Using proxy: ${useProxy}`);
+    
+        // Switch to the Viewer page and pass a callback function
+        // This callback will execute AFTER the Viewer page's HTML (including the iframe) is in the DOM
+        switchPage('Viewer', () => {
+            console.log('switchPage callback executed: Attempting to load game into viewer iframe.');
+            if (useProxy) {
+                console.log(`Proxy mode active for "${name}". Loading proxied URL: ${targetUrl}`);
+                loadViewerUrl(targetUrl, name, displayUrl, true);
+            } else {
+                console.log(`Direct load for "${name}". Loading URL: ${targetUrl}`);
+                loadViewerUrl(targetUrl, name, displayUrl, true);
+            }
+        });
     }
 
 
@@ -5114,7 +5164,6 @@
         goguardian: { title: 'GoGuardian Admin', favicon: 'https://www.goguardian.com/favicon.ico' },
         drive: { title: 'My Drive - Google Drive', favicon: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png' },
         classroom: { title: 'Classes', favicon: 'https://ssl.gstatic.com/classroom/favicon.png' },
-        // 'custom' will use the values saved via 'App Appearance'
         custom: { title: null, favicon: null } // Placeholder
     };
     
@@ -5241,16 +5290,14 @@ const pages = {
               </div>
             </div>`,
         Viewer: `
-            <div class="viewer-page-content">
-                <iframe id="mainViewerIframe" src="about:blank" frameborder="0" allowfullscreen></iframe>
-                <div class="bottom-controls" id="viewer-bottom-controls">
-                    <input type="text" id="viewerUrlSearch" placeholder="Enter URL or Search" onkeydown="if(event.key==='Enter') goToViewerUrl()">
-                    <button class="go-button" onclick="goToViewerUrl()" title="Go"><i class="fas fa-check"></i></button>
-                    <button class="fullscreen-button" onclick="openViewerFullscreen()" title="Open Fullscreen"><i class="fas fa-expand"></i></button>
-                    <button onclick="addToLibraryFromViewerPage()" title="Add to Library"><i class="fas fa-bookmark"></i></button>
-                </div>
+            <iframe id="mainViewerIframe" src="about:blank" frameborder="0" allowfullscreen></iframe>
+            <div class="bottom-controls" id="viewer-bottom-controls">
+                <input type="text" id="viewerUrlSearch" placeholder="Enter URL or Search" onkeydown="if(event.key==='Enter') goToViewerUrl()">
+                <button class="go-button" onclick="goToViewerUrl()" title="Go"><i class="fas fa-check"></i></button>
+                <button class="fullscreen-button" onclick="openViewerFullscreen()" title="Open Fullscreen"><i class="fas fa-expand"></i></button>
+                <button onclick="addToLibraryFromViewerPage()" title="Add to Library"><i class="fas fa-bookmark"></i></button>
             </div>
-        `,
+            `,
         Games: ``, // Placeholder - content is dynamically generated
         Music: `
           <div class="music-player-grid">
@@ -5413,130 +5460,119 @@ const pages = {
 
 
     // --- Replace your existing switchPage function with this ---
-    function switchPage(pageKey) {
-       console.log('Switching to page:', pageKey);
-
-       // Update page title visibility and content based on the target page
-       if (pageKey === 'Games') {
-           showingFavorites = false; // Reset view to 'All Games' when entering Games page
-           pageTitle.textContent = 'Games'; // Set title
-           pageTitle.style.display = 'block'; // Show title
-           console.log('Switched to Games page. Resetting favorites view state.');
-       } else if (pageKey === 'Home') {
-           pageTitle.style.display = 'none'; // Hide title on Home page
-           console.log('Switched to Home page. Hiding page title.');
+    function switchPage(pageKey, callback) { // <--- Added callback parameter
+        console.log('Switching to page:', pageKey);
+    
+        // Update page title visibility and content based on the target page
+        if (pageKey === 'Games') {
+            showingFavorites = false; // Reset view to 'All Games' when entering Games page
+            pageTitle.textContent = 'Games'; // Set title
+            pageTitle.style.display = 'block'; // Show title
+            console.log('Switched to Games page. Resetting favorites view state.');
+        } else if (pageKey === 'Home') {
+            pageTitle.style.display = 'none'; // Hide title on Home page
+            console.log('Switched to Home page. Hiding page title.');
             // Reset favorite view state if coming from Games page
             if (showingFavorites) {
-                 showingFavorites = false;
-                 console.log('Came from favorites view, resetting showingFavorites state.');
+                showingFavorites = false;
+                console.log('Came from favorites view, resetting showingFavorites state.');
             }
-       } else { // For all other pages (Library, Music, Settings, About, etc.)
+        } else if (pageKey === 'Viewer') {
+            pageTitle.style.display = 'none'; // Hide title on Viewer page
+            console.log('Switched to Viewer page. Hiding page title.');
+            if (showingFavorites) {
+                showingFavorites = false;
+                console.log('Came from favorites view on Viewer page, resetting showingFavorites state.');
+            }
+        }
+        else { // For all other pages (Library, Music, Settings, About, etc.)
             pageTitle.textContent = pageKey; // Use the key as the title
             pageTitle.style.display = 'block'; // Show title
             console.log('Switched to page:', pageKey, 'Showing page title.');
-           // Reset favorite view state if coming from Games page
-           if (showingFavorites) {
-               showingFavorites = false;
+            if (showingFavorites) {
+                showingFavorites = false;
                 console.log('Came from favorites view on another page, resetting showingFavorites state.');
-           }
-       }
-
-       // Fade out current content
-       pageContent.classList.add('fade-out');
-       console.log('Adding fade-out class to content.');
-
-       // Wait for fade-out transition, then update content and fade in
-       setTimeout(() => {
-         console.log('Timeout before content switch complete.');
-         // Set new page content from the 'pages' object
-         pageContent.innerHTML = pages[pageKey] || `<div class="panel"><p>Content for ${pageKey} not found.</p></div>`; // Added default panel
-         console.log(`Content set for page: ${pageKey}. Content found: ${!!pages[pageKey]}`);
-
-         // --- Page-Specific Initialization ---
-         if (pageKey === 'Music') {
-             console.log("MP: Initializing Music page content via switchPage.");
-             // This function will now handle getting elements and calling render internally
-             mp_initializeMusicPlayerPage();
-
-             // REMOVED the redundant setTimeout block with rendering calls here.
-             // Rendering is now handled within mp_initializeMusicPlayerPage after element refs are obtained.
-
-             // Ensure playback bar is visible if music has ever been loaded/played or library exists
-             if (mp_playbackControlsBar && (mp_currentSong || mp_musicLibrary.length > 0)) {
-                 mp_playbackControlsBar.style.display = 'flex';
-             } else {
-                 // If navigating *away* from Music and playback bar should hide, handle that here
-                 // Although the initial CSS display: none and the check above should suffice
-             }
-         } else {
-              // Hide the music playback bar when switching away from the Music page
-              if (mp_playbackControlsBar) {
-                  mp_playbackControlsBar.style.display = 'none';
-              }
-              // Optional: You could add logic here if you need to *clean up* music player listeners
-              // when navigating away, but it's often not necessary if handled correctly on init.
-         }
-
-         // Handle initialization/updates for other pages
-         if (pageKey === 'Games') {
-            updateGamesPage(); // This generates HTML and calls setupDragAndDrop
-            // Note: setupDragAndDrop() should be called within updateGamesPage()
-         } else if (pageKey === 'Library') {
-           updateLibraryPage(); // Updates library lists and handles filtering
-         } else if (pageKey === 'Home') {
-           checkVersion(); // Check/display version info
-           fetchNews();    // Fetch news and Game of the Day
-           console.log('Home page specific actions (checkVersion, fetchNews) triggered.');
-         } else if (pageKey === 'Settings') {
-             // Load and apply specific settings UI states
-             loadTabCloakSettings(); // Set the cloak dropdown correctly
-             // Ensure theme selector reflects current theme (setTheme handles this visually if called)
-             setTheme(currentThemeName); // Re-apply to ensure selection marks are correct
-             // Load panic key values into inputs
-             const keyInput = document.getElementById('panicKeyInput');
-             const urlInput = document.getElementById('panicUrlInput');
-             if (keyInput && panicKey) keyInput.value = panicKey;
-             if (urlInput && panicUrl) urlInput.value = panicUrl;
-              // Load App Appearance values into inputs
-             const appTitleInput = document.getElementById('appTabTitleInput');
-             const appIconInput = document.getElementById('appFaviconUrlInput');
-             const currentAppSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
-             if (appTitleInput) appTitleInput.value = currentAppSettings.tabTitle || 'Underground';
-             if (appIconInput) appIconInput.value = currentAppSettings.faviconUrl || '';
-              // Load About:Blank toggle state
-             const aboutBlankToggle = document.getElementById('aboutBlankToggle');
-             const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
-             if (aboutBlankToggle) aboutBlankToggle.checked = aboutBlankPref !== 'false';
-
-             console.log('Settings page specific UI states loaded.');
-         } else if (pageKey === 'About') {
-             // Update version number on About page if needed
-             const aboutVersionEl = document.getElementById('about-version');
-             if (aboutVersionEl) aboutVersionEl.textContent = "v1.0.0"; // Replace with dynamic version if available
-             console.log('About page loaded.');
-         }
-
-         // Fade in new content
-         pageContent.classList.remove('fade-out');
-         console.log('Removing fade-out class, content should fade in.');
-
-         // Update active icon in the sidebar
-         icons.forEach(i => {
-             i.classList.remove('active');
-             // Activate icon if its data-page matches the current pageKey AND it's not the Viewer icon
-             // (Viewer icon click doesn't change the main page, it opens an overlay)
-             if (i.getAttribute('data-page') === pageKey && pageKey !== 'Viewer') {
-                 i.classList.add('active');
-             }
-         });
-         console.log('Active sidebar icon updated.');
-
-         // Save the last active page to localStorage (optional but good for remembering state)
-         localStorage.setItem('lastActivePage', pageKey);
-         localStorage.setItem('lastActivePageTitle', pageTitle.textContent); // Save the displayed title too
-
-       }, 150); // Match this delay to your CSS transition duration for fade-out
-     }
+            }
+        }
+    
+        // Fade out current content
+        pageContent.classList.add('fade-out');
+        console.log('Adding fade-out class to content.');
+    
+        // Wait for fade-out transition, then update content and fade in
+        setTimeout(() => {
+            console.log('Timeout before content switch complete.');
+            // Set new page content from the 'pages' object
+            pageContent.innerHTML = pages[pageKey] || `<div class="panel"><p>Content for ${pageKey} not found.</p></div>`;
+            console.log(`Content set for page: ${pageKey}. Content found: ${!!pages[pageKey]}`);
+    
+            // --- Page-Specific Initialization ---
+            if (pageKey === 'Music') {
+                console.log("MP: Initializing Music page content via switchPage.");
+                mp_initializeMusicPlayerPage();
+                if (mp_playbackControlsBar && (mp_currentSong || mp_musicLibrary.length > 0)) {
+                    mp_playbackControlsBar.style.display = 'flex';
+                }
+            } else {
+                if (mp_playbackControlsBar) {
+                    mp_playbackControlsBar.style.display = 'none';
+                }
+            }
+    
+            if (pageKey === 'Games') {
+                updateGamesPage();
+            } else if (pageKey === 'Library') {
+                updateLibraryPage();
+            } else if (pageKey === 'Home') {
+                checkVersion();
+                fetchNews();
+                console.log('Home page specific actions (checkVersion, fetchNews) triggered.');
+            } else if (pageKey === 'Settings') {
+                loadTabCloakSettings();
+                setTheme(currentThemeName);
+                const keyInput = document.getElementById('panicKeyInput');
+                const urlInput = document.getElementById('panicUrlInput');
+                if (keyInput && panicKey) keyInput.value = panicKey;
+                if (urlInput && panicUrl) urlInput.value = panicUrl;
+                const appTitleInput = document.getElementById('appTabTitleInput');
+                const appIconInput = document.getElementById('appFaviconUrlInput');
+                const currentAppSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+                if (appTitleInput) appTitleInput.value = currentAppSettings.tabTitle || 'Underground';
+                if (appIconInput) appIconInput.value = currentAppSettings.faviconUrl || '';
+                const aboutBlankToggle = document.getElementById('aboutBlankToggle');
+                const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
+                if (aboutBlankToggle) aboutBlankToggle.checked = aboutBlankPref !== 'false';
+                console.log('Settings page specific UI states loaded.');
+            } else if (pageKey === 'About') {
+                const aboutVersionEl = document.getElementById('about-version');
+                if (aboutVersionEl) aboutVersionEl.textContent = "v1.0.0"; // Replace with your actual version
+                console.log('About page loaded.');
+            }
+    
+            // Fade in new content
+            pageContent.classList.remove('fade-out');
+            console.log('Removing fade-out class, content should fade in.');
+    
+            // Update active icon in the sidebar
+            icons.forEach(i => {
+                i.classList.remove('active');
+                if (i.getAttribute('data-page') === pageKey && pageKey !== 'Viewer') {
+                    i.classList.add('active');
+                }
+            });
+            console.log('Active sidebar icon updated.');
+    
+            localStorage.setItem('lastActivePage', pageKey);
+            localStorage.setItem('lastActivePageTitle', pageTitle.textContent);
+    
+            // *** CALL THE CALLBACK FUNCTION if it exists ***
+            if (typeof callback === 'function') {
+                console.log('Executing callback function after page switch and content update.');
+                callback(); // Call the provided callback
+            }
+    
+        }, 150); // Match this delay to your CSS transition duration for fade-out
+    }
     
     function handleIconClick() {
       const page = this.getAttribute('data-page');
@@ -5610,7 +5646,7 @@ const pages = {
               addToLibrary(url);
          } else {
               // If the URL is not valid, show a notification
-              showNotification('Error', 'Cannot add "about:blank" or empty URL to library.', 'error');
+              showindividualNotification('Error', 'Cannot add "about:blank" or empty URL to library.', 'error');
               console.warn("Attempted to add 'about:blank' or empty URL to library.");
          }
     }
@@ -5620,13 +5656,13 @@ const pages = {
     function addToLibrary(url) {
         // Basic validation
         if (!url || url === 'about:blank') {
-            showNotification('Error', 'Cannot add empty or blank URL to library.', 'error');
+            showIndividualNotification('Error', 'Cannot add empty or blank URL to library.', 'error');
             console.warn("Attempted to add empty or about:blank URL to library.");
             return;
         }
          // Optional: Prevent adding search result pages directly
          if (url.startsWith('https://www.google.com/search?q=')) {
-             showNotification('Info', 'Cannot add search result pages directly to library.', 'info');
+             showIndividualNotification('Info', 'Cannot add search result pages directly to library.', 'info');
              console.warn("Attempted to add Google search results URL to library.");
              return;
          }
@@ -5642,7 +5678,7 @@ const pages = {
 
         if (exists) {
             // If the item already exists, show an info notification
-            showNotification('Info', 'This item is already in your library.', 'info');
+            showIndividualNotification('Info', 'This item is already in your library.', 'info');
             console.log('Item already exists in library.');
         } else {
             // If the item does not exist, create a new item object
@@ -5658,7 +5694,7 @@ const pages = {
             console.log('Added to library:', newItem);
 
             // Show a success notification
-            showNotification('Success', 'Item added to library!', 'success');
+            showIndividualNotification('Success', 'Item added to library!', 'success');
 
             // (Optional code to refresh display on the Library page is omitted as requested)
         }
@@ -5744,9 +5780,9 @@ const pages = {
 
 
     // --- App Reset ---
-    function resetApp() {
+function resetApp() {
       console.log('Reset App requested.');
-      if (confirm("Reset App? This deletes all custom games, library favorites, viewed history, and settings.")) {
+      if (confirm("Reset App? This deletes all custom games, library favorites, viewed history, all settings, and music player data (library, recents, playlists, and stored folder reference).")) {
         console.log('Reset confirmed.');
         // Clear localStorage
         localStorage.clear();
@@ -5759,10 +5795,51 @@ const pages = {
         currentTheme = 'default';
         localStorage.setItem('theme', 'default'); // Set default theme immediately
         showingFavorites = false; // Reset favorite view state
+        panicKey = null; // Clear panic key variable
+        panicUrl = null; // Clear panic URL variable
         console.log('App state variables reset.');
 
+        // Stop music playback and clear related UI/variables
+        mp_stopPlaybackAndClearUI();
+        mp_musicLibrary = [];
+        mp_recentlyPlayed = [];
+        mp_playlists = {};
+        mp_currentDirectoryHandle = null; // Clear directory handle variable
+        console.log('Music player state variables reset.');
+
+
+        // --- NEW: Delete IndexedDB Database ---
+        console.log('Attempting to delete IndexedDB database:', MP_DB_NAME);
+        try {
+             if (mp_db) { // Close any open connection first
+                  mp_db.close();
+                  mp_db = null;
+                  console.log('Closed existing IndexedDB connection before deletion.');
+             }
+             const deleteRequest = indexedDB.deleteDatabase(MP_DB_NAME);
+
+             deleteRequest.onsuccess = () => {
+                 console.log("IndexedDB database deleted successfully");
+             };
+
+             deleteRequest.onerror = (event) => {
+                 console.error("Error deleting IndexedDB database:", event.target.error);
+                 alert(`Error deleting music library data: ${event.target.error.message || event.target.error}. You may need to clear site data manually via browser settings.`);
+             };
+
+             deleteRequest.onblocked = () => {
+                  console.warn("IndexedDB database deletion blocked. Database may be in use.");
+                  alert("Music library data deletion is blocked. Please ensure all tabs of this app are closed and try again.");
+             };
+        } catch (err) {
+            console.error("Error initiating IndexedDB database deletion:", err);
+             alert(`Error initiating music library data deletion: ${err.message}. You may need to clear site data manually via browser settings.`);
+        }
+        // --- END NEW ---
+
+
         // Reload data (which includes defaults) and re-initialize UI
-        loadData(); // This will set the default theme class
+        loadData(); // This will set the default theme class and reload default games
         setTheme('default'); // Explicitly call setTheme to update Vanta.js etc.
         initializeVanta(); // Re-initialize Vanta with default theme (although setTheme should handle this after init)
         switchPage('Home'); // Go to home page
