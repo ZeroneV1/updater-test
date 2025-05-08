@@ -2835,68 +2835,7 @@
         });
     }
 // Loads the directory handle from IndexedDB and checks its permission status
-// Loads the directory handle from IndexedDB and checks its permission status
-    async function mp_loadHandleAndCheckPermissions() {
-        console.log("MP: Attempting to load directory handle from IndexedDB.");
-        mp_currentDirectoryHandle = null; // Reset the global handle variable
-        let storedHandle = null;
 
-        try {
-            const db = await mp_dbOpen();
-            // Check if the database and the handle object store exist
-            if (db && db.objectStoreNames.contains(MP_HANDLE_STORE_NAME)) {
-                 const transaction = db.transaction([MP_HANDLE_STORE_NAME], 'readonly');
-                 const store = transaction.objectStore(MP_HANDLE_STORE_NAME);
-                 // --- THIS LINE IS CRUCIAL: Get the key 'directoryHandle' from the handle store ---
-                 const request = store.get('directoryHandle');
-
-                 storedHandle = await new Promise((resolve, reject) => {
-                     request.onsuccess = (event) => {
-                         console.log("MP_DB: Successfully got value for key: directoryHandle", event.target.result !== undefined ? "Found" : "Not Found");
-                         resolve(event.target.result);
-                     };
-                     request.onerror = (event) => {
-                         console.error(`MP_DB: Error getting key 'directoryHandle':`, event.target.error);
-                         reject(event.target.error);
-                     };
-                      transaction.onerror = (event) => {
-                          console.error("MP_DB: Transaction error during get 'directoryHandle':", event.target.error);
-                          reject(event.target.error);
-                      };
-                 });
-            } else {
-                 console.warn(`MP_DB: Database not ready or Object store "${MP_HANDLE_STORE_NAME}" not found for handle loading.`);
-                 // If the store doesn't exist, there's no handle to load, resolve with null
-                 storedHandle = null;
-            }
-
-            if (storedHandle) {
-                console.log("MP: Directory handle loaded from IndexedDB. Checking permissions...");
-                // Check permission status without prompting the user immediately
-                const permissionStatus = await storedHandle.queryPermission({ mode: 'read' });
-                console.log("MP: Directory handle permission status:", permissionStatus);
-
-                if (permissionStatus === 'granted') {
-                    mp_currentDirectoryHandle = storedHandle; // Assign to global variable if granted
-                    console.log("MP: Directory handle permission granted.");
-                } else {
-                    console.warn("MP: Directory handle permission not granted on load.");
-                     // Update UI to show permission prompt needed
-                    mp_updatePermissionUI(false, storedHandle); // Pass handle to show prompt button
-                }
-            } else {
-                console.log("MP: No directory handle found in IndexedDB.");
-                 // Update UI to show folder selection needed
-                 mp_updatePermissionUI(false, null);
-            }
-
-        } catch (error) {
-            console.error("MP: Error loading directory handle or checking permissions:", error);
-             // On any error during this process, assume no handle is available
-             mp_currentDirectoryHandle = null;
-             mp_updatePermissionUI(false, null);
-        }
-    }
 
     // Gets a value from the object store by key
     function mp_dbGet(key) {
@@ -3031,45 +2970,71 @@
     // --- END Permission UI Function ---
 
 
-    // --- START Function to load handle and check permissions ---
+// --- START Function to load handle and check permissions ---
     async function mp_loadHandleAndCheckPermissions() {
-        console.log("MP: Attempting to load directory handle from IndexedDB");
+        console.log("MP: Attempting to load directory handle from IndexedDB.");
+        mp_currentDirectoryHandle = null; // Reset the global handle variable
+        let storedHandle = null;
+
         try {
-            const savedHandle = await mp_dbGet(MP_KEY_DIR_HANDLE);
+            const db = await mp_dbOpen(); // This should now open successfully
 
-            if (savedHandle) {
-                console.log("MP: Found saved directory handle:", savedHandle.name);
+            // Check if the database and the handle object store exist
+            if (db && db.objectStoreNames.contains(MP_HANDLE_STORE_NAME)) { // Ensure using MP_HANDLE_STORE_NAME
+                 const transaction = db.transaction([MP_HANDLE_STORE_NAME], 'readonly');
+                 const store = transaction.objectStore(MP_HANDLE_STORE_NAME);
+                 // --- Get the handle using the correct key 'directoryHandle' ---
+                 const request = store.get('directoryHandle');
 
-                // Check current permission status **WITHOUT** prompting
-                const options = { mode: 'read' };
-                let permissionStatus = await savedHandle.queryPermission(options);
-                console.log(`MP: Permission status for saved handle: ${permissionStatus}`);
+                 storedHandle = await new Promise((resolve, reject) => {
+                     request.onsuccess = (event) => {
+                         console.log("MP_DB: Successfully got value for key: directoryHandle", event.target.result !== undefined ? "Found" : "Not Found");
+                         resolve(event.target.result);
+                     };
+                     request.onerror = (event) => {
+                         console.error(`MP_DB: Error getting key 'directoryHandle':`, event.target.error);
+                         reject(event.target.error);
+                     };
+                      transaction.onerror = (event) => { // Added to catch transaction errors
+                          console.error("MP_DB: Transaction error during get 'directoryHandle':", event.target.error);
+                          reject(event.target.error);
+                      };
+                 });
+            } else {
+                 console.warn(`MP_DB: Database not ready or Object store "${MP_HANDLE_STORE_NAME}" not found for handle loading.`);
+                 storedHandle = null;
+            }
+
+            if (storedHandle) {
+                console.log("MP: Directory handle loaded from IndexedDB. Checking permissions...");
+                // Check permission status without prompting the user immediately
+                const permissionStatus = await storedHandle.queryPermission({ mode: 'read' });
+                console.log("MP: Directory handle permission status:", permissionStatus);
 
                 if (permissionStatus === 'granted') {
-                    mp_currentDirectoryHandle = savedHandle;
-                    console.log("MP: Read permission already granted for saved handle.");
-                    mp_updatePermissionUI(true); // Update UI to show access granted
-                } else if (permissionStatus === 'prompt') {
-                    mp_currentDirectoryHandle = null; // Don't set the handle yet
-                    console.log("MP: Read permission requires a prompt.");
-                    mp_updatePermissionUI(false, savedHandle); // Update UI to show button/message
-                } else { // 'denied'
-                    mp_currentDirectoryHandle = null;
-                    console.warn("MP: Read permission was denied for the saved handle.");
-                    // Consider a less intrusive notification than alert on page load
-                    // showIndividualNotification("Permission Denied", "Access to the saved music folder was denied. Please select it again.", 10000);
-                    console.log("MP: Alerting user permission denied."); // Keep log
-                    mp_updatePermissionUI(false); // Update UI to show access needed
+                    mp_currentDirectoryHandle = storedHandle; // Assign to global variable if granted
+                    console.log("MP: Directory handle permission granted.");
+                    // If permission is granted, you might want to immediately process the directory
+                    // to ensure the library is up-to-date if files changed.
+                    // Consider calling: await mp_processDirectoryHandle(mp_currentDirectoryHandle);
+                    // This will also update the UI.
+                } else {
+                    console.warn("MP: Directory handle permission not granted on load.");
+                     // Update UI to show permission prompt needed
+                    mp_updatePermissionUI(false, storedHandle); // Pass handle to show prompt button
                 }
             } else {
-                console.log("MP: No saved directory handle found in IndexedDB.");
-                mp_currentDirectoryHandle = null;
-                mp_updatePermissionUI(false); // Update UI, no specific handle to prompt for
+                console.log("MP: No directory handle found in IndexedDB.");
+                 // Update UI to show folder selection needed
+                 mp_updatePermissionUI(false, null);
             }
+
         } catch (error) {
-            console.error("MP: Error loading handle or checking permissions:", error);
-            mp_currentDirectoryHandle = null;
-            mp_updatePermissionUI(false); // Show permission needed on error
+            // This catch block will now primarily catch errors from mp_dbOpen or permission checks,
+            // as the ReferenceError from the old mp_dbGet call for the handle is avoided.
+            console.error("MP: Error loading directory handle or checking permissions:", error);
+             mp_currentDirectoryHandle = null;
+             mp_updatePermissionUI(false, null);
         }
     }
     // --- END Function to load handle and check permissions ---
