@@ -2530,8 +2530,6 @@
     const MP_MAX_RECENTLY_PLAYED = 20;
     let mp_isInitialized = false; // Flag to check if player UI is set up
     let mp_playbackBarInitialized = false; // Flag for playback bar listeners
-    let isSeeking = false;          // Flag for main seek bar interaction
-    let isSeekingHover = false;  
 
     // --- Music Player DOM Element References (Filled later) ---
     let mp_fileInput = null;
@@ -2554,85 +2552,330 @@
 
 
     // --- START IndexedDB Helper Functions ---
-// --- START OPFS Helper Functions ---
-    let opfsRoot = null; // Global variable for the OPFS root handle
-    const MP_METADATA_FILENAME = 'music_metadata.json'; // Filename for storing metadata in OPFS
+    const MP_KEY_DIR_HANDLE = 'songs'; // Key for the directory handle
+    const MP_DB_NAME = 'musicPlayerDB';
+    const MP_DB_VERSION = 2; // Make sure this version number is correct based on your upgrade history
+    const MP_HANDLE_STORE_NAME = 'fileHandles'; // Object store name for the directory handle
+    const MP_SONG_STORE_NAME = 'songs';
 
-    // Gets or creates the root directory handle for OPFS
-    async function getOpfsRoot() {
-        if (opfsRoot) return opfsRoot;
-        console.log("MP OPFS: Getting OPFS root directory handle.");
-        opfsRoot = await navigator.storage.getDirectory();
-        console.log("MP OPFS: OPFS root directory handle obtained.");
-        return opfsRoot;
-    }
+// Global variable for the database connection
+    let mp_db = null;
 
-    // Saves data as JSON to a file in OPFS
-    async function saveOpfsJson(filename, data) {
-        console.log(`MP OPFS: Attempting to save JSON data to ${filename} in OPFS.`);
-        try {
-            const root = await getOpfsRoot();
-            // Get or create the file handle
-            const fileHandle = await root.getFileHandle(filename, { create: true });
-            // Create a writable stream
-            const writable = await fileHandle.createWritable();
-            // Write the JSON string to the file
-            await writable.write(JSON.stringify(data));
-            // Close the file
-            await writable.close();
-            console.log(`MP OPFS: Successfully saved JSON data to ${filename}.`);
-        } catch (error) {
-            console.error(`MP OPFS: Error saving JSON data to ${filename}:`, error);
-            throw error; // Re-throw to be handled by calling function
-        }
-    }
-
-    // Loads data from a JSON file in OPFS
-    async function loadOpfsJson(filename) {
-        console.log(`MP OPFS: Attempting to load JSON data from ${filename} in OPFS.`);
-        try {
-            const root = await getOpfsRoot();
-            // Get the file handle (will throw if file doesn't exist)
-            const fileHandle = await root.getFileHandle(filename);
-            // Get the file object
-            const file = await fileHandle.getFile();
-            // Read the file content as text
-            const contents = await file.text();
-            console.log(`MP OPFS: Successfully loaded JSON data from ${filename}.`);
-            // Parse and return the JSON data
-            return JSON.parse(contents);
-        } catch (error) {
-            // Handle 'NotFoundError' specifically - indicates the file doesn't exist yet
-            if (error.name === 'NotFoundError') {
-                console.log(`MP OPFS: Metadata file "${filename}" not found. Returning empty state.`);
-                return null; // Indicate file not found
-            }
-            console.error(`MP OPFS: Error loading JSON data from ${filename}:`, error);
-            throw error; // Re-throw other errors
-        }
-    }
-    // --- END OPFS Helper Functions ---
     // Opens or creates the IndexedDB database
+    function mp_dbOpen() {
+        console.log("MP_DB: Opening database...");
+        return new Promise((resolve, reject) => {
+            if (mp_db) { // If connection already open, resolve it
+                console.log("MP_DB: Database connection already open.");
+                resolve(mp_db);
+                return;
+            }
 
+            const request = indexedDB.open(MP_DB_NAME, MP_DB_VERSION);
+
+            request.onerror = (event) => {
+                console.error(`MP_DB: Database error: ${event.target.errorCode}`);
+                reject(`Database error: ${event.target.errorCode}`);
+            };
+
+            request.onsuccess = (event) => {
+                mp_db = event.target.result;
+                console.log("MP_DB: Database opened successfully.");
+                // --- Add listener for database closing unexpectedly ---
+                 mp_db.onclose = () => {
+                     console.warn("MP_DB: Database connection closed unexpectedly.");
+                     mp_db = null; // Reset the connection variable
+                 };
+                 mp_db.onerror = (event) => { // General DB errors
+                      console.error("MP_DB: General database error:", event.target.error);
+                 };
+                resolve(mp_db);
+            };
+
+            // This event only runs if the database version changes (initial creation or upgrade)
+            request.onupgradeneeded = (event) => {
+                console.log("MP_DB: Upgrade needed or database creation.");
+                const db = event.target.result;
+
+                // Object store for Directory Handle (existing)
+                if (!db.objectStoreNames.contains(MP_HANDLE_STORE_NAME)) {
+                    console.log(`MP_DB: Creating object store: ${MP_HANDLE_STORE_NAME}`);
+                    db.createObjectStore(MP_HANDLE_STORE_NAME);
+                }
+
+                // NEW: Object store for Song Metadata
+                if (!db.objectStoreNames.contains(MP_SONG_STORE_NAME)) {
+                    console.log(`MP_DB: Creating object store: ${MP_SONG_STORE_NAME}`);
+                    // Create an object store for songs, using 'id' as the keyPath
+                    db.createObjectStore(MP_SONG_STORE_NAME, { keyPath: 'id' });
+                     // Optional: Create an index for filename if you often search by filename
+                     // store.createIndex('by_fileName', 'fileName', { unique: false });
+                }
+            };
+        });
+    }
 
     // Puts (saves/updates) a value in the object store
+    function mp_dbPut(key, value) {
+        console.log(`MP_DB: Attempting to put value for key: ${key}`);
+        return mp_dbOpen().then(db => {
+            return new Promise((resolve, reject) => {
+                 // Ensure the store exists before starting a transaction
+                 if (!db || !db.objectStoreNames.contains(MP_STORE_NAME)) {
+                     console.error(`MP_DB: Database not ready or Object store "${MP_STORE_NAME}" not found for put.`);
+                     reject(`Database not ready or Object store "${MP_STORE_NAME}" not found.`);
+                     // Optional: Attempt to reopen DB? Careful with loops.
+                     // if (db) db.close();
+                     // mp_db = null;
+                     return;
+                 }
 
+                try {
+                    const transaction = db.transaction([MP_STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(MP_STORE_NAME);
+                    const request = store.put(value, key);
+
+                    request.onsuccess = () => {
+                        console.log(`MP_DB: Successfully put value for key: ${key}`);
+                        resolve(request.result);
+                    };
+
+                    request.onerror = (event) => {
+                        console.error(`MP_DB: Error putting value for key ${key}:`, event.target.error);
+                        reject(`Error putting value: ${event.target.error}`);
+                    };
+
+                    transaction.oncomplete = () => {
+                        console.log(`MP_DB: Transaction completed for putting key: ${key}`);
+                    };
+                    transaction.onerror = (event) => {
+                        console.error("MP_DB: Transaction error during put:", event.target.error);
+                        reject(`Transaction error during put: ${event.target.error}`);
+                    };
+                 } catch (err) {
+                     console.error("MP_DB: Error initiating transaction for put:", err);
+                     reject(`Error initiating transaction: ${err}`);
+                 }
+            });
+        }).catch(error => {
+             console.error(`MP_DB: Error in mp_dbPut process for key ${key}:`, error);
+             return Promise.reject(error);
+        });
+    }
 // Saves multiple song objects to the 'songs' object store in IndexedDB
+    function mp_dbPutSongs(songs) {
+        console.log(`MP_DB: Attempting to put ${songs.length} songs into '${MP_SONG_STORE_NAME}'.`);
+        if (!songs || songs.length === 0) {
+            console.log("MP_DB: No songs to put.");
+            return Promise.resolve();
+        }
+        return mp_dbOpen().then(db => {
+            return new Promise((resolve, reject) => {
+                 if (!db || !db.objectStoreNames.contains(MP_SONG_STORE_NAME)) {
+                     console.error(`MP_DB: Database not ready or Object store "${MP_SONG_STORE_NAME}" not found for putSongs.`);
+                     reject(`Database not ready or Object store "${MP_SONG_STORE_NAME}" not found.`);
+                     return;
+                 }
+                 const transaction = db.transaction([MP_SONG_STORE_NAME], 'readwrite');
+                 const store = transaction.objectStore(MP_SONG_STORE_NAME);
+                 let successCount = 0;
+                 let errorCount = 0;
 
+                 songs.forEach(song => {
+                     const request = store.put(song); // Put each song object
+
+                     request.onsuccess = () => {
+                         successCount++;
+                         // console.log(`MP_DB: Put song ${song.id} successfully. Total success: ${successCount}`); // Verbose
+                     };
+                     request.onerror = (event) => {
+                         errorCount++;
+                         console.error(`MP_DB: Error putting song ${song.id}:`, event.target.error);
+                         // Continue processing other songs despite error
+                     };
+                 });
+
+                 transaction.oncomplete = () => {
+                     console.log(`MP_DB: Transaction completed for putting songs. Success: ${successCount}, Errors: ${errorCount}`);
+                     resolve(successCount); // Resolve with number of successful saves
+                 };
+                 transaction.onerror = (event) => {
+                     console.error("MP_DB: Transaction error during putSongs:", event.target.error);
+                     reject(`Transaction error during putSongs: ${event.target.error}`);
+                 };
+                 transaction.onabort = (event) => {
+                     console.warn("MP_DB: Transaction aborted during putSongs:", event.target.error);
+                     reject(`Transaction aborted during putSongs: ${event.target.error}`);
+                 };
+            });
+        }).catch(error => {
+             console.error(`MP_DB: Error in mp_dbPutSongs process:`, error);
+             return Promise.reject(error);
+        });
+    }
 
     // Gets all song objects from the 'songs' object store in IndexedDB
+    function mp_dbGetAllSongs() {
+        console.log(`MP_DB: Attempting to get all songs from '${MP_SONG_STORE_NAME}'.`);
+        return mp_dbOpen().then(db => {
+            return new Promise((resolve, reject) => {
+                 if (!db || !db.objectStoreNames.contains(MP_SONG_STORE_NAME)) {
+                      console.warn(`MP_DB: Database not ready or Object store "${MP_SONG_STORE_NAME}" not found during getAllSongs. Returning empty array.`);
+                     resolve([]); // Return empty array if DB/store doesn't exist
+                     return;
+                 }
+                 const transaction = db.transaction([MP_SONG_STORE_NAME], 'readonly');
+                 const store = transaction.objectStore(MP_SONG_STORE_NAME);
+                 const request = store.getAll();
 
+                 request.onsuccess = () => {
+                     console.log(`MP_DB: Successfully got ${request.result.length} songs from '${MP_SONG_STORE_NAME}'.`);
+                     resolve(request.result); // request.result is an array of all objects
+                 };
+
+                 request.onerror = (event) => {
+                     console.error(`MP_DB: Error getting all songs:`, event.target.error);
+                     reject(`Error getting all songs: ${event.target.error}`);
+                 };
+
+                 transaction.onerror = (event) => {
+                     console.error("MP_DB: Transaction error during getAllSongs:", event.target.error);
+                     reject(`Transaction error during getAllSongs: ${event.target.error}`);
+                 };
+            });
+         }).catch(error => {
+             console.error(`MP_DB: Error in mp_dbGetAllSongs process:`, error);
+             return Promise.reject(error);
+        });
+    }
 
      // Deletes a song by ID from the 'songs' object store
+     function mp_dbDeleteSong(songId) {
+         console.log(`MP_DB: Attempting to delete song with ID: ${songId} from '${MP_SONG_STORE_NAME}'.`);
+         return mp_dbOpen().then(db => {
+             return new Promise((resolve, reject) => {
+                 if (!db || !db.objectStoreNames.contains(MP_SONG_STORE_NAME)) {
+                     console.warn(`MP_DB: Database not ready or Object store "${MP_SONG_STORE_NAME}" not found during deleteSong.`);
+                     resolve(); // Resolve as if deleted if store doesn't exist
+                     return;
+                 }
+                 const transaction = db.transaction([MP_SONG_STORE_NAME], 'readwrite');
+                 const store = transaction.objectStore(MP_SONG_STORE_NAME);
+                 const request = store.delete(songId);
 
+                 request.onsuccess = () => {
+                     console.log(`MP_DB: Successfully deleted song with ID: ${songId}.`);
+                     resolve();
+                 };
+                 request.onerror = (event) => {
+                     console.error(`MP_DB: Error deleting song with ID ${songId}:`, event.target.error);
+                     reject(`Error deleting song: ${event.target.error}`);
+                 };
+                  transaction.onerror = (event) => {
+                      console.error("MP_DB: Transaction error during deleteSong:", event.target.error);
+                      reject(`Transaction error during deleteSong: ${event.target.error}`);
+                  };
+             });
+         }).catch(error => {
+             console.error(`MP_DB: Error in mp_dbDeleteSong process for ID ${songId}:`, error);
+             return Promise.reject(error);
+         });
+     }
 
     // Deletes multiple songs by ID from the 'songs' object store
+    function mp_dbDeleteSongs(songIds) {
+        console.log(`MP_DB: Attempting to delete ${songIds.length} songs from '${MP_SONG_STORE_NAME}'.`);
+         if (!songIds || songIds.length === 0) {
+            console.log("MP_DB: No song IDs to delete.");
+            return Promise.resolve(0);
+         }
+        return mp_dbOpen().then(db => {
+            return new Promise((resolve, reject) => {
+                 if (!db || !db.objectStoreNames.contains(MP_SONG_STORE_NAME)) {
+                     console.warn(`MP_DB: Database not ready or Object store "${MP_SONG_STORE_NAME}" not found for deleteSongs.`);
+                     resolve(0); // Resolve with 0 deleted if store doesn't exist
+                     return;
+                 }
+                 const transaction = db.transaction([MP_SONG_STORE_NAME], 'readwrite');
+                 const store = transaction.objectStore(MP_SONG_STORE_NAME);
+                 let deleteCount = 0;
+                 let errorCount = 0;
 
+                 songIds.forEach(songId => {
+                     const request = store.delete(songId);
+
+                     request.onsuccess = () => {
+                         deleteCount++;
+                         // console.log(`MP_DB: Deleted song ${songId}. Total deleted: ${deleteCount}`); // Verbose
+                     };
+                     request.onerror = (event) => {
+                         errorCount++;
+                         console.error(`MP_DB: Error deleting song ${songId}:`, event.target.error);
+                         // Continue despite error
+                     };
+                 });
+
+                 transaction.oncomplete = () => {
+                     console.log(`MP_DB: Transaction completed for deleting songs. Deleted: ${deleteCount}, Errors: ${errorCount}`);
+                     resolve(deleteCount); // Resolve with number of successful deletes
+                 };
+                 transaction.onerror = (event) => {
+                     console.error("MP_DB: Transaction error during deleteSongs:", event.target.error);
+                     reject(`Transaction error during deleteSongs: ${event.target.error}`);
+                 };
+                 transaction.onabort = (event) => {
+                     console.warn("MP_DB: Transaction aborted during deleteSongs:", event.target.error);
+                     reject(`Transaction aborted during deleteSongs: ${event.target.error}`);
+                 };
+            });
+        }).catch(error => {
+             console.error(`MP_DB: Error in mp_dbDeleteSongs process:`, error);
+             return Promise.reject(error);
+        });
+    }
 // Loads the directory handle from IndexedDB and checks its permission status
 
 
     // Gets a value from the object store by key
+    function mp_dbGet(key) {
+        console.log(`MP_DB: Attempting to get value for key: ${key}`);
+        return mp_dbOpen().then(db => {
+            return new Promise((resolve, reject) => {
+                 if (!db || !db.objectStoreNames.contains(MP_STORE_NAME)) {
+                     console.warn(`MP_DB: Database not ready or Object store "${MP_STORE_NAME}" not found during get. Returning undefined.`);
+                     resolve(undefined); // Resolve with undefined if DB/store doesn't exist
+                     return;
+                 }
 
+                try {
+                    const transaction = db.transaction([MP_STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(MP_STORE_NAME);
+                    const request = store.get(key);
+
+                    request.onsuccess = () => {
+                        console.log(`MP_DB: Successfully got value for key: ${key}`, request.result);
+                        resolve(request.result); // request.result will be undefined if key not found
+                    };
+
+                    request.onerror = (event) => {
+                        console.error(`MP_DB: Error getting value for key ${key}:`, event.target.error);
+                        reject(`Error getting value: ${event.target.error}`);
+                    };
+
+                    transaction.onerror = (event) => {
+                        console.error("MP_DB: Transaction error during get:", event.target.error);
+                        reject(`Transaction error during get: ${event.target.error}`);
+                    };
+                } catch (err) {
+                     console.error("MP_DB: Error initiating transaction for get:", err);
+                     reject(`Error initiating transaction: ${err}`);
+                }
+            });
+         }).catch(error => {
+             console.error(`MP_DB: Error in mp_dbGet process for key ${key}:`, error);
+             return Promise.reject(error);
+        });
+    }
     // --- END IndexedDB Helper Functions ---
 // Helper function to convert ArrayBuffer to Base64 string (needed for album art)
     function arrayBufferToBase64(buffer) {
@@ -2727,31 +2970,71 @@
 
 
 // --- START Function to load handle and check permissions ---
-// Checks for File System Access API support on startup and updates UI.
-// It does NOT attempt to load or query permission for a handle automatically on load
-// to avoid the user gesture requirement error.
     async function mp_loadHandleAndCheckPermissions() {
-        console.log("MP: Checking File System Access API support on startup.");
-        // Ensure handle is null initially on startup
-        mp_currentDirectoryHandle = null;
+        console.log("MP: Attempting to load directory handle from IndexedDB.");
+        mp_currentDirectoryHandle = null; // Reset the global handle variable
+        let storedHandle = null;
 
-         // Check if the necessary File System Access API features are supported
-         if (!window.showDirectoryPicker || !navigator.storage || !navigator.storage.getDirectory) {
-              console.warn("MP: File System Access API not fully supported by browser.");
-              // Update UI to show lack of support or that a folder needs to be selected manually
-              mp_updatePermissionUI(false, null); // Pass null as no handle is available
-              // Optional: Show a notification to the user about limited support
-              // showIndividualNotification("Browser Support", "Your browser may not fully support persistent music folder access. You will need to select your folder each time.", 10000);
-         } else {
-             console.log("MP: File System Access API appears supported.");
-             // API is supported. On startup, we don't have a handle loaded automatically
-             // without a gesture. The UI should prompt the user to select a folder.
-             mp_updatePermissionUI(false, null); // Pass null as no handle is available yet
-             // Optional: Hint to the user to select a folder
-             // showIndividualNotification("Music Folder Access", "Please select your music folder to load songs.", 8000);
-         }
-        // The actual process of getting/re-obtaining a handle and checking/requesting permission
-        // will now ONLY happen when the user interacts with the UI (e.g., clicks 'Select Folder' or 'Grant Access').
+        try {
+            const db = await mp_dbOpen(); // This should now open successfully
+
+            // Check if the database and the handle object store exist
+            if (db && db.objectStoreNames.contains(MP_HANDLE_STORE_NAME)) { // Ensure using MP_HANDLE_STORE_NAME
+                 const transaction = db.transaction([MP_HANDLE_STORE_NAME], 'readonly');
+                 const store = transaction.objectStore(MP_HANDLE_STORE_NAME);
+                 // --- Get the handle using the correct key 'directoryHandle' ---
+                 const request = store.get('directoryHandle');
+
+                 storedHandle = await new Promise((resolve, reject) => {
+                     request.onsuccess = (event) => {
+                         console.log("MP_DB: Successfully got value for key: directoryHandle", event.target.result !== undefined ? "Found" : "Not Found");
+                         resolve(event.target.result);
+                     };
+                     request.onerror = (event) => {
+                         console.error(`MP_DB: Error getting key 'directoryHandle':`, event.target.error);
+                         reject(event.target.error);
+                     };
+                      transaction.onerror = (event) => { // Added to catch transaction errors
+                          console.error("MP_DB: Transaction error during get 'directoryHandle':", event.target.error);
+                          reject(event.target.error);
+                      };
+                 });
+            } else {
+                 console.warn(`MP_DB: Database not ready or Object store "${MP_HANDLE_STORE_NAME}" not found for handle loading.`);
+                 storedHandle = null;
+            }
+
+            if (storedHandle) {
+                console.log("MP: Directory handle loaded from IndexedDB. Checking permissions...");
+                // Check permission status without prompting the user immediately
+                const permissionStatus = await storedHandle.queryPermission({ mode: 'read' });
+                console.log("MP: Directory handle permission status:", permissionStatus);
+
+                if (permissionStatus === 'granted') {
+                    mp_currentDirectoryHandle = storedHandle; // Assign to global variable if granted
+                    console.log("MP: Directory handle permission granted.");
+                    // If permission is granted, you might want to immediately process the directory
+                    // to ensure the library is up-to-date if files changed.
+                    // Consider calling: await mp_processDirectoryHandle(mp_currentDirectoryHandle);
+                    // This will also update the UI.
+                } else {
+                    console.warn("MP: Directory handle permission not granted on load.");
+                     // Update UI to show permission prompt needed
+                    mp_updatePermissionUI(false, storedHandle); // Pass handle to show prompt button
+                }
+            } else {
+                console.log("MP: No directory handle found in IndexedDB.");
+                 // Update UI to show folder selection needed
+                 mp_updatePermissionUI(false, null);
+            }
+
+        } catch (error) {
+            // This catch block will now primarily catch errors from mp_dbOpen or permission checks,
+            // as the ReferenceError from the old mp_dbGet call for the handle is avoided.
+            console.error("MP: Error loading directory handle or checking permissions:", error);
+             mp_currentDirectoryHandle = null;
+             mp_updatePermissionUI(false, null);
+        }
     }
     // --- END Function to load handle and check permissions ---
 
@@ -2814,24 +3097,14 @@
 
     // Called by the "Select Folder" button
 // Handles the user clicking "Select Folder" and choosing a directory
-// Handles the user clicking "Select Folder" and choosing a directory
     async function mp_selectMusicDirectory() {
         console.log("MP: Select Folder button clicked.");
-        if (!window.showDirectoryPicker) {
-            alert('MP: Your browser does not support the File System Access API. Using temporary file selection (will not be persistent).');
-            const input = document.getElementById('mp_fileInput');
-            if (input) input.click();
-            else console.error("MP: File input not found for fallback.");
-            return null; // Return null as no persistent handle is obtained
-        }
         try {
             // Use the File System Access API to show directory picker
-            // Use an 'id' here so the browser can remember the permission grant for this folder
-            const directoryHandle = await window.showDirectoryPicker({ id: 'music-folder', mode: 'readwrite' }); // Request read/write initially
+            const directoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' }); // Request read/write initially
             console.log("MP: Directory selected:", directoryHandle.name);
 
             // Request persistent permission for read access
-            // This might re-prompt the user if 'readwrite' wasn't sufficient or if they revoked permissions
             const permissionStatus = await directoryHandle.requestPermission({ mode: 'read' });
             console.log("MP: Read permission request result:", permissionStatus);
 
@@ -2839,10 +3112,35 @@
                 mp_currentDirectoryHandle = directoryHandle; // Store the handle globally
                 console.log("MP: Read permission granted for selected directory.");
 
-                // --- REMOVE: Code to save handle to IndexedDB was here ---
-                // The browser now manages the persistence of the handle reference via the 'id'.
-                // No need to save the handle object itself in storage.
-                // --- END REMOVE ---
+                // --- Save the directory handle to IndexedDB ---
+                try {
+                    const db = await mp_dbOpen();
+                    if (db && db.objectStoreNames.contains(MP_HANDLE_STORE_NAME)) {
+                         const transaction = db.transaction([MP_HANDLE_STORE_NAME], 'readwrite');
+                         const store = transaction.objectStore(MP_HANDLE_STORE_NAME);
+                         const request = store.put(directoryHandle, 'directoryHandle'); // Store handle with a fixed key
+
+                         request.onsuccess = () => {
+                              console.log("MP_DB: Directory handle saved to IndexedDB.");
+                         };
+                         request.onerror = (event) => {
+                             console.error("MP_DB: Error saving directory handle:", event.target.error);
+                              alert("Error saving directory access for persistence.");
+                         };
+                          transaction.onerror = (event) => {
+                              console.error("MP_DB: Transaction error during handle save:", event.target.error);
+                               alert("Error saving directory access for persistence.");
+                          };
+                    } else {
+                         console.error(`MP_DB: Object store "${MP_HANDLE_STORE_NAME}" not found for handle saving.`);
+                         alert("Error saving directory access for persistence: Database not ready.");
+                    }
+                } catch (dbError) {
+                     console.error("MP: Error in mp_selectMusicDirectory DB save process:", dbError);
+                      alert("Error saving directory access for persistence.");
+                }
+                // --- End Save Handle ---
+
 
                 // Update UI to show permission status
                 mp_updatePermissionUI(true); // Permission granted
@@ -2854,18 +3152,18 @@
             } else {
                 console.warn("MP: Read permission denied for selected directory.");
                 mp_currentDirectoryHandle = null; // Ensure handle is null if permission denied
-                mp_updatePermissionUI(false, directoryHandle); // Update UI to show permission prompt needed (pass the handle)
-                alert("Permission to read the selected directory was denied. Music will not be loaded persistently from this folder.");
+                 mp_updatePermissionUI(false, directoryHandle); // Update UI to show permission prompt needed (pass the handle)
+                alert("Permission to read the selected directory was denied. Music will not be loaded persistently.");
             }
 
         } catch (error) {
             console.error("MP: Error selecting directory:", error);
-            mp_currentDirectoryHandle = null;
-            mp_updatePermissionUI(false, null);
+             mp_currentDirectoryHandle = null;
+             mp_updatePermissionUI(false, null);
             if (error.name === 'AbortError') {
                 console.log("MP: Directory picker aborted by user.");
             } else {
-                alert(`An error occurred while selecting the directory: ${error.message}`);
+                 alert(`An error occurred while selecting the directory: ${error.message}`);
             }
         }
     }
@@ -3236,34 +3534,21 @@
         mp_updatePlayingIndicator(); // Clear playing indicators in lists
     }
 // Loads music data from IndexedDB (songs) and LocalStorage (recents, playlists)
-// Loads music data from OPFS (songs) and LocalStorage (recents, playlists)
     async function mp_loadMusicData() {
-        console.log("MP: Loading music data from OPFS and LocalStorage.");
+        console.log("MP: Loading music data from IndexedDB and LocalStorage.");
         try {
-            // Load metadata (songs, recents, playlists) from OPFS JSON file
-            const metadata = await loadOpfsJson(MP_METADATA_FILENAME);
+            // Load songs from IndexedDB
+            mp_musicLibrary = await mp_dbGetAllSongs();
+            console.log(`MP: Loaded ${mp_musicLibrary.length} songs from IndexedDB.`);
 
-            if (metadata) {
-                mp_musicLibrary = metadata.songs || [];
-                mp_recentlyPlayed = metadata.recentlyPlayed || [];
-                mp_playlists = metadata.playlists || {};
-                console.log(`MP: Loaded ${mp_musicLibrary.length} songs, ${mp_recentlyPlayed.length} recents, and ${Object.keys(mp_playlists).length} playlists from OPFS.`);
-            } else {
-                 // If metadata file not found (loadOpfsJson returned null), initialize with empty data
-                 mp_musicLibrary = [];
-                 mp_recentlyPlayed = [];
-                 mp_playlists = {};
-                 console.log("MP: OPFS metadata file not found. Initializing with empty data.");
-            }
+            // Load recents and playlists from LocalStorage
+            const recentlyPlayedData = localStorage.getItem('mp_recentlyPlayed');
+            const playlistsData = localStorage.getItem('mp_playlists');
 
-            // --- Optional: Keep loading recents and playlists from LocalStorage instead of OPFS ---
-            // If you prefer to keep recents/playlists in LocalStorage, uncomment these lines
-            // const recentlyPlayedData = localStorage.getItem('mp_recentlyPlayed');
-            // const playlistsData = localStorage.getItem('mp_playlists');
-            // mp_recentlyPlayed = recentlyPlayedData ? JSON.parse(recentlyPlayedData) : [];
-            // mp_playlists = playlistsData ? JSON.parse(playlistsData) : {};
-            // console.log(`MP: Loaded ${mp_recentlyPlayed.length} recents and ${Object.keys(mp_playlists).length} playlists from LocalStorage.`);
-            // --- End Optional ---
+            mp_recentlyPlayed = recentlyPlayedData ? JSON.parse(recentlyPlayedData) : [];
+            mp_playlists = playlistsData ? JSON.parse(playlistsData) : {};
+
+            console.log(`MP: Loaded ${mp_recentlyPlayed.length} recents and ${Object.keys(mp_playlists).length} playlists from LocalStorage.`);
 
         } catch (error) {
             console.error("MP: Error loading music data:", error);
@@ -3279,34 +3564,28 @@
 
     // Saves music data to IndexedDB (songs) and LocalStorage (recents, playlists)
     // This function is called after processing or changes
-// Saves music data to OPFS (all metadata in one JSON file)
     async function mp_saveMusicData() {
-        console.log("MP: Saving music data to OPFS.");
+        console.log("MP: Saving music data to IndexedDB and LocalStorage.");
         try {
-            // Prepare the metadata object to save
-            const metadataToSave = {
-                songs: mp_musicLibrary,
-                recentlyPlayed: mp_recentlyPlayed,
-                playlists: mp_playlists
-            };
+            // Save the *entire* current in-memory mp_musicLibrary to IndexedDB
+            // This will add new songs and update existing ones (if they have the same ID)
+            // Note: This replaces ALL songs in the DB with the current in-memory state.
+            // A more efficient approach for large libraries might be to only put changed/new songs.
+            // But for simplicity, saving the full list works for now.
+            await mp_dbPutSongs(mp_musicLibrary);
+            console.log(`MP: Saved ${mp_musicLibrary.length} songs to IndexedDB.`);
 
-            // Save the entire metadata object to the OPFS JSON file
-            await saveOpfsJson(MP_METADATA_FILENAME, metadataToSave);
-            console.log(`MP: Saved ${mp_musicLibrary.length} songs, ${mp_recentlyPlayed.length} recents, and ${Object.keys(mp_playlists).length} playlists to OPFS.`);
-
-
-            // --- Optional: Keep saving recents and playlists to LocalStorage instead of OPFS ---
-            // If you prefer to keep recents/playlists in LocalStorage, uncomment these lines
-            // localStorage.setItem('mp_recentlyPlayed', JSON.stringify(mp_recentlyPlayed));
-            // localStorage.setItem('mp_playlists', JSON.stringify(mp_playlists));
-            // console.log(`MP: Saved ${mp_recentlyPlayed.length} recents and ${Object.keys(mp_playlists).length} playlists to LocalStorage.`);
-            // --- End Optional ---
+            // Save recents and playlists to LocalStorage
+            localStorage.setItem('mp_recentlyPlayed', JSON.stringify(mp_recentlyPlayed));
+            localStorage.setItem('mp_playlists', JSON.stringify(mp_playlists));
+             console.log(`MP: Saved ${mp_recentlyPlayed.length} recents and ${Object.keys(mp_playlists).length} playlists to LocalStorage.`);
 
         } catch (error) {
             console.error("MP: Error saving music data:", error);
             // Don't alert here, as it might happen frequently.
             console.warn("MP: Music data saving failed. Some changes might not be saved.");
         }
+        // Note: Saving the directory handle happens separately in mp_selectMusicDirectory
     }
 
 
@@ -3708,31 +3987,35 @@
     // Updates seek bar progress and time display for both main bar and hover overlay
 // isSeeking is typically local to mp_initializePlaybackBar
 // isSeekingHover should be a variable accessible here, maybe declared globally
+// let isSeekingHover = false; // Example global declaration
 
     function mp_updateSeekBar() {
-        if (!mp_audioPlayer || !mp_audioPlayer.duration || isNaN(mp_audioPlayer.duration)) return; // Basic check
+        if (!mp_audioPlayer || !mp_audioPlayer.duration || isNaN(mp_audioPlayer.duration)) return; // Basic check for valid audio state
     
         const currentTime = mp_audioPlayer.currentTime;
         const duration = mp_audioPlayer.duration;
-        const percentage = (currentTime / duration) * 100;
+        const percentage = (currentTime / duration) * 100; // Calculate percentage (0-100)
     
         // --- Update Main Playback Bar SeekBar ---
-        if (mp_seekBar && !isSeeking) { // Check global isSeeking flag
-             // Use isNaN check for safety, although percentage should be valid if duration is
-             mp_seekBar.value = isNaN(percentage) ? 0 : percentage;
-        }
+        // Check the 'isSeeking' flag local to mp_initializePlaybackBar
+        // (Assuming 'isSeeking' is defined in a scope accessible here, e.g., local to mp_initializePlaybackBar)
+        if (mp_seekBar && typeof isSeeking !== 'undefined' && !isSeeking) {
+             mp_seekBar.value = isNaN(percentage) ? 0 : percentage; // Set value based on percentage
+         }
         if (mp_currentTime) {
              mp_currentTime.textContent = mp_formatTime(currentTime);
-             // Update total duration only if it's still at 0:00 and duration is known
-             if (mp_totalDuration && mp_totalDuration.textContent === '0:00' && duration > 0) {
-                  mp_totalDuration.textContent = mp_formatTime(duration);
-             }
+              // Update total duration only if it's still at 0:00 and duration is known
+              if (mp_totalDuration && mp_totalDuration.textContent === '0:00' && duration > 0) {
+                   mp_totalDuration.textContent = mp_formatTime(duration);
+              }
         }
     
+    
         // --- Update Hover Overlay SeekBar (if initialized AND visible) ---
+        // Check the 'isSeekingHover' flag (assuming it's accessible, like a global var)
         if (mp_hoverOverlayInitialized && audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
-            if (hoverOverlayScroller && !isSeekingHover) { // Check global isSeekingHover flag
-               hoverOverlayScroller.value = isNaN(percentage) ? 0 : percentage;
+            if (hoverOverlayScroller && typeof isSeekingHover !== 'undefined' && !isSeekingHover) {
+               hoverOverlayScroller.value = isNaN(percentage) ? 0 : percentage; // Set value based on percentage
             }
             if (hoverOverlayCurrentTime) {
                  hoverOverlayCurrentTime.textContent = mp_formatTime(currentTime);
@@ -3742,6 +4025,7 @@
                  }
             }
         }
+        // --- End Update Hover Overlay ---
     }
 
 
@@ -3879,6 +4163,7 @@
         // --- Add Scroller Listener for the Overlay ---
         // 'isSeekingHover' flag should be accessible to this function and its listeners.
         // If it's not declared outside, declare it here:
+         let isSeekingHover = false; // Assuming it's local as per your original snippet
     
         hoverOverlayScroller.addEventListener('input', () => {
              // Only update time if the hover seek bar is being dragged AND audio is ready
@@ -4135,50 +4420,52 @@
     // mp_removeSelectedSongs logic remains the same - it reads checked checkboxes
     // No change needed for mp_removeSelectedSongs if you keep using checkboxes.
 
-async function mp_removeSelectedSongs() { // Keep it async
+    async function mp_removeSelectedSongs() { // Make it async
         const selectedListItems = document.querySelectorAll('#mp_removeSongsModalList .list-item.selected-for-action');
         const idsToRemove = Array.from(selectedListItems).map(item => item.dataset.songId);
-
+    
         if (idsToRemove.length === 0) {
             alert("MP: No songs selected.");
             return;
         }
-
-        if (confirm(`MP: Remove ${idsToRemove.length} song(s)? This will remove them from your library, recents, and all playlists. This action cannot be undone.`)) {
+    
+        if (confirm(`MP: Remove ${idsToRemove.length} song(s)? This cannot be undone.`)) {
             let stoppedPlayback = false;
             // Check if playing song is being removed
             if (mp_currentSong && idsToRemove.includes(mp_currentSong.id)) {
-                mp_stopPlaybackAndClearUI(); // Stop playback and revoke URL
-                stoppedPlayback = true;
+                 mp_stopPlaybackAndClearUI(); // Stop playback and revoke URL
+                 stoppedPlayback = true;
             }
-
+    
             // Remove from in-memory library
             const initialLibLength = mp_musicLibrary.length;
             mp_musicLibrary = mp_musicLibrary.filter(song => !idsToRemove.includes(song.id));
             const removedLibCount = initialLibLength - mp_musicLibrary.length;
-
+    
             // Remove from in-memory recently played
             const initialRecentLength = mp_recentlyPlayed.length;
             mp_recentlyPlayed = mp_recentlyPlayed.filter(id => !idsToRemove.includes(id));
             const removedRecentCount = initialRecentLength - mp_recentlyPlayed.length;
-
+    
             // Remove from in-memory all playlists
             let removedPlaylistCount = 0;
             Object.keys(mp_playlists).forEach(pName => {
-                const initialPListLength = mp_playlists[pName].length;
-                mp_playlists[pName] = mp_playlists[pName].filter(id => !idsToRemove.includes(id));
-                removedPlaylistCount += (initialPListLength - mp_playlists[pName].length);
+                 const initialPListLength = mp_playlists[pName].length;
+                 mp_playlists[pName] = mp_playlists[pName].filter(id => !idsToRemove.includes(id));
+                 removedPlaylistCount += (initialPListLength - mp_playlists[pName].length);
             });
-
+    
             try {
-                // Save the *entire* updated state to OPFS (this replaces the old db delete + save)
-                await mp_saveMusicData(); // This function now saves to OPFS
-                console.log(`MP: Removed ${removedLibCount} from library, ${removedRecentCount} from recents, ${removedPlaylistCount} from playlists. Data saved to OPFS.`);
+                // ***** MODIFIED SECTION *****
+                await mp_dbDeleteSongs(idsToRemove); // Delete from IndexedDB first
+                await mp_saveMusicData(); // Then save all updated states (library to IDB, recents/playlists to LS)
+                // **************************
+                console.log(`MP: Removed ${removedLibCount} from library, ${removedRecentCount} from recents, ${removedPlaylistCount} from playlists. Data saved.`);
             } catch (error) {
                 console.error("MP: Error during song removal and saving:", error);
                 alert("An error occurred while removing songs. Changes might not be fully saved.");
             }
-
+    
             // Re-render lists if they are currently displayed
             if (mp_isInitialized) {
                 if (document.getElementById('mp_songsList')) mp_renderSongsList();
@@ -4408,6 +4695,10 @@ function mp_createListItem(song, onClickCallback) {
          mp_nextButton.addEventListener('click', mp_playNextSong);
          mp_prevButton.addEventListener('click', mp_playPrevSong);
     
+         // Prevent seek bar input during audio seeking (for the main bar)
+         // 'isSeeking' flag should be accessible to this function and its listeners.
+         // If it's not declared outside, declare it here: let isSeeking = false;
+          let isSeeking = false; // Assuming it's local as per your original code snippet
     
          mp_seekBar.addEventListener('input', () => {
               // Only update time if the main seek bar is being dragged AND audio is ready
