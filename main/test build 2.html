@@ -4734,99 +4734,94 @@
 // isSeekingHover should be a variable accessible here, maybe declared globally
 // let isSeekingHover = false; // Example global declaration
 
-     function mp_updateSeekBar() {
-        // Ensure playback bar is initialized and a song is loaded
-        if (!mp_playbackBarInitialized || !mp_currentSong) {
-             // Optionally reset UI elements if no song is loaded
-             if(mp_seekBar) mp_seekBar.value = 0;
+// Updates the main playback bar's time and seek bar
+    function mp_updateSeekBar() {
+         // console.log("MP: mp_updateSeekBar called."); // Can be noisy, uncomment for debugging
+
+         if (!mp_currentSong) {
+             // No song loaded, reset everything
              if(mp_currentTime) mp_currentTime.textContent = mp_formatTime(0);
              if(mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(0);
-             // Also reset hover overlay if initialized and visible
-             if (mp_hoverOverlayInitialized && audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
-                  if(hoverOverlayScroller) hoverOverlayScroller.value = 0;
-                  if(hoverOverlayCurrentTime) hoverOverlayCurrentTime.textContent = mp_formatTime(0);
-                  if(hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = mp_formatTime(0);
-             }
-             // Ensure Play/Pause button shows Play state and is disabled
-             mp_isPlaying = false;
-             mp_updatePlaybackControls(); // Call to update button state
-             return; // Exit if bar not ready or no song
+             if(mp_seekBar) mp_seekBar.value = 0;
+             if(mp_seekBar) mp_seekBar.max = 0; // Reset max value
+             return;
          }
 
-         let currentPlaybackTime = 0;
-         let totalDuration = 0;
-         let currentPercentage = 0;
+         let currentTime = 0;
+         let duration = 0;
 
-         // Determine which player is active and get its state
-         if (mp_currentSong.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.getCurrentTime === 'function' && typeof mp_youtubePlayer.getDuration === 'function') {
-              currentPlaybackTime = mp_youtubePlayer.getCurrentTime();
-              totalDuration = mp_youtubePlayer.getDuration();
-             console.log(`MP_updateSeekBar: YouTube Time - ${currentTime} / ${duration}`); // Log YouTube time
-         } else if (!mp_currentSong.isYouTube && mp_audioPlayer && !isNaN(mp_audioPlayer.currentTime) && !isNaN(mp_audioPlayer.duration)) {
-              currentPlaybackTime = mp_audioPlayer.currentTime;
-              totalDuration = mp_audioPlayer.duration;
-              console.log(`MP_updateSeekBar: Audio Time - ${currentPlaybackTime} / ${totalDuration}`); // Log Audio time
+         if (mp_currentSong.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.getCurrentTime === 'function') {
+             // Get time from YouTube player
+             currentTime = mp_youtubePlayer.getCurrentTime() || 0; // Use 0 if null/undefined
+             duration = mp_youtubePlayer.getDuration() || 0; // Use 0 if null/undefined
+
+         } else if (!mp_currentSong.isYouTube && mp_audioPlayer) {
+             // Get time from HTML Audio player
+             currentTime = mp_audioPlayer.currentTime || 0; // Use 0 if null/undefined
+             duration = mp_audioPlayer.duration || 0; // Use 0 if NaN/Infinity/undefined - check explicitly for NaN/Infinity might be safer
+              if (isNaN(duration) || !isFinite(duration)) { // Check for invalid audio duration
+                 duration = 0;
+             }
          } else {
-             // No active player with valid time for the current song type
-             currentPlaybackTime = 0;
-             totalDuration = 0;
-             console.log("MP_updateSeekBar: No active player or invalid time/duration.");
+              // No active player found for the current song type
+              console.warn("MP: mp_updateSeekBar called but no valid player instance found for current song type.");
+             // Reset UI as a fallback
+             if(mp_currentTime) mp_currentTime.textContent = mp_formatTime(0);
+             if(mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(0);
+             if(mp_seekBar) mp_seekBar.value = 0;
+             if(mp_seekBar) mp_seekBar.max = 0;
+              return;
          }
 
-         // Calculate percentage only if duration is valid and > 0
-         currentPercentage = (totalDuration > 0 && !isNaN(currentPlaybackTime) && !isNaN(totalDuration)) ? (currentPlaybackTime / totalDuration) * 100 : 0;
-          // Clamp percentage between 0 and 100 just in case
-          currentPercentage = Math.max(0, Math.min(100, currentPercentage));
 
+         // Update current time display
+         if(mp_currentTime) mp_currentTime.textContent = mp_formatTime(currentTime);
 
-         // Check the seeking flags (Assuming isSeeking and isSeekingHover are globally accessible)
-         // These flags are set/cleared in the slider mousedown/mouseup/touchstart/touchend listeners.
-         // If they are local to the initialization functions, you need to ensure they are accessible here.
-         // Global declaration (let isSeeking = false; let isSeekingHover = false;) is a common solution.
-
-
-         // --- Update Main Playback Bar SeekBar ---
-         // Only update the slider value if the user is NOT actively dragging the *main* bar
-         if (mp_seekBar && !isSeeking) { // Check if isSeeking is false
-              mp_seekBar.value = isNaN(currentPercentage) ? 0 : currentPercentage; // Set value based on percentage
-         }
-          // Always update the time text for the main bar
-         if (mp_currentTime) {
-              mp_currentTime.textContent = mp_formatTime(currentPlaybackTime);
-         }
-         if (mp_totalDuration) {
-              // Update total duration only if it's still 0:00 or invalid, or if duration is now known
-              if (totalDuration > 0) {
-                  mp_totalDuration.textContent = mp_formatTime(totalDuration);
-              } else {
-                   // If duration is 0 or invalid, show 0:00 or ?:??
-                   mp_totalDuration.textContent = mp_formatTime(0); // Or '?:??'
+         // Update total duration display only if duration is valid and not already displayed
+         // This prevents flickering if duration changes slightly or is updated late
+          if (duration > 0 && duration !== Infinity) {
+              if(mp_totalDuration && mp_totalDuration.textContent !== mp_formatTime(duration)) {
+                 mp_totalDuration.textContent = mp_formatTime(duration);
+             }
+              // Also set the max value of the seek bar based on duration for more accurate scrubbing
+              if(mp_seekBar && mp_seekBar.max !== duration) {
+                  mp_seekBar.max = duration; // Set max to duration in seconds
               }
+         } else {
+              // If duration is still not available/valid, show a placeholder or 0:00
+              if(mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(0); // Or '--:--'
+              if(mp_seekBar) mp_seekBar.max = 0; // Reset max
          }
 
 
-         // --- Update Hover Overlay SeekBar (if initialized AND visible) ---
-         // Check if the hover overlay is initialized and visible
-         // Only update the slider value if the user is NOT actively dragging the *hover* bar
-         if (mp_hoverOverlayInitialized && audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
-             if (hoverOverlayScroller && !isSeekingHover) { // Check if isSeekingHover is false
-                hoverOverlayScroller.value = isNaN(currentPercentage) ? 0 : currentPercentage; // Set value based on percentage
-             }
-              // Always update the time text for the hover overlay
-             if (hoverOverlayCurrentTime) {
-                  hoverOverlayCurrentTime.textContent = mp_formatTime(currentPlaybackTime);
-             }
-             if (hoverOverlayTotalDuration) {
-                  // Update total duration for hover overlay
-                   if (totalDuration > 0) {
-                       hoverOverlayTotalDuration.textContent = mp_formatTime(totalDuration);
-                   } else {
-                       hoverOverlayTotalDuration.textContent = mp_formatTime(0); // Or '?:??'
-                   }
-             }
+         // Update seek bar slider position only if the user is NOT dragging it
+         // Also ensure duration is valid to prevent division by zero or incorrect calculations
+         if (!isSeeking && duration > 0 && duration !== Infinity) {
+             // Calculate slider value based on current time relative to duration
+             // If using mp_seekBar.max = duration, then mp_seekBar.value = currentTime is sufficient
+              if(mp_seekBar) {
+                  mp_seekBar.value = currentTime;
+              }
+             // If mp_seekBar.max is still 100 (default), calculate percentage:
+             // if(mp_seekBar) {
+             //     mp_seekBar.value = (currentTime / duration) * 100;
+             // }
          }
-         // --- End Update Hover Overlay ---
-     }
+         // If isSeeking is true, the seek bar's value is being set by the input listener during dragging
+         // The time display (mp_currentTime) is updated in the input listener as well for immediate feedback.
+
+    }
+
+    // Helper function to format time (you likely already have this)
+    function mp_formatTime(seconds) {
+        if (isNaN(seconds) || seconds < 0) {
+            return '0:00';
+        }
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = Math.floor(seconds % 60);
+        const formattedSeconds = remainingSeconds < 10 ? '0' + remainingSeconds : remainingSeconds;
+        return `${minutes}:${formattedSeconds}`;
+    }
 
 
 
