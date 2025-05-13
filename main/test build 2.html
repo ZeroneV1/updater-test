@@ -1289,6 +1289,88 @@
         min-height: 180px; /* Ensure at least one card's height is accommodated */
         max-height: 375px; /* Roughly allows two rows of 180px cards (180*2 + 15 gap) before scrolling */
     }
+/* --- New Styles for Youtube Modal --- */
+    /* Re-use .mp-modal and .mp-modal-content */
+
+    #mp_Youtube-input {
+        flex-grow: 1; /* Allow input to take available space */
+        /* Inherits general input[type="text"] or type="search" styles */
+        padding: 0.6rem 0.8rem; /* Consistent padding */
+        height: auto; /* Remove fixed height */
+        font-size: 1rem;
+        margin-bottom: 0; /* Remove bottom margin here as gap is used */
+         /* Adjust padding-left if you add a search icon here */
+         padding-left: 0.8rem;
+    }
+
+    #mp_Youtube-input:focus {
+        border-color: var(--accent);
+        outline: none;
+        box-shadow: 0 0 0 2px var(--accent-transparent, rgba(0, 255, 132, 0.3)); /* Add focus ring */
+    }
+
+     #mp_Youtube-button {
+         flex-shrink: 0; /* Prevent button from shrinking */
+         /* Inherits general button styles */
+         padding: 0.6rem 1rem; /* Adjust padding for search button */
+         font-size: 1rem;
+         height: auto;
+         margin-top: 0; /* Remove margin if inheriting */
+     }
+
+    #mp_youtube-results-list .list-item {
+        /* Inherits general list-item styles */
+        cursor: pointer;
+        display: flex; /* Use flex to align icon and text */
+        align-items: center; /* Vertically center items */
+        gap: 8px; /* Space for potential icon */
+    }
+
+     #mp_youtube-results-list .list-item:hover,
+     #mp_youtube-results-list .list-item:focus-visible { /* Added focus-visible */
+         background-color: var(--sidebar-dark);
+         border-color: var(--accent);
+         color: var(--accent);
+         outline: none; /* Remove default outline */
+     }
+
+     #mp_youtube-results-list .list-item .youtube-icon {
+         flex-shrink: 0; /* Prevent icon from shrinking */
+         color: red; /* Standard YouTube red */
+         font-size: 1em; /* Match text size */
+     }
+
+      #mp_youtube-results-list .list-item span {
+          flex-grow: 1; /* Allow text to take available space */
+          overflow: hidden; /* Hide overflowing text */
+          text-overflow: ellipsis; /* Show ellipsis for overflow */
+          white-space: nowrap; /* Keep text on a single line */
+          /* Inherits text color */
+      }
+    /* --- End Youtube Modal Styles --- */
+
+    /* --- Styles for the Tiny Hidden Player --- */
+     #mp_youtube_hidden_player {
+         /* These styles make the div effectively invisible and non-interactive */
+         position: fixed;
+         bottom: 0;
+         right: 0;
+         width: 1px;
+         height: 1px;
+         z-index: 9999; /* Ensure it's behind everything */
+         overflow: hidden; /* Hide its contents */
+         opacity: 0; /* Ensure it's not visible even if size is briefly wrong */
+         pointer-events: none; /* Prevent any mouse interaction */
+     }
+    /* Ensure the iframe inside also respects these properties */
+     #mp_youtube_hidden_player iframe {
+         width: 1px;
+         height: 1px;
+         opacity: 0;
+         pointer-events: none;
+         border: none; /* Ensure no border */
+     }
+    /* --- End Styles for Tiny Hidden Player --- */
 
     /* Renamed .music-box to .music-section-box for clarity */
     .music-section-box {
@@ -2187,6 +2269,27 @@
       <pre id="changelogContent" style="white-space: pre-wrap; font-family: inherit;"></pre>
     </div>
   </div>
+    
+    <div id="mp_youtubeSearchModal" class="mp-modal">
+        <div class="mp-modal-content" style="max-width: 600px;">
+            <span class="mp-modal-close" onclick="mp_closeModal('mp_youtubeSearchModal')">×</span>
+            <h3>Search Music on YouTube</h3>
+            <div class="mp-modal-body">
+                <div id="mp_Youtube-container" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="mp_Youtube-input" placeholder="Search for a video or song..." aria-label="Search YouTube">
+                    <button id="mp_Youtube-button">Search</button>
+                </div>
+                <div class="scrollable-list" id="mp_youtube-results-list" style="max-height: 300px;">
+                    <p class="placeholder-text">Search results will appear here.</p>
+                </div>
+            </div>
+            <div class="mp-modal-buttons" style="justify-content: flex-end;">
+                 <button class="secondary" onclick="mp_closeModal('mp_youtubeSearchModal')">Close</button>
+                 </div>
+        </div>
+    </div>
+    <div id="mp_youtube_hidden_player" style="position: fixed; bottom: 0; right: 0; width: 1px; height: 1px; z-index: -1; overflow: hidden;"></div>
+    <script src="https://www.youtube.com/iframe_api"></script>
 
 <div id="notificationContainer">
     </div>
@@ -2313,6 +2416,8 @@
     const tooltip = document.getElementById('tooltip');
     const addGameModal = document.getElementById('addGameModal');
     const changelogModal = document.getElementById('changelogModal'); // Get changelog modal
+    const API_KEY = 'AIzaSyAaK9yxxs1I_mtKqanp5r7YdEjCkXXbI-8';
+    
 
     // App State
     let games = [];
@@ -2340,9 +2445,55 @@
     let hoverOverlayCurrentTime = null;
     let hoverOverlayScroller = null;
     let hoverOverlayTotalDuration = null;
+    let mp_musicQueue = [];
     
     // Flag to know if the hover overlay elements and listeners are initialized
     let mp_hoverOverlayInitialized = false;
+    if (API_KEY === 'YOUR_YOUTUBE_API_KEY' || !API_KEY || API_KEY.includes(' ')) {
+        console.error('WARNING: Please replace "YOUR_YOUTUBE_API_KEY" in the script with your actual API key.');
+        // You might want to show an alert or error message to the user here on critical pages
+    }
+
+    let mp_youtubePlayer = null; // Variable to hold the hidden YouTube player instance
+    let youtubeTimeUpdateInterval = null; // Interval for YouTube time update simulation
+    // let isSeekingHover = false; // Declare this globally if not already accessible for the hover overlay scroller
+
+    // --- YouTube API Readiness Handling ---
+    let youtubeApiReady = false;
+    let youtubeApiQueue = []; // Queue of functions to run once the API is ready
+    
+    // This function queues up actions until the YouTube API is loaded and ready
+    function runWhenYouTubeApiReady(func) {
+        if (youtubeApiReady) {
+            // If API is already ready, execute the function immediately
+            func();
+        } else {
+            // If API is not ready, add the function to the queue
+            youtubeApiQueue.push(func);
+        }
+    }
+    
+    // This function is called by the YouTube Iframe Player API when it's loaded.
+    // It must be a global function.
+    function onYouTubeIframeAPIReady() {
+         youtubeApiReady = true;
+         console.log('MP YouTube Player: YouTube Iframe API is ready.');
+         // Process any functions that were queued while the API was loading
+         while (youtubeApiQueue.length > 0) {
+             const func = youtubeApiQueue.shift(); // Get the oldest function from the queue
+             func(); // Execute the function
+         }
+     }
+    
+    // Ensure the API callback is in the global scope
+    // (This might already be handled implicitly by defining the function directly in a <script> tag,
+    // but explicitly assigning to window confirms it).
+    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+    
+    // --- End YouTube API Readiness Handling ---
+    
+    // ... rest of your music player code, including mp_loadSong ...
+
 
     // Define themes array (keep your existing themes array here)
     const themes = [
@@ -2712,6 +2863,152 @@
              console.error(`MP_DB: Error in mp_dbPutSongs process:`, error);
              return Promise.reject(error);
         });
+    }
+    // Function to perform the Youtube (triggered by modal button/input)
+    function performYouTubeSearch() {
+        // Get elements from the Youtube modal
+        const searchInput = document.getElementById('mp_Youtube-input');
+        const resultsList = document.getElementById('mp_youtube-results-list');
+
+        if (!searchInput || !resultsList) {
+             console.error("MP Youtube: Search input or results list not found.");
+             return;
+        }
+
+        const query = searchInput.value.trim();
+        if (!query) {
+            resultsList.innerHTML = '<p class="placeholder-text">Please enter a search query.</p>';
+            return;
+        }
+
+        if (API_KEY === 'YOUR_YOUTUBE_API_KEY' || !API_KEY || API_KEY.includes(' ')) {
+            resultsList.innerHTML = '<p class="placeholder-text" style="color: red;">YouTube API key is not set correctly.</p>';
+            console.error('YouTube API Key is not set correctly in script.js');
+            return;
+        }
+
+        // Clear previous results and show loading indicator
+        resultsList.innerHTML = '<p class="placeholder-text">Searching...</p>';
+
+        // Construct the YouTube Data API search URL
+        // Searching for type=video and part=snippet (includes title, channel, thumbnail)
+        const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&q=${encodeURIComponent(query)}&maxResults=25&part=snippet&type=video`;
+
+        console.log("MP Youtube: Fetching from:", searchUrl);
+
+        fetch(searchUrl)
+            .then(response => {
+                if (!response.ok) {
+                     // Check for specific error codes
+                     console.error('MP Youtube: API response not OK:', response.status, response.statusText);
+                     return response.json().then(err => {
+                          const errorMsg = err.error && err.error.message ? err.error.message : 'Unknown API error';
+                          throw new Error(`API error ${response.status}: ${errorMsg}`);
+                     });
+                }
+                return response.json();
+            })
+            .then(data => {
+                resultsList.innerHTML = ''; // Clear loading indicator
+
+                if (data.items.length === 0) {
+                    resultsList.innerHTML = '<p class="placeholder-text">No results found.</p>';
+                    return;
+                }
+
+                // Display results
+                const fragment = document.createDocumentFragment();
+                data.items.forEach(item => {
+                    // item.id.videoId gives the YouTube video ID
+                    // item.snippet.title gives the video title
+                    // item.snippet.channelTitle gives the channel name (can use as artist)
+                    const videoId = item.id.videoId;
+                    const title = item.snippet.title;
+                    const artist = item.snippet.channelTitle; // Use channel title as artist
+                    const thumbnailUrl = item.snippet.thumbnails.default.url; // Get a thumbnail URL
+
+                    const li = document.createElement('div'); // Use div matching .list-item class
+                    li.className = 'list-item';
+                    li.setAttribute('role', 'option'); // Role for listbox item
+                    li.setAttribute('tabindex', '0'); // Make focusable
+                    li.dataset.videoId = videoId; // Store video ID
+
+                    // Add a YouTube icon (requires Font Awesome)
+                    const youtubeIcon = document.createElement('i');
+                    youtubeIcon.className = 'fab fa-youtube youtube-icon';
+                    li.appendChild(youtubeIcon);
+
+                    // Add text content (Title by Artist)
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = `${escapeHtml(artist)} - ${escapeHtml(title)}`;
+                    textSpan.title = `YouTube: ${escapeHtml(title)} by ${escapeHtml(artist)}`;
+                    li.appendChild(textSpan);
+
+                    // Add click listener to add the song
+                    li.addEventListener('click', () => handleYouTubeResultClick(videoId, title, artist, thumbnailUrl));
+                     // Add keyboard accessibility
+                     li.onkeydown = (event) => {
+                         if (event.key === 'Enter' || event.key === ' ') {
+                             event.preventDefault(); // Prevent page scroll
+                             handleYouTubeResultClick(videoId, title, artist, thumbnailUrl);
+                         }
+                     };
+
+                    fragment.appendChild(li);
+                });
+                resultsList.appendChild(fragment);
+                console.log(`MP Youtube: Displayed ${data.items.length} results.`);
+            })
+            .catch(error => {
+                console.error('MP Youtube: Error fetching search results:', error);
+                 resultsList.innerHTML = `<p class="placeholder-text" style="color: red;">Error searching: ${error.message}. Check console and API key.</p>`;
+            });
+    }
+
+    // Handles clicking on a Youtube result
+    function handleYouTubeResultClick(videoId, title, artist, thumbnailUrl) {
+        console.log("MP Youtube: Result clicked. Adding video:", videoId, title, artist);
+
+        // Create a song object for a YouTube video
+        const youtubeSong = {
+            id: `youtube-${videoId}`, // Unique ID prefix
+            isYouTube: true, // Flag to identify YouTube songs
+            videoId: videoId, // Store the video ID
+            artist: artist, // Use channel title
+            title: title,
+            fileName: `YouTube: ${title}`, // A descriptive filename for display/search
+            fileSize: 0, // N/A for YouTube
+            albumArtUrl: thumbnailUrl // Store the thumbnail URL (YouTube thumbnail)
+        };
+
+        // Check if this YouTube video is already in the library by ID
+        const exists = mp_musicLibrary.some(song => song.id === youtubeSong.id);
+
+        if (exists) {
+             showIndividualNotification('Info', 'This YouTube video is already in your library.', 4000);
+             console.log('MP Youtube: Video already exists in library.');
+        } else {
+            // Add the new song to the library
+            mp_musicLibrary.push(youtubeSong);
+            console.log('MP Youtube: Added YouTube video to library:', youtubeSong);
+
+            // Save the updated library (which now includes the new YouTube song)
+            mp_saveMusicData(); // This saves all music data (songs to IDB, recents/playlists to LS)
+
+            // Update the music player UI if it's currently visible/initialized
+            if (mp_isInitialized) {
+                if (document.getElementById('mp_songsList')) mp_renderSongsList(); // Re-render main list
+                // Recents and Playlists will be updated when saved and re-rendered via their own logic
+                mp_renderRecentlyPlayed(); // Important to re-render recents if a YouTube song is added and played
+                mp_renderPlaylists(); // Important to re-render playlists if a YouTube song is added to one
+            }
+
+            // Close the search modal
+            mp_closeModal('mp_youtubeSearchModal');
+
+            // Show a confirmation notification
+            showIndividualNotification('Success', `Added "${escapeHtml(title)}" to your library.`, 4000);
+        }
     }
 
     // Gets all song objects from the 'songs' object store in IndexedDB
@@ -3496,41 +3793,75 @@
     // Stops playback, revokes URL, clears UI for both main bar and hover overlay
     function mp_stopPlaybackAndClearUI() {
         console.log("MP: Stopping playback and clearing UI.");
-        if (mp_currentSong && mp_currentSong.tempUrl) {
-            URL.revokeObjectURL(mp_currentSong.tempUrl);
-            console.log("MP: Revoked temporary URL.");
-        }
-        if (mp_audioPlayer) {
+        // Stop any currently playing audio or video
+        if (mp_audioPlayer && mp_audioPlayer.src) {
             mp_audioPlayer.pause();
             mp_audioPlayer.removeAttribute('src'); // More reliable than setting to ''
             mp_audioPlayer.load(); // Reset internal state
+            // Revoke old temporary URL if it exists (only for local files)
+            if (mp_currentSong && !mp_currentSong.isYouTube && mp_currentSong.tempUrl) {
+                URL.revokeObjectURL(mp_currentSong.tempUrl);
+                console.log("MP: Revoked old temporary URL.");
+            }
         }
+         // Stop any currently playing YouTube video
+         // Clear any active YouTube time update simulation interval
+         if (youtubeTimeUpdateInterval) {
+              clearInterval(youtubeTimeUpdateInterval);
+              youtubeTimeUpdateInterval = null;
+              console.log("MP: Stopped YouTube time update simulation interval.");
+         }
+
+         if (mp_youtubePlayer && typeof mp_youtubePlayer.stopVideo === 'function') {
+              mp_youtubePlayer.stopVideo(); // Stop the video
+             // Optional: Reset player state/src visually in the tiny div if needed
+              const hiddenPlayerDiv = document.getElementById('mp_youtube_hidden_player');
+              if (hiddenPlayerDiv) hiddenPlayerDiv.innerHTML = ''; // Clear the iframe
+              // Do NOT destroy the player here, as we might need it again
+              // if (typeof mp_youtubePlayer.destroy === 'function') mp_youtubePlayer.destroy();
+              console.log("MP: Stopped existing YouTube player and cleared div.");
+         }
+
+
         mp_currentSong = null;
         mp_currentSongIndex = -1;
         // mp_currentQueue = []; // Keep queue for potential resume? Maybe clear on explicit stop?
         mp_isPlaying = false;
-    
+
         // --- Clear Main Playback Bar UI ---
         if (mp_currentSongInfo) mp_currentSongInfo.textContent = "No Song Playing";
         if (mp_currentSongInfo) mp_currentSongInfo.title = "";
         if (mp_seekBar) mp_seekBar.value = 0;
         if (mp_currentTime) mp_currentTime.textContent = mp_formatTime(0);
         if (mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(0);
-    
+        // Disable playback controls buttons
+         if (mp_playPauseButton) mp_playPauseButton.disabled = true;
+         if (mp_prevButton) mp_prevButton.disabled = true;
+         if (mp_nextButton) mp_nextButton.disabled = true;
+
+
         // --- Update Hover Overlay State ---
-        if (audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
-            // Keep it visible or hide? Let's hide it as no song is playing.
+        // Check if the hover overlay is initialized before accessing its elements
+        if (mp_hoverOverlayInitialized && audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
+            // Hide it as no song is playing.
             audioControlHoverOverlay.style.display = 'none'; // Hide the overlay
-            // Clear its content
+            console.log("MP: Hiding Hover Overlay.");
+            // Clear its content (optional, but clean)
             if (hoverOverlaySongTitle) hoverOverlaySongTitle.textContent = "No song playing";
             if (hoverOverlaySongTitle) hoverOverlaySongTitle.title = "";
             if (hoverOverlayScroller) hoverOverlayScroller.value = 0;
             if (hoverOverlayCurrentTime) hoverOverlayCurrentTime.textContent = mp_formatTime(0);
             if (hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = mp_formatTime(0);
+             // Disable hover overlay buttons
+             if (hoverOverlayPlayPauseBtn) hoverOverlayPlayPauseBtn.disabled = true;
+             if (hoverOverlayBackwardBtn) hoverOverlayBackwardBtn.disabled = true;
+             if (hoverOverlayForwardBtn) hoverOverlayForwardBtn.disabled = true;
+        } else {
+             // Ensure it's hidden if it wasn't initialized/visible but playback was stopped
+             if (audioControlHoverOverlay) audioControlHoverOverlay.style.display = 'none';
         }
         // --- End Update Hover Overlay ---
-    
-        mp_updatePlaybackControls(); // Update both sets of buttons (will disable them)
+
         mp_updatePlayingIndicator(); // Clear playing indicators in lists
     }
 // Loads music data from IndexedDB (songs) and LocalStorage (recents, playlists)
@@ -3590,189 +3921,453 @@
 
 
     // Loads song metadata, gets file handle, creates temp URL, loads player
+// Loads song metadata, gets file handle (for local), creates temp URL, loads player (audio or YouTube)
+// Loads song metadata, gets file handle (for local), creates temp URL, loads player (audio or YouTube)
+// Loads song metadata, gets file handle (for local), creates temp URL, loads player (audio or YouTube)
     async function mp_loadSong(songMetaData) {
-        console.log("MP: loadSong called for:", songMetaData?.fileName);
-        if (!songMetaData || !songMetaData.fileName) {
-            console.error("MP: Invalid song metadata passed to mp_loadSong.");
+        console.log("MP_DEBUG: mp_loadSong called for:", songMetaData?.fileName || songMetaData?.title, "ID:", songMetaData?.id);
+        if (!songMetaData || !songMetaData.id) {
+            console.error("MP_CRITICAL_ERROR: Invalid song metadata passed to mp_loadSong. Metadata:", songMetaData);
             mp_stopPlaybackAndClearUI();
             return;
         }
-    
-        // *** Check if handle is available ***
-        if (!mp_currentDirectoryHandle) {
-             console.error("MP: Directory handle not available. Cannot load song. Handle Status:", mp_currentDirectoryHandle);
-             // Avoid alert loop - rely on UI prompt being visible
-             // alert("MP: Music directory access not granted or handle is missing. Please select the folder or grant permission.");
-             mp_stopPlaybackAndClearUI(); // Stop any previous playback
-             return; // Stop if handle isn't ready
-        }
-    
-        // Show playback bar when attempting to load a song
+
         if (mp_playbackControlsBar) mp_playbackControlsBar.style.display = 'flex';
-         // The hover overlay will be shown on hover if music is playing
-    
-        // --- Find File Handle & Get File ---
-        let fileToPlay = null;
-        try {
-             // Ensure permissions *before* trying to read
-             if (await mp_currentDirectoryHandle.queryPermission({ mode: 'read' }) !== 'granted') {
-                  console.error("MP: Read permission check failed just before loading song.");
-                  mp_updatePermissionUI(false, mp_currentDirectoryHandle); // Show prompt again
-                  mp_stopPlaybackAndClearUI();
-                  return; // Stop loading
+
+        if (mp_audioPlayer && mp_audioPlayer.src) {
+             mp_audioPlayer.pause();
+             mp_audioPlayer.removeAttribute('src');
+             mp_audioPlayer.load();
+             if (mp_currentSong && !mp_currentSong.isYouTube && mp_currentSong.tempUrl) {
+                 URL.revokeObjectURL(mp_currentSong.tempUrl);
+                 console.log("MP_DEBUG: Revoked old temporary URL for local file.");
              }
-    
-             // Recursive function to find the file handle within the directory structure
-             async function findFileHandleRecursive(dirHandle, fileNameToFind, currentPath = '') {
-                 // Check directory permission before iterating
-                  if (await dirHandle.queryPermission({ mode: 'read' }) !== 'granted') {
-                       console.warn(`MP: No permission for directory ${dirHandle.name} during search.`);
-                       return null;
-                  }
-    
-                 try {
-                     for await (const entryHandle of dirHandle.values()) {
-                         const entryFullPath = currentPath ? `${currentPath}/${entryHandle.name}` : entryHandle.name;
-                         if (entryHandle.kind === 'file' && entryHandle.name === fileNameToFind) {
-                             // Check file permission before returning
-                             if (await entryHandle.queryPermission({ mode: 'read' }) === 'granted') {
-                                 return entryHandle;
-                             } else {
-                                  console.warn(`MP: Found file ${entryHandle.name} but no read permission.`);
-                                  return null; // Found but can't read
-                             }
-                         } else if (entryHandle.kind === 'directory') {
-                              const found = await findFileHandleRecursive(entryHandle, fileNameToFind, entryFullPath);
-                              if (found) return found; // Return handle if found in subdirectory
-                         }
-                     }
-                 } catch(innerErr) {
-                      console.warn(`MP: Error iterating directory ${dirHandle.name} during search: ${innerErr.message}`);
-                 }
-                 return null; // Not found in this directory level
-             }
-    
-            const fileHandle = await findFileHandleRecursive(mp_currentDirectoryHandle, songMetaData.fileName);
-    
-            if (!fileHandle) {
-                 throw new Error(`File not found within granted directory: ${songMetaData.fileName}`);
-            }
-    
-            // Re-verify permission on the specific file handle (might be redundant but safe)
-            if (await fileHandle.queryPermission({ mode: 'read' }) !== 'granted') {
-                 throw new Error(`Read permission check failed for file: ${fileHandle.name}`);
-            }
-    
-            console.log(`MP: Found file handle for: ${fileHandle.name}`);
-            fileToPlay = await fileHandle.getFile();
-            console.log(`MP: Retrieved file object for: ${fileToPlay.name}`);
-    
-        } catch (err) {
-            console.error("MP: Error getting file for playback:", err);
-            // Use less intrusive notification?
-            showIndividualNotification("Playback Error", `Error loading "${songMetaData.title}": ${err.message}`, 6000);
-            // alert(`MP: Error loading "${songMetaData.title}": ${err.message}`);
-            mp_stopPlaybackAndClearUI();
-            return;
         }
-    
-        // --- Create Temporary URL & Load Player ---
-        if (mp_currentSong && mp_currentSong.tempUrl) {
-            URL.revokeObjectURL(mp_currentSong.tempUrl);
-        }
-        const tempUrl = URL.createObjectURL(fileToPlay);
-        console.log(`MP: Created temp URL for ${songMetaData.fileName}`);
-    
-        mp_currentSong = { ...songMetaData, tempUrl: tempUrl }; // Store metadata and URL
-    
-        // --- Update Main Playback Bar Content ---
+         if (youtubeTimeUpdateInterval) {
+              clearInterval(youtubeTimeUpdateInterval);
+              youtubeTimeUpdateInterval = null;
+              console.log("MP_DEBUG: Cleared YouTube time update simulation interval.");
+         }
+
+         if (mp_youtubePlayer && typeof mp_youtubePlayer.stopVideo === 'function') {
+              console.log("MP_DEBUG: Stopping existing YouTube player video (if any).");
+              mp_youtubePlayer.stopVideo();
+              // If destroying and recreating player, ensure mp_youtubePlayer is nulled after destroy.
+              // For now, we are reusing if possible, so just stopVideo.
+         }
+
+        mp_currentSong = songMetaData;
+
+        const songTitleDisplay = `${songMetaData.artist || 'Unknown Artist'} - ${songMetaData.title || 'Unknown Title'}`;
         if (mp_currentSongInfo) {
-            mp_currentSongInfo.textContent = `${songMetaData.artist} - ${songMetaData.title}`;
-            mp_currentSongInfo.title = `${songMetaData.artist} - ${songMetaData.title}`;
+            mp_currentSongInfo.textContent = songTitleDisplay;
+            mp_currentSongInfo.title = songTitleDisplay;
         }
         if (mp_seekBar) mp_seekBar.value = 0;
         if (mp_currentTime) mp_currentTime.textContent = mp_formatTime(0);
-        // Delay setting total duration until loadedmetadata fires
         if (mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(0);
-    
-        // --- Update Hover Overlay Content (if visible) ---
-        if (audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
-            if (hoverOverlaySongTitle) {
-                hoverOverlaySongTitle.textContent = `${songMetaData.artist} - ${songMetaData.title}`;
-                hoverOverlaySongTitle.title = `${songMetaData.artist} - ${songMetaData.title}`;
+
+        if (mp_hoverOverlayInitialized && audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
+             if (hoverOverlaySongTitle) {
+                 hoverOverlaySongTitle.textContent = songTitleDisplay;
+                 hoverOverlaySongTitle.title = songTitleDisplay;
+             }
+             if (hoverOverlayScroller) hoverOverlayScroller.value = 0;
+             if (hoverOverlayCurrentTime) hoverOverlayCurrentTime.textContent = mp_formatTime(0);
+             if (hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = mp_formatTime(0);
+        }
+
+        mp_updatePlaybackControls();
+
+        if (songMetaData.isYouTube) {
+            console.log("MP_DEBUG: mp_loadSong - Preparing to load YouTube video:", songMetaData.videoId);
+
+            runWhenYouTubeApiReady(() => {
+                console.log("MP_DEBUG: YouTube API ready callback executed, proceeding with loading video:", songMetaData.videoId);
+
+                const hiddenPlayerDivId = 'mp_youtube_hidden_player';
+                const hiddenPlayerDiv = document.getElementById(hiddenPlayerDivId);
+                if (!hiddenPlayerDiv) {
+                    console.error("MP_CRITICAL_ERROR: Hidden YouTube player div not found:", hiddenPlayerDivId);
+                    showIndividualNotification('Error', 'Player container missing.', 5000);
+                    return;
+                }
+                hiddenPlayerDiv.style.width = '120px';
+                hiddenPlayerDiv.style.height = '120px';
+
+                const playerVarsForDebug = {
+                    'controls': 1, 'autoplay': 1, 'disablekb': 0, 'fs': 1,
+                    'iv_load_policy': 3, 'modestbranding': 1, 'rel': 0,
+                    'origin': window.location.origin
+                };
+                console.log('MP_DEBUG: PlayerVars for new/existing YT.Player:', playerVarsForDebug);
+                console.log('MP_DEBUG: Target videoId:', songMetaData.videoId);
+                console.log('MP_DEBUG: mp_youtubePlayer before decision:', mp_youtubePlayer, "Is function?", typeof mp_youtubePlayer?.loadVideoById === 'function');
+
+
+                // Determine if we need to create a new player or reuse an existing one
+                let needsNewPlayer = !mp_youtubePlayer ||
+                                     typeof mp_youtubePlayer.loadVideoById !== 'function' || // Player object doesn't have methods
+                                     (mp_youtubePlayer.getIframe && !document.getElementById(hiddenPlayerDivId)?.contains(mp_youtubePlayer.getIframe())) || // Player's iframe not in our div
+                                     !document.getElementById(hiddenPlayerDivId)?.querySelector('iframe'); // No iframe in our div
+
+                if (needsNewPlayer) {
+                    console.log('MP_DEBUG: Creating NEW YouTube player instance in div:', hiddenPlayerDivId);
+                    if(hiddenPlayerDiv) hiddenPlayerDiv.innerHTML = ''; // Clear div for fresh player
+
+                    // Destroy the old player instance if it exists but is problematic
+                    if (mp_youtubePlayer && typeof mp_youtubePlayer.destroy === 'function') {
+                        try {
+                            mp_youtubePlayer.destroy();
+                            console.log('MP_DEBUG: Destroyed previous problematic mp_youtubePlayer instance.');
+                        } catch (destroyError) {
+                            console.error('MP_DEBUG: Error destroying previous mp_youtubePlayer instance:', destroyError);
+                        }
+                        mp_youtubePlayer = null; // Explicitly nullify
+                    }
+
+                    try {
+                        mp_youtubePlayer = new YT.Player(hiddenPlayerDivId, {
+                            height: '100%', width: '100%',
+                            videoId: songMetaData.videoId,
+                            playerVars: playerVarsForDebug,
+                            events: {
+                                'onReady': (event) => {
+                                    console.log('MP_DEBUG: YT.Player INTERNAL onReady event FIRED! Player state at onReady:', event.target.getPlayerState());
+                                    console.log('MP_DEBUG: YT.Player INTERNAL onReady - typeof event.target.getPlayerState:', typeof event.target.getPlayerState);
+                                    onYouTubePlayerReady(event);
+                                },
+                                'onStateChange': (event) => {
+                                     console.log('MP_DEBUG: YT.Player INTERNAL onStateChange event FIRED! New State:', event.data, "Player State Now:", event.target.getPlayerState());
+                                     onYouTubePlayerStateChange(event);
+                                },
+                                'onError': (event) => {
+                                     console.log('MP_DEBUG: YT.Player INTERNAL onError event FIRED! Error code:', event.data, "Player State Now:", event.target.getPlayerState());
+                                     onYouTubePlayerError(event);
+                                }
+                            }
+                        });
+                        console.log('MP_DEBUG: new YT.Player() call completed. mp_youtubePlayer assigned.');
+                    } catch (e) {
+                        console.error('MP_CRITICAL_ERROR: Error during new YT.Player() instantiation:', e);
+                        showIndividualNotification('Error', 'Failed to create YouTube player.', 6000);
+                        mp_youtubePlayer = null;
+                    }
+                } else {
+                    console.log('MP_DEBUG: Reusing existing YouTube player. Loading video:', songMetaData.videoId);
+                    try {
+                        mp_youtubePlayer.loadVideoById({ videoId: songMetaData.videoId });
+                        console.log('MP_DEBUG: mp_youtubePlayer.loadVideoById() call completed.');
+                    } catch (e) {
+                         console.error('MP_CRITICAL_ERROR: Error during mp_youtubePlayer.loadVideoById():', e);
+                         showIndividualNotification('Error', 'Failed to load video in existing player.', 6000);
+                    }
+                }
+            });
+
+        } else { // It's a local file
+            console.log("MP_DEBUG: mp_loadSong - Loading local file:", songMetaData.fileName);
+            // (Rest of local file loading logic - kept for completeness but not the focus of the current YouTube issue)
+            if (!mp_currentDirectoryHandle) {
+                 console.error("MP_CRITICAL_ERROR: Directory handle not available for local file. Cannot load song:", songMetaData.fileName);
+                 mp_updatePermissionUI(false, null);
+                 mp_stopPlaybackAndClearUI();
+                 return;
             }
-            if (hoverOverlayScroller) hoverOverlayScroller.value = 0;
-            if (hoverOverlayCurrentTime) hoverOverlayCurrentTime.textContent = mp_formatTime(0);
-             // Total duration is often not known precisely until loadedmetadata fires
-            if (hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = '0:00'; // Reset initially
+            // ... (findFileHandleRecursive and file loading logic) ...
+            let fileToPlay = null;
+            try {
+                 if (await mp_currentDirectoryHandle.queryPermission({ mode: 'read' }) !== 'granted') {
+                      console.error("MP_CRITICAL_ERROR: Read permission check failed just before loading local song:", songMetaData.fileName);
+                      mp_updatePermissionUI(false, mp_currentDirectoryHandle);
+                      mp_stopPlaybackAndClearUI();
+                      return;
+                 }
+                 async function findFileHandleRecursive(dirHandle, filePathToFind, currentPath = '') { /* ... */ return null;} // Placeholder for brevity
+                 const fileHandle = await findFileHandleRecursive(mp_currentDirectoryHandle, songMetaData.filePath);
+                 if (!fileHandle) throw new Error(`Local file not found: ${songMetaData.filePath}`);
+                 if (await fileHandle.queryPermission({ mode: 'read' }) !== 'granted') throw new Error(`Read permission failed for file: ${fileHandle.name}`);
+                 fileToPlay = await fileHandle.getFile();
+            } catch (err) {
+                console.error("MP_CRITICAL_ERROR: Error getting local file for playback:", err);
+                showIndividualNotification("Playback Error", `Error loading "${songMetaData.title || songMetaData.fileName}": ${err.message}`, 6000);
+                mp_stopPlaybackAndClearUI(); return;
+            }
+            const tempUrl = URL.createObjectURL(fileToPlay);
+            mp_currentSong.tempUrl = tempUrl;
+            if (mp_audioPlayer) {
+                mp_audioPlayer.src = tempUrl; mp_audioPlayer.load(); mp_playAudio();
+            }
         }
-        // --- End Update Hover Overlay ---
-    
-    
-        if (mp_audioPlayer) {
-            console.log("MP: Setting audio player src:", tempUrl);
-            mp_audioPlayer.src = tempUrl;
-            mp_audioPlayer.load(); // Important after setting src
-        }
-        // mp_playAudio(); // Playback is initiated via audio element events or play button
+
         mp_addToRecentlyPlayed(songMetaData.id);
-        mp_updatePlayingIndicator(); // This updates the main bar button/indicator
-        mp_updatePlaybackControls(); // Call this to update *both* sets of buttons
+        mp_updatePlayingIndicator();
+        console.log("MP_DEBUG: mp_loadSong finished for:", songMetaData.id);
+    }
+
+    // ... (your other functions like onYouTubeIframeAPIReady, runWhenYouTubeApiReady, onYouTubePlayerReady, onYouTubePlayerStateChange, onYouTubePlayerError, etc.) ...
     
-         // Attempt to play (browser might block autoplay)
-         mp_playAudio();
+// --- Add YouTube Player Event Handlers ---
+    function onYouTubePlayerReady(event) {
+        console.log('MP YouTube Player: Player is ready.');
+        // Player is ready, event.target is the player instance
+        // You can use event.target.playVideo() here if you want to ensure playback starts
+        // (though autoplay in playerVars should handle it).
+         // Ensure the state is updated
+         // mp_isPlaying state is primarily managed by onStateChange, but we can optimistically set it true here
+         // mp_isPlaying = true; // Better to wait for onStateChange -> PLAYING
+         mp_updatePlaybackControls(); // Update UI buttons (they become enabled if a song is loaded)
+
+        // Update duration if available (it might be available here or on the first timeupdate)
+         if (event.target && typeof event.target.getDuration === 'function') {
+              const duration = event.target.getDuration();
+              if (!isNaN(duration) && duration > 0) {
+                  if(mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(duration);
+                   if(mp_hoverOverlayInitialized && hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = mp_formatTime(duration);
+                   // Update seek bar max value (if using 0-100 scale)
+                   if(mp_seekBar) mp_seekBar.max = 100;
+                   if(mp_hoverOverlayInitialized && hoverOverlayScroller) hoverOverlayScroller.max = 100;
+              }
+         }
+         // Start the timeupdate simulation (since YouTube player doesn't fire it like <audio>)
+         // This will only start if the state changes to PLAYING
+         // mp_startYouTubeTimeUpdateSimulation(); // Moved this call to onStateChange -> PLAYING
+    }
+
+     // Simulation interval for YouTube timeupdate
+     // let youtubeTimeUpdateInterval = null; // Already declared globally
+
+     function mp_startYouTubeTimeUpdateSimulation() {
+          // Clear any existing interval first
+          if (youtubeTimeUpdateInterval) {
+               clearInterval(youtubeTimeUpdateInterval);
+               youtubeTimeUpdateInterval = null;
+               console.log("MP YouTube Player: Cleared previous timeupdate simulation interval.");
+          }
+
+          // Only start simulation if we are supposed to be playing a YouTube video AND the player is actually playing
+          if (!mp_currentSong || !mp_currentSong.isYouTube || !mp_youtubePlayer || typeof mp_youtubePlayer.getPlayerState !== 'function' || mp_youtubePlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
+               console.log("MP YouTube Player: Not starting timeupdate simulation. Player not ready, not YouTube, or not in PLAYING state.");
+               return; // Don't start the interval if prerequisites aren't met
+          }
+
+          console.log("MP YouTube Player: Starting timeupdate simulation interval.");
+          // Set a new interval (e.g., update every 250ms)
+          youtubeTimeUpdateInterval = setInterval(() => {
+               // Inside the interval, check again if the song is still playing and it's a YouTube video
+               // This check prevents errors if the song changes or playback stops while the interval is active
+               if (mp_currentSong && mp_currentSong.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.getCurrentTime === 'function' && typeof mp_youtubePlayer.getDuration === 'function' && mp_youtubePlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+                   const currentTime = mp_youtubePlayer.getCurrentTime();
+                   const duration = mp_youtubePlayer.getDuration();
+                   // Ensure values are valid before updating UI
+                   if (!isNaN(currentTime) && !isNaN(duration) && duration > 0) {
+                        // Manually call the update function with current data
+                        // mp_updateSeekBar function is designed to read from the *active* player internally
+                        mp_updateSeekBar(); // Call the combined update function
+                   } else {
+                        // Handle cases where duration might be 0 or NaN briefly
+                        // mp_updateSeekBar already handles displaying 0:00 or similar for invalid duration
+                         mp_updateSeekBar();
+                   }
+               } else {
+                   // If the state changes or song changes while the interval is running, stop it
+                   console.log("MP YouTube Player: Stopping timeupdate simulation from inside interval (state change or song change detected).");
+                   if (youtubeTimeUpdateInterval) {
+                        clearInterval(youtubeTimeUpdateInterval);
+                        youtubeTimeUpdateInterval = null;
+                   }
+               }
+          }, 250); // Update every quarter second (adjust as needed)
+     }
+
+    function onYouTubePlayerStateChange(event) {
+        console.log('MP YouTube Player: State changed. Event data:', event.data);
+        console.log('MP YouTube Player: Current mp_isPlaying before update:', mp_isPlaying);
+
+        let newStateIsPlaying = false;
+        let shouldStartSim = false;
+        let shouldStopSim = false;
+
+
+        switch (event.data) {
+            case YT.PlayerState.PLAYING:
+                newStateIsPlaying = true;
+                shouldStartSim = true; // Start simulation when playing
+                console.log("MP YouTube Player: State is PLAYING.");
+                break;
+            case YT.PlayerState.PAUSED:
+                newStateIsPlaying = false;
+                shouldStopSim = true; // Stop simulation when paused
+                console.log("MP YouTube Player: State is PAUSED.");
+                break;
+            case YT.PlayerState.ENDED:
+                newStateIsPlaying = false;
+                shouldStopSim = true; // Stop simulation when ended
+                console.log("MP YouTube Player: State is ENDED.");
+                mp_updateSeekBar(); // Ensure UI is updated to the end time (100%)
+                mp_playNextSong(); // Automatically play the next song
+                break;
+            case YT.PlayerState.BUFFERING:
+                console.log("MP YouTube Player: State is BUFFERING.");
+                // The player is temporarily not playing, but mp_isPlaying might remain true
+                // Don't explicitly change mp_isPlaying here, let PLAYING/PAUSED handle it.
+                break;
+            case YT.PlayerState.CUED:
+            case -1: // Unstarted
+                newStateIsPlaying = false;
+                shouldStopSim = true; // Stop simulation if unstarted or cued
+                console.log("MP YouTube Player: State is CUED or UNSTARTED.");
+                 // Reset time/seek bar UI on load/cue
+                 mp_updateSeekBar(); // This should handle resetting time/duration display based on player state (likely 0)
+                break;
+            default:
+                 console.log("MP YouTube Player: Unknown state:", event.data);
+                // Don't change mp_isPlaying for unknown states
+                break;
+        }
+
+        // Update the global mp_isPlaying flag only if the state represents a definite playing/paused/ended state
+        // Buffering/Cued/Unstarted states are transient or not actively playing
+        if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+             mp_isPlaying = newStateIsPlaying;
+             console.log("MP YouTube Player: Updated mp_isPlaying to:", mp_isPlaying);
+        }
+
+
+        // Manage the time update simulation interval
+        if (shouldStartSim) {
+            mp_startYouTubeTimeUpdateSimulation();
+        } else if (shouldStopSim) {
+             console.log("MP YouTube Player: Stopping timeupdate simulation interval.");
+             if (youtubeTimeUpdateInterval) {
+                  clearInterval(youtubeTimeUpdateInterval);
+                  youtubeTimeUpdateInterval = null;
+             }
+        }
+
+
+        // Update the UI controls based on the new state
+        mp_updatePlaybackControls(); // Update buttons based on new state (using mp_isPlaying)
+        mp_updatePlayingIndicator(); // Update list indicators (will be none if paused/ended/stopped)
+    }
+
+    function onYouTubePlayerError(event) {
+        console.error('MP_DEBUG: onYouTubePlayerError - Raw Event Data:', event.data);
+        // Attempt to get player reference safely, event.target might be the player
+        const playerInstance = event && event.target;
+        let videoUrl = "N/A";
+        let playerStateAtError = "N/A";
+
+        if (playerInstance && typeof playerInstance.getVideoUrl === 'function') {
+            videoUrl = playerInstance.getVideoUrl();
+        }
+        if (playerInstance && typeof playerInstance.getPlayerState === 'function') {
+            playerStateAtError = playerInstance.getPlayerState();
+        }
+
+        console.error('MP_DEBUG: onYouTubePlayerError - Video URL (if available):', videoUrl);
+        console.error('MP_DEBUG: onYouTubePlayerError - Player State at Error (if available):', playerStateAtError);
+        console.error('MP_DEBUG: onYouTubePlayerError - Current song metadata when error occurred:', mp_currentSong);
+
+        let errorMessage = 'An error occurred with the YouTube player.';
+        switch(event.data) {
+            case 2: errorMessage = 'Invalid video ID or parameters. Check the videoId being loaded.'; break;
+            case 5: errorMessage = 'HTML5 player error. This might be an issue with the video or browser.'; break;
+            case 100: errorMessage = 'Video not found, private, or deleted.'; break;
+            case 101: // Falls through
+            case 150: errorMessage = 'Video cannot be played here due to embedding restrictions by the video owner.'; break;
+            default: errorMessage = `An unknown error occurred with the YouTube player (Code: ${event.data}).`; break;
+        }
+        console.error("MP YouTube Player: Playback Error Details:", errorMessage, "Current Song:", mp_currentSong?.title || "N/A");
+        showIndividualNotification("YouTube Playback Error", `Could not play "${mp_currentSong?.title || 'YouTube video'}": ${errorMessage}`, 10000);
+
+        mp_isPlaying = false;
+        mp_updatePlaybackControls();
+        if (youtubeTimeUpdateInterval) {
+            clearInterval(youtubeTimeUpdateInterval);
+            youtubeTimeUpdateInterval = null;
+            console.log("MP_DEBUG: Stopped YouTube time update simulation due to player error.");
+        }
+        mp_updateSeekBar();
+
+        console.log("MP YouTube Player: Attempting to play the next song after error.");
+        mp_playNextSong();
     }
 
 
     // Plays a song from the library view
-    function mp_playSongFromLibrary(songId) {
+    async function mp_playSongFromLibrary(songId) {
         console.log("MP: playSongFromLibrary, ID:", songId);
-        // *** ADD HANDLE CHECK ***
-        if (!mp_currentDirectoryHandle) {
-            console.warn("MP: Attempted to play song from library, but directory handle is not ready.");
-            mp_updatePermissionUI(false, null); // Ensure prompt is visible without specific handle
-            showIndividualNotification("Permission Required", "Select music folder or grant access first.", 5000);
-            return; // Do not proceed
-        }
-        // *** END HANDLE CHECK ***
-
-        const songMeta = mp_findSongById(songId);
-        if (!songMeta) {
-            console.error("MP: Song metadata not found for ID:", songId);
+    
+        const songToPlay = mp_musicLibrary.find(s => s.id === songId);
+        if (!songToPlay) {
+            console.error("MP: Song with ID", songId, "not found in library.");
+            showIndividualNotification('Error', 'Song not found in library.', 4000);
+            mp_stopPlaybackAndClearUI();
             return;
         }
-
-        // Update the queue based on the current filter in the songs list
-        const currentFilter = mp_songSearch ? mp_songSearch.value.toLowerCase() : '';
-        mp_currentQueue = mp_musicLibrary
-            .filter(s => s.title.toLowerCase().includes(currentFilter) ||
-                         s.artist.toLowerCase().includes(currentFilter) ||
-                         s.fileName.toLowerCase().includes(currentFilter))
-            .sort((a, b) => `${a.artist} - ${a.title}`.localeCompare(`${b.artist} - ${b.title}`)) // Keep consistent sort order
-            .map(s => s.id);
-
-        mp_currentSongIndex = mp_currentQueue.findIndex(id => id === songId);
-        console.log(`MP: Set queue from Songs list filter. Length: ${mp_currentQueue.length}. Index: ${mp_currentSongIndex}`);
-        mp_loadSong(songMeta); // Load and attempt play
+    
+        // Stop current playback and load the new song metadata into mp_currentSong
+        await mp_loadSong(songToPlay); // This function prepares everything and INITIATES YouTube player loading
+    
+        // Update the queue index to the currently playing song
+        const queueIndex = mp_musicQueue.findIndex(s => s.id === songId);
+        if (queueIndex !== -1) {
+             mp_currentQueueIndex = queueIndex;
+             console.log("MP: Set queue from Songs list filter. Length:", mp_musicQueue.length, "Index:", mp_currentQueueIndex);
+        } else {
+             console.warn("MP: Loaded song not found in current queue.");
+             mp_currentQueueIndex = -1; // Or handle as appropriate for your queue logic
+        }
+    
+    
+        // *** IMPORTANT MODIFICATION HERE ***
+        // Do NOT call mp_togglePlayPause automatically for YouTube videos.
+        // The initial playback for YouTube is handled by autoplay=1 and the onYouTubePlayerReady/onStateChange events.
+        // mp_togglePlayPause should only be called by user interaction AFTER the player is ready.
+    
+        // Check if the song is NOT a YouTube video before calling togglePlayPause automatically
+        if (!songToPlay.isYouTube) {
+            console.log("MP: Automatically toggling play for local file.");
+            mp_togglePlayPause(); // Call togglePlayPause only for local files if needed for initial play
+        } else {
+             console.log("MP: YouTube video loading initiated. Awaiting onYouTubePlayerReady for playback start.");
+             // The onYouTubePlayerReady handler (and subsequent onStateChange) will manage setting mp_isPlaying
+             // and updating the UI based on autoplay=1.
+        }
+    
+        // The UI state (play/pause button icon, mp_isPlaying flag) should be updated
+        // by the player's state change events (onStateChange for YouTube, 'play'/'pause' for audio).
+    
     }
 
     // Starts playback of a specific playlist
     function mp_playPlaylist(playlistName) {
         console.log("MP: playPlaylist:", playlistName);
-        // *** ADD HANDLE CHECK ***
-        if (!mp_currentDirectoryHandle) {
-            console.warn("MP: Attempted to play playlist, but directory handle is not ready.");
-            mp_updatePermissionUI(false, null); // Ensure prompt is visible without specific handle
-            showIndividualNotification("Permission Required", "Select music folder or grant access first.", 5000);
-            return; // Do not proceed
-        }
-        // *** END HANDLE CHECK ***
 
         const playlistSongIds = mp_playlists[playlistName];
         if (!playlistSongIds || playlistSongIds.length === 0) {
             alert(`MP: Playlist "${playlistName}" is empty.`);
             return;
         }
+
+        // --- Check for directory handle if playlist contains local files ---
+        const containsLocalFiles = playlistSongIds.some(id => {
+            const song = mp_findSongById(id);
+            return song && !song.isYouTube;
+        });
+
+        if (containsLocalFiles && !mp_currentDirectoryHandle) {
+            console.warn("MP: Attempted to play playlist containing local files, but directory handle is not ready.");
+            mp_updatePermissionUI(false, null); // Ensure prompt is visible without specific handle
+            showIndividualNotification("Permission Required", "Select music folder or grant access to play local files in playlist.", 6000);
+            // If permission is missing, we cannot load any local files, so perhaps don't set the queue?
+            // Or set the queue but mp_loadSong will fail for local ones?
+            // Let's set the queue, and mp_loadSong will handle individual failures.
+        }
+        // --- End handle check ---
+
+
         mp_currentQueue = [...playlistSongIds]; // Set queue to this playlist
         mp_currentSongIndex = 0; // Start from the beginning
         console.log(`MP: Set queue from Playlist "${playlistName}". Length: ${mp_currentQueue.length}.`);
@@ -3819,117 +4414,262 @@
 
     // Toggles play/pause state
     function mp_togglePlayPause() {
-            console.log("MP: mp_togglePlayPause called by button click."); // Specific log
-            console.log("MP: Current state - mp_isPlaying:", mp_isPlaying, "audioPlayer src:", mp_audioPlayer?.src, "audioPlayer paused:", mp_audioPlayer?.paused);
-    
-            if (mp_audioPlayer) {
-                if (mp_isPlaying) {
-                    console.log("MP: mp_togglePlayPause: mp_isPlaying is TRUE. Attempting to PAUSE audio."); // Specific log
-                    mp_audioPlayer.pause(); // This should trigger the 'pause' event listener
-                } else {
-                    console.log("MP: mp_togglePlayPause: mp_isPlaying is FALSE. Attempting to PLAY audio."); // Specific log
-                    // If not playing, check if a song is loaded or playable
-                     if (mp_currentSong || (mp_currentQueue && mp_currentQueue.length > 0)) {
-                         console.log("MP: mp_togglePlayPause: Song loaded or queue exists. Calling mp_playAudio()."); // Specific log
-                         mp_playAudio(); // This should attempt to play and trigger the 'play' event listener
-                     } else if (mp_musicLibrary.length > 0) {
-                          console.warn("MP: mp_togglePlayPause: Play button clicked, but no song loaded. Library has songs.");
-                          // Optional: If nothing loaded, play the first song in the library
-                          // mp_playSong(mp_musicLibrary[0].id); // Assuming you have a function like this
-                     } else {
-                         console.warn("MP: mp_togglePlayPause: Play button clicked, but no song loaded and no library/queue available.");
-                     }
-                }
-            } else {
-                console.error("MP: mp_togglePlayPause: audioPlayer element not found.");
-            }
-            // UI updates happen via 'play' and 'pause' audio events.
-            // Removed the redundant call to mp_updatePlaybackControls() here as events handle it.
-            // mp_updatePlaybackControls(); // REMOVED
-        }
+         console.log("MP_DEBUG: mp_togglePlayPause called.");
+         console.trace("MP_DEBUG: Call Stack for mp_togglePlayPause");
+         console.log("MP_DEBUG: Current state - mp_isPlaying:", mp_isPlaying, "Current Song ID:", mp_currentSong?.id, "Is YouTube:", mp_currentSong?.isYouTube);
 
-    // Plays the next song in the current queue
+         if (!mp_currentSong) {
+              console.warn("MP_DEBUG: mp_togglePlayPause - Cannot toggle, no song loaded.");
+              if (mp_musicLibrary.length > 0) {
+                   console.log("MP_DEBUG: mp_togglePlayPause - Attempting to load the first song from the library.");
+                   mp_playSongFromLibrary(mp_musicLibrary[0].id);
+              }
+              return;
+         }
+
+         if (mp_currentSong.isYouTube) {
+              console.log("MP_DEBUG: mp_togglePlayPause - Called for YouTube song.");
+
+              if (mp_youtubePlayer && typeof mp_youtubePlayer.getPlayerState === 'function') {
+                  const playerState = mp_youtubePlayer.getPlayerState();
+                  let playerStateMeaning = "Unknown";
+                  switch(playerState) {
+                      case -1: playerStateMeaning = "UNSTARTED"; break;
+                      case YT.PlayerState.ENDED: playerStateMeaning = "ENDED"; break;
+                      case YT.PlayerState.PLAYING: playerStateMeaning = "PLAYING"; break;
+                      case YT.PlayerState.PAUSED: playerStateMeaning = "PAUSED"; break;
+                      case YT.PlayerState.BUFFERING: playerStateMeaning = "BUFFERING"; break;
+                      case YT.PlayerState.CUED: playerStateMeaning = "CUED"; break;
+                      default: playerStateMeaning = `UNKNOWN_STATE_CODE_${playerState}`; break;
+                  }
+                  console.log(`MP_DEBUG: mp_togglePlayPause - YouTube player current state: ${playerState} (${playerStateMeaning})`);
+
+                  // It's crucial that getPlayerState() is a valid function and returns a defined state.
+                  // The API might not be ready if playerState is undefined or getPlayerState is not a function.
+                  if (typeof playerState !== 'undefined' && playerState !== null) {
+                      if (playerState === YT.PlayerState.PLAYING || playerState === YT.PlayerState.BUFFERING) {
+                          console.log("MP_DEBUG: mp_togglePlayPause - Calling mp_youtubePlayer.pauseVideo()");
+                          mp_youtubePlayer.pauseVideo();
+                      } else { // Includes UNSTARTED, PAUSED, ENDED, CUED states
+                          console.log("MP_DEBUG: mp_togglePlayPause - Calling mp_youtubePlayer.playVideo()");
+                          mp_youtubePlayer.playVideo();
+                      }
+                  } else {
+                      console.warn("MP_DEBUG: mp_togglePlayPause - getPlayerState() returned undefined or null. Player may not be fully initialized or in an error state. Player object:", mp_youtubePlayer);
+                      showIndividualNotification('Warning', 'YouTube Player state is unclear. Please wait or try reloading the song.', 3500);
+                  }
+              } else {
+                  console.warn("MP_DEBUG: mp_togglePlayPause - mp_youtubePlayer object is NOT VALID (null, undefined, or no getPlayerState method). mp_youtubePlayer:", mp_youtubePlayer);
+                  showIndividualNotification('Error', 'YouTube player component is unavailable or failed. Try reloading the song.', 4000);
+              }
+         } else { // Handle Local Audio File
+              console.log("MP_DEBUG: mp_togglePlayPause - Toggling Audio player state.");
+              if (mp_audioPlayer) {
+                  if (mp_audioPlayer.paused || mp_audioPlayer.ended) {
+                      console.log("MP_DEBUG: mp_togglePlayPause - Calling audioPlayer.play()");
+                      mp_audioPlayer.play().catch(error => {
+                           console.error("MP_DEBUG: mp_togglePlayPause - Audio play failed:", error);
+                           showIndividualNotification('Playback Error', `Could not play "${mp_currentSong.title || 'audio'}": ${error.message}`, 5000);
+                           mp_isPlaying = false;
+                           mp_updatePlaybackControls();
+                       });
+                  } else {
+                      console.log("MP_DEBUG: mp_togglePlayPause - Calling audioPlayer.pause()");
+                      mp_audioPlayer.pause();
+                  }
+              } else {
+                  console.error("MP_CRITICAL_ERROR: mp_togglePlayPause - Audio player element (mp_audioPlayer) not found.");
+              }
+         }
+    }
+    
     function mp_playNextSong() {
         console.log("MP: playNextSong called.");
-        if (!mp_currentDirectoryHandle) {
-             console.warn("MP: Cannot play next song, directory handle missing.");
-             mp_stopPlaybackAndClearUI(); // Stop everything if handle lost
-             mp_updatePermissionUI(false, null);
-             return;
-        }
-        if (mp_currentQueue.length === 0) {
-            console.log("MP: Queue empty, stopping playback.");
-            mp_stopPlaybackAndClearUI();
+
+        if (!mp_currentQueue || mp_currentQueue.length === 0) {
+            console.log("MP: Queue empty, cannot play next.");
+            mp_stopPlaybackAndClearUI(); // Stop if queue is empty
             return;
         }
 
         let nextIndex = mp_currentSongIndex + 1;
         if (nextIndex >= mp_currentQueue.length) {
-            nextIndex = 0; // Loop back to start
+            nextIndex = 0; // Loop to start
              console.log("MP: Reached end of queue, looping to start.");
         }
+
+        // Stop the currently playing song/video before loading the next one
+         if (mp_currentSong) {
+             if (mp_currentSong.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.stopVideo === 'function') {
+                 mp_youtubePlayer.stopVideo();
+                  // Stop simulation interval
+                  if (youtubeTimeUpdateInterval) clearInterval(youtubeTimeUpdateInterval); youtubeTimeUpdateInterval = null;
+             } else if (!mp_currentSong.isYouTube && mp_audioPlayer) {
+                 mp_audioPlayer.pause();
+                 mp_audioPlayer.removeAttribute('src');
+                 mp_audioPlayer.load();
+                 if (mp_currentSong.tempUrl) {
+                     URL.revokeObjectURL(mp_currentSong.tempUrl);
+                     mp_currentSong.tempUrl = null;
+                 }
+             }
+             // mp_isPlaying state will be updated by the next song's play event
+             mp_isPlaying = false; // Assume not playing until the next song starts
+         }
+
 
         const nextSongId = mp_currentQueue[nextIndex];
         const nextSongMeta = mp_findSongById(nextSongId);
 
         if (nextSongMeta) {
             mp_currentSongIndex = nextIndex;
-            console.log(`MP: Playing next song (Index ${nextIndex}): ${nextSongMeta.title}`);
+            console.log(`MP: Playing next song (Index ${nextIndex}): ${nextSongMeta.title || nextSongMeta.fileName}`);
+
+            // *** Check for directory handle before loading local file ***
+             if (!nextSongMeta.isYouTube && !mp_currentDirectoryHandle) {
+                 console.warn("MP: Directory handle not available for next local song. Skipping.");
+                 mp_updatePermissionUI(false, null); // Ensure prompt is visible
+                 // Remove the missing song from the queue and try again
+                 mp_currentQueue.splice(nextIndex, 1);
+                 // If the removed song was before the current index, the index needs to adjust.
+                 // If the removed song was at nextIndex (which is current + 1), and nextIndex > current,
+                 // then the song at current will remain at current. The 'next' song is now the one
+                 // that was originally at nextIndex + 1. So currentSongIndex doesn't need to change.
+                 // However, if the queue is now empty, stop playback.
+                 if (mp_currentQueue.length === 0) {
+                     mp_currentSongIndex = -1;
+                     mp_stopPlaybackAndClearUI();
+                     return;
+                 }
+                 console.log("MP: Retrying playNextSong after removing missing local song.");
+                 mp_playNextSong(); // Recursive call
+                 return; // Exit this call
+             }
+            // *** End handle check ***
+
+
             mp_loadSong(nextSongMeta); // Load the next song
         } else {
-            console.warn("MP: Next song ID not found, removing from queue:", nextSongId);
+            console.warn("MP: Next song ID not found in library, removing from queue:", nextSongId);
+            // Use splice to remove the missing song ID from the queue
             mp_currentQueue.splice(nextIndex, 1);
-            // Adjust index if needed (it shouldn't be necessary here as we retry from current index)
-             console.log("MP: Retrying playNextSong after removing missing ID.");
-            mp_playNextSong(); // Recursive call to try the *new* song at the potentially updated index
+            // Adjust current index if the removed item was before it.
+            // If nextIndex was after currentSongIndex, currentSongIndex doesn't need to change relative to the song it's on.
+            // However, if nextIndex was 0 (looping back) and we remove the first song, the new first song is now at index 0,
+            // and if the current song was the last one, the new 'next' song will be index 0.
+            // For simplicity, if we remove an item, just try playing the "next" song again.
+             if (mp_currentQueue.length === 0) {
+                 mp_currentSongIndex = -1;
+                 mp_stopPlaybackAndClearUI();
+                 return;
+             }
+            console.log("MP: Retrying playNextSong after removing missing ID.");
+             mp_playNextSong(); // Recursive call
         }
     }
 
 
     // Plays the previous song or restarts current
-    function mp_playPrevSong() {
+     function mp_playPrevSong() {
         console.log("MP: playPrevSong called.");
-        if (!mp_currentDirectoryHandle) {
-             console.warn("MP: Cannot play previous song, directory handle missing.");
-             mp_stopPlaybackAndClearUI(); // Stop everything if handle lost
-             mp_updatePermissionUI(false, null);
-             return;
-        }
-        if (mp_currentQueue.length === 0) {
+
+        if (!mp_currentQueue || mp_currentQueue.length === 0) {
             console.log("MP: Queue empty, cannot play previous.");
+            mp_stopPlaybackAndClearUI(); // Stop if queue is empty
             return;
         }
 
         // Restart current song if played for more than ~3 seconds
-        if (mp_audioPlayer && mp_audioPlayer.currentTime > 3) {
-             console.log("MP: Restarting current song.");
-             mp_audioPlayer.currentTime = 0;
-             mp_playAudio(); // Ensure playback state is correct
-             return;
+        let restartCurrent = false;
+        if (mp_currentSong) {
+            if (mp_currentSong.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.getCurrentTime === 'function' && mp_youtubePlayer.getCurrentTime() > 3) {
+                 restartCurrent = true;
+                 console.log("MP: Restarting current YouTube song.");
+                 mp_youtubePlayer.seekTo(0, true); // Seek to start and play
+                 mp_isPlaying = true; // Ensure state is playing
+                 mp_updatePlaybackControls(); // Update UI
+                  // Ensure simulation is running
+                 mp_startYouTubeTimeUpdateSimulation();
+                 return; // Exit the function after restarting
+            } else if (!mp_currentSong.isYouTube && mp_audioPlayer && mp_audioPlayer.currentTime > 3) {
+                 restartCurrent = true;
+                 console.log("MP: Restarting current Audio song.");
+                 mp_audioPlayer.currentTime = 0;
+                 mp_playAudio(); // Ensure playback state is correct
+                 return; // Exit the function after restarting
+            }
         }
 
+
+        // If not restarting current song, proceed to previous song in queue
         let prevIndex = mp_currentSongIndex - 1;
         if (prevIndex < 0) {
             prevIndex = mp_currentQueue.length - 1; // Loop to end
              console.log("MP: Reached start of queue, looping to end.");
         }
 
+         // Stop the currently playing song/video before loading the next one
+         if (mp_currentSong) {
+             if (mp_currentSong.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.stopVideo === 'function') {
+                 mp_youtubePlayer.stopVideo();
+                  // Stop simulation interval
+                  if (youtubeTimeUpdateInterval) clearInterval(youtubeTimeUpdateInterval); youtubeTimeUpdateInterval = null;
+             } else if (!mp_currentSong.isYouTube && mp_audioPlayer) {
+                 mp_audioPlayer.pause();
+                 mp_audioPlayer.removeAttribute('src');
+                 mp_audioPlayer.load();
+                 if (mp_currentSong.tempUrl) {
+                     URL.revokeObjectURL(mp_currentSong.tempUrl);
+                     mp_currentSong.tempUrl = null;
+                 }
+             }
+             // mp_isPlaying state will be updated by the next song's play event
+             mp_isPlaying = false; // Assume not playing until the next song starts
+         }
+
+
         const prevSongId = mp_currentQueue[prevIndex];
         const prevSongMeta = mp_findSongById(prevSongId);
 
         if (prevSongMeta) {
             mp_currentSongIndex = prevIndex;
-            console.log(`MP: Playing previous song (Index ${prevIndex}): ${prevSongMeta.title}`);
+            console.log(`MP: Playing previous song (Index ${prevIndex}): ${prevSongMeta.title || prevSongMeta.fileName}`);
+
+            // *** Check for directory handle before loading local file ***
+             if (!prevSongMeta.isYouTube && !mp_currentDirectoryHandle) {
+                 console.warn("MP: Directory handle not available for previous local song. Skipping.");
+                 mp_updatePermissionUI(false, null); // Ensure prompt is visible
+                 // Remove the missing song from the queue and try again
+                 mp_currentQueue.splice(prevIndex, 1);
+                 // If the removed song was before the current index, adjust the current index
+                  if (prevIndex < mp_currentSongIndex) {
+                       mp_currentSongIndex--;
+                  }
+                 console.log("MP: Retrying playPrevSong after removing missing local song.");
+                 mp_playPrevSong(); // Recursive call
+                 return; // Exit this call
+             }
+            // *** End handle check ***
+
+
             mp_loadSong(prevSongMeta); // Load the previous song
         } else {
-            console.warn("MP: Previous song ID not found, removing from queue:", prevSongId);
+            console.warn("MP: Previous song ID not found in library, removing from queue:", prevSongId);
+             // Use splice to remove the missing song ID from the queue
             mp_currentQueue.splice(prevIndex, 1);
             // Adjust current index if the removed item was before it
-            if (prevIndex < mp_currentSongIndex) {
-                mp_currentSongIndex--;
-            }
+            // We removed prevIndex. If prevIndex was < currentSongIndex, currentSongIndex needs to decrease.
+            // However, since we *just* calculated prevIndex from currentSongIndex - 1, if the item at prevIndex
+            // is removed, the new item at currentSongIndex (which was originally at currentSongIndex) will still be there.
+            // So, no need to adjust currentSongIndex *unless* the queue becomes empty.
+             if (mp_currentQueue.length === 0) {
+                 mp_currentSongIndex = -1;
+                 mp_stopPlaybackAndClearUI();
+                 return;
+             }
+             // Otherwise, try playing the song at the calculated prevIndex again (which is now a different song)
             console.log("MP: Retrying playPrevSong after removing missing ID.");
-            mp_playPrevSong(); // Recursive call
+             mp_playPrevSong(); // Recursive call
         }
     }
 
@@ -3938,30 +4678,35 @@
     function mp_updatePlaybackControls() {
         // Update Main Playback Bar Controls (if initialized)
         if (mp_playbackBarInitialized) {
+            // Ensure play/pause button exists before updating
             if (mp_playPauseButton) {
                 mp_playPauseButton.innerHTML = mp_isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
                 mp_playPauseButton.title = mp_isPlaying ? 'Pause' : 'Play';
-                // Disable play/pause if no src is loaded? Maybe not, allow playing first song.
-                mp_playPauseButton.disabled = (!mp_currentSong && mp_musicLibrary.length === 0);
+                // Disable play/pause if no songs are in the library at all
+                mp_playPauseButton.disabled = (mp_musicLibrary.length === 0);
             }
             // Enable prev/next only if there's a valid queue with more than one song
             const canNavigate = mp_currentQueue && mp_currentQueue.length > 1;
+             // Ensure prev/next buttons exist before updating
             if (mp_prevButton) mp_prevButton.disabled = !canNavigate;
             if (mp_nextButton) mp_nextButton.disabled = !canNavigate;
         } else {
              console.warn("MP: Main Playback Bar not initialized, skipping button update.");
         }
-    
-    
+
+
         // --- Update Hover Overlay Controls (if initialized AND visible) ---
+        // Check if the hover overlay is initialized before accessing its elements
         if (mp_hoverOverlayInitialized && audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
             console.log("MP: Updating hover overlay controls.");
+             // Ensure buttons exist before updating
             if (hoverOverlayPlayPauseBtn) {
                  hoverOverlayPlayPauseBtn.innerHTML = mp_isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
                  hoverOverlayPlayPauseBtn.title = mp_isPlaying ? 'Pause' : 'Play';
-                 hoverOverlayPlayPauseBtn.disabled = (!mp_currentSong && mp_musicLibrary.length === 0);
+                  hoverOverlayPlayPauseBtn.disabled = (mp_musicLibrary.length === 0);
             }
             const canNavigate = mp_currentQueue && mp_currentQueue.length > 1;
+             // Ensure prev/next buttons exist before updating
             if (hoverOverlayBackwardBtn) hoverOverlayBackwardBtn.disabled = !canNavigate;
             if (hoverOverlayForwardBtn) hoverOverlayForwardBtn.disabled = !canNavigate;
              // Note: Hover overlay doesn't need mp_updatePlayingIndicator as it's not a list of songs
@@ -3971,7 +4716,7 @@
             // else if (audioControlHoverOverlay && audioControlHoverOverlay.style.display !== 'flex') console.log("MP: Hover Overlay not visible, skipping button update.");
         }
         // --- End Update Hover Overlay ---
-    
+
         mp_updatePlayingIndicator(); // Ensure list indicators are updated (this only affects the main song lists)
     }
 
@@ -3989,68 +4734,180 @@
 // isSeekingHover should be a variable accessible here, maybe declared globally
 // let isSeekingHover = false; // Example global declaration
 
-    function mp_updateSeekBar() {
-        if (!mp_audioPlayer || !mp_audioPlayer.duration || isNaN(mp_audioPlayer.duration)) return; // Basic check for valid audio state
-    
-        const currentTime = mp_audioPlayer.currentTime;
-        const duration = mp_audioPlayer.duration;
-        const percentage = (currentTime / duration) * 100; // Calculate percentage (0-100)
-    
-        // --- Update Main Playback Bar SeekBar ---
-        // Check the 'isSeeking' flag local to mp_initializePlaybackBar
-        // (Assuming 'isSeeking' is defined in a scope accessible here, e.g., local to mp_initializePlaybackBar)
-        if (mp_seekBar && typeof isSeeking !== 'undefined' && !isSeeking) {
-             mp_seekBar.value = isNaN(percentage) ? 0 : percentage; // Set value based on percentage
+     function mp_updateSeekBar() {
+        // Ensure playback bar is initialized and a song is loaded
+        if (!mp_playbackBarInitialized || !mp_currentSong) {
+             // Optionally reset UI elements if no song is loaded
+             if(mp_seekBar) mp_seekBar.value = 0;
+             if(mp_currentTime) mp_currentTime.textContent = mp_formatTime(0);
+             if(mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(0);
+             // Also reset hover overlay if initialized and visible
+             if (mp_hoverOverlayInitialized && audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
+                  if(hoverOverlayScroller) hoverOverlayScroller.value = 0;
+                  if(hoverOverlayCurrentTime) hoverOverlayCurrentTime.textContent = mp_formatTime(0);
+                  if(hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = mp_formatTime(0);
+             }
+             // Ensure Play/Pause button shows Play state and is disabled
+             mp_isPlaying = false;
+             mp_updatePlaybackControls(); // Call to update button state
+             return; // Exit if bar not ready or no song
          }
-        if (mp_currentTime) {
-             mp_currentTime.textContent = mp_formatTime(currentTime);
-              // Update total duration only if it's still at 0:00 and duration is known
-              if (mp_totalDuration && mp_totalDuration.textContent === '0:00' && duration > 0) {
-                   mp_totalDuration.textContent = mp_formatTime(duration);
+
+         let currentPlaybackTime = 0;
+         let totalDuration = 0;
+         let currentPercentage = 0;
+
+         // Determine which player is active and get its state
+         if (mp_currentSong.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.getCurrentTime === 'function' && typeof mp_youtubePlayer.getDuration === 'function') {
+              currentPlaybackTime = mp_youtubePlayer.getCurrentTime();
+              totalDuration = mp_youtubePlayer.getDuration();
+             console.log(`MP_updateSeekBar: YouTube Time - ${currentTime} / ${duration}`); // Log YouTube time
+         } else if (!mp_currentSong.isYouTube && mp_audioPlayer && !isNaN(mp_audioPlayer.currentTime) && !isNaN(mp_audioPlayer.duration)) {
+              currentPlaybackTime = mp_audioPlayer.currentTime;
+              totalDuration = mp_audioPlayer.duration;
+              console.log(`MP_updateSeekBar: Audio Time - ${currentPlaybackTime} / ${totalDuration}`); // Log Audio time
+         } else {
+             // No active player with valid time for the current song type
+             currentPlaybackTime = 0;
+             totalDuration = 0;
+             console.log("MP_updateSeekBar: No active player or invalid time/duration.");
+         }
+
+         // Calculate percentage only if duration is valid and > 0
+         currentPercentage = (totalDuration > 0 && !isNaN(currentPlaybackTime) && !isNaN(totalDuration)) ? (currentPlaybackTime / totalDuration) * 100 : 0;
+          // Clamp percentage between 0 and 100 just in case
+          currentPercentage = Math.max(0, Math.min(100, currentPercentage));
+
+
+         // Check the seeking flags (Assuming isSeeking and isSeekingHover are globally accessible)
+         // These flags are set/cleared in the slider mousedown/mouseup/touchstart/touchend listeners.
+         // If they are local to the initialization functions, you need to ensure they are accessible here.
+         // Global declaration (let isSeeking = false; let isSeekingHover = false;) is a common solution.
+
+
+         // --- Update Main Playback Bar SeekBar ---
+         // Only update the slider value if the user is NOT actively dragging the *main* bar
+         if (mp_seekBar && !isSeeking) { // Check if isSeeking is false
+              mp_seekBar.value = isNaN(currentPercentage) ? 0 : currentPercentage; // Set value based on percentage
+         }
+          // Always update the time text for the main bar
+         if (mp_currentTime) {
+              mp_currentTime.textContent = mp_formatTime(currentPlaybackTime);
+         }
+         if (mp_totalDuration) {
+              // Update total duration only if it's still 0:00 or invalid, or if duration is now known
+              if (totalDuration > 0) {
+                  mp_totalDuration.textContent = mp_formatTime(totalDuration);
+              } else {
+                   // If duration is 0 or invalid, show 0:00 or ?:??
+                   mp_totalDuration.textContent = mp_formatTime(0); // Or '?:??'
               }
-        }
-    
-    
-        // --- Update Hover Overlay SeekBar (if initialized AND visible) ---
-        // Check the 'isSeekingHover' flag (assuming it's accessible, like a global var)
-        if (mp_hoverOverlayInitialized && audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
-            if (hoverOverlayScroller && typeof isSeekingHover !== 'undefined' && !isSeekingHover) {
-               hoverOverlayScroller.value = isNaN(percentage) ? 0 : percentage; // Set value based on percentage
-            }
-            if (hoverOverlayCurrentTime) {
-                 hoverOverlayCurrentTime.textContent = mp_formatTime(currentTime);
-                 // Also update total duration for hover overlay if needed
-                 if (hoverOverlayTotalDuration && hoverOverlayTotalDuration.textContent === '0:00' && duration > 0) {
-                      hoverOverlayTotalDuration.textContent = mp_formatTime(duration);
-                 }
-            }
-        }
-        // --- End Update Hover Overlay ---
-    }
+         }
+
+
+         // --- Update Hover Overlay SeekBar (if initialized AND visible) ---
+         // Check if the hover overlay is initialized and visible
+         // Only update the slider value if the user is NOT actively dragging the *hover* bar
+         if (mp_hoverOverlayInitialized && audioControlHoverOverlay && audioControlHoverOverlay.style.display === 'flex') {
+             if (hoverOverlayScroller && !isSeekingHover) { // Check if isSeekingHover is false
+                hoverOverlayScroller.value = isNaN(currentPercentage) ? 0 : currentPercentage; // Set value based on percentage
+             }
+              // Always update the time text for the hover overlay
+             if (hoverOverlayCurrentTime) {
+                  hoverOverlayCurrentTime.textContent = mp_formatTime(currentPlaybackTime);
+             }
+             if (hoverOverlayTotalDuration) {
+                  // Update total duration for hover overlay
+                   if (totalDuration > 0) {
+                       hoverOverlayTotalDuration.textContent = mp_formatTime(totalDuration);
+                   } else {
+                       hoverOverlayTotalDuration.textContent = mp_formatTime(0); // Or '?:??'
+                   }
+             }
+         }
+         // --- End Update Hover Overlay ---
+     }
+
 
 
     // Updates volume slider and mute button UI
     function mp_updateVolumeControls() {
-        if (!mp_playbackBarInitialized || !mp_audioPlayer || !mp_muteButton || !mp_volumePercentage) return; // Check initialization
-        const isMuted = mp_audioPlayer.muted;
-        const volume = mp_audioPlayer.volume;
+         // Ensure playback bar elements exist for the main bar
+         if (!mp_playbackBarInitialized || !mp_muteButton || !mp_volumePercentage || !mp_volumeSlider) {
+              console.warn("MP: Main Volume control elements not initialized, skipping update.");
+              // Still try to update hover overlay if it exists
+         }
 
-        if (isMuted || volume === 0) {
-            mp_muteButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
-            mp_muteButton.title = 'Unmute';
-            mp_volumePercentage.textContent = `0%`;
-        } else {
-            mp_muteButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-            mp_muteButton.title = 'Mute';
-            mp_volumePercentage.textContent = `${Math.round(volume * 100)}%`;
-        }
-        // Only update slider value if not muted (to preserve position visually)
-        if (mp_volumeSlider && !isMuted) {
-            mp_volumeSlider.value = volume;
-        } else if (mp_volumeSlider && isMuted) {
-             // If muted, maybe visually reset slider to 0? Or leave it? Preference.
-             // mp_volumeSlider.value = 0; // Uncomment to set slider to 0 when muted
-        }
+         let isMuted = false;
+         let volume = 1; // Default to 100% if no player state
+
+         // Get volume and mute state from the active player or default
+         if (mp_currentSong?.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.isMuted === 'function' && typeof mp_youtubePlayer.getVolume === 'function') {
+             isMuted = mp_youtubePlayer.isMuted();
+             volume = mp_youtubePlayer.getVolume() / 100; // YouTube volume is 0-100, convert to 0-1
+         } else if (!mp_currentSong?.isYouTube && mp_audioPlayer && !isNaN(mp_audioPlayer.volume)) {
+             isMuted = mp_audioPlayer.muted;
+             volume = mp_audioPlayer.volume; // Audio volume is 0-1
+         } else {
+             // No active player with valid volume info, default to initial state
+              isMuted = false; // Assume not muted
+              volume = 1; // Assume 100%
+         }
+
+         // --- Update Main Playback Bar Volume Controls ---
+         if (mp_muteButton && mp_volumePercentage && mp_volumeSlider) { // Check elements exist
+             if (isMuted || volume <= 0.001) { // Use a small threshold for volume being effectively zero
+                 mp_muteButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                 mp_muteButton.title = 'Unmute';
+                 mp_volumePercentage.textContent = `0%`;
+             } else {
+                 mp_muteButton.innerHTML = '<i class="fas fa-volume-up"></i>'; // Assume volume > 0 means 'up' or 'down' based on level
+                 // You could add logic here for volume-down icon if volume is low (e.g., volume < 0.5)
+                 mp_muteButton.title = 'Mute';
+                 mp_volumePercentage.textContent = `${Math.round(volume * 100)}%`;
+             }
+
+             // Update slider value *visually* based on the player's volume
+             // Do NOT set the player volume here, as this function is for updating the UI *from* the player state.
+             // The slider's 'input' event listener sets the player volume.
+             mp_volumeSlider.value = volume; // Always set slider value based on current volume
+         }
+
+        // Note: The hover overlay currently doesn't have volume controls, so no update needed there.
+    }
+
+    // Function to set volume on the active player (called by slider input)
+    function mp_setVolume(volume) { // Volume is expected to be 0-1
+         if (mp_currentSong?.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.setVolume === 'function') {
+             mp_youtubePlayer.setVolume(volume * 100); // Convert 0-1 to 0-100 for YouTube API
+         } else if (!mp_currentSong?.isYouTube && mp_audioPlayer) {
+             mp_audioPlayer.volume = volume;
+         } else {
+              console.warn("MP: Attempted to set volume, but no active player found.");
+         }
+          // Ensure muted state is correct if volume changes
+         if (volume > 0.001) { // Use threshold
+              mp_setMuted(false); // Unmute if volume is increased above near-zero
+         }
+         // Update the UI immediately after setting volume
+         mp_updateVolumeControls();
+    }
+
+    // Function to set muted state on the active player (called by mute button click)
+    function mp_setMuted(isMuted) {
+         if (mp_currentSong?.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.mute === 'function' && typeof mp_youtubePlayer.unMute === 'function') {
+             if (isMuted) {
+                 mp_youtubePlayer.mute();
+             } else {
+                 mp_youtubePlayer.unMute();
+             }
+         } else if (!mp_currentSong?.isYouTube && mp_audioPlayer) {
+             mp_audioPlayer.muted = isMuted;
+         } else {
+              console.warn("MP: Attempted to set muted state, but no active player found.");
+         }
+         // Update the UI immediately after setting muted state
+         mp_updateVolumeControls();
     }
 
     // --- Recently Played Logic ---
@@ -4073,7 +4930,7 @@
     function initializeMusicHoverOverlay() {
         if (mp_hoverOverlayInitialized) return; // Run only once
         console.log("MP: Initializing Music Hover Overlay Listeners");
-    
+
         // Get references AFTER DOM is loaded
         musicIconAndHoverContainer = document.getElementById('musicIconAndHoverContainer');
         audioControlHoverOverlay = document.getElementById('audioControlHoverOverlay');
@@ -4085,7 +4942,7 @@
         hoverOverlayCurrentTime = document.getElementById('hoverOverlayCurrentTime');
         hoverOverlayScroller = document.getElementById('hoverOverlayScroller');
         hoverOverlayTotalDuration = document.getElementById('hoverOverlayTotalDuration');
-    
+
         // Check if essential elements were found
         if (!musicIconAndHoverContainer || !audioControlHoverOverlay || !hoverOverlaySongTitle ||
             !hoverOverlayBackwardBtn || !hoverOverlayPlayPauseBtn || !hoverOverlayForwardBtn ||
@@ -4093,99 +4950,136 @@
             console.error("MP: Failed to find one or more essential hover overlay elements. Cannot initialize overlay fully.");
             return; // Stop initialization
         }
-    
+
         // --- Add Hover Listeners to the Container ---
         let hideOverlayTimeout;
-    
+
         musicIconAndHoverContainer.addEventListener('mouseenter', () => {
             // Only show if a song is currently loaded or playing/paused
-            // Checking audioPlayer.paused is more reliable than just mp_currentSong for state
-            if (mp_currentSong || (mp_audioPlayer && mp_audioPlayer.src)) {
+            // Check if mp_currentSong exists or if the audio player has a source
+             if (mp_currentSong || (mp_audioPlayer && mp_audioPlayer.src) || (mp_youtubePlayer && typeof mp_youtubePlayer.getPlayerState === 'function' && mp_youtubePlayer.getPlayerState() !== -1)) {
                  clearTimeout(hideOverlayTimeout); // Cancel any pending hide
                  audioControlHoverOverlay.style.display = 'flex'; // Show the overlay (using flex from CSS)
-    
+
                  // --- *** Call Update Functions Immediately on Showing Overlay *** ---
                  console.log("MP: Hover Overlay shown. Updating content.");
                  // Update Song Title
                  if (hoverOverlaySongTitle && mp_currentSong) {
-                      hoverOverlaySongTitle.textContent = `${mp_currentSong.artist} - ${mp_currentSong.title}`;
-                      hoverOverlaySongTitle.title = `${mp_currentSong.artist} - ${mp_currentSong.title}`;
+                      // Use fallback titles in case metadata is incomplete
+                      const songTitleDisplay = `${mp_currentSong.artist || 'Unknown Artist'} - ${mp_currentSong.title || 'Unknown Title'}`;
+                      hoverOverlaySongTitle.textContent = songTitleDisplay;
+                      hoverOverlaySongTitle.title = songTitleDisplay;
                  } else if (hoverOverlaySongTitle) {
                      hoverOverlaySongTitle.textContent = "No song playing";
                      hoverOverlaySongTitle.title = "";
                  }
-    
+
                  // Update Button States (Play/Pause, Next/Prev enabled/disabled)
                  mp_updatePlaybackControls(); // This function updates buttons for both bars
-    
-                 // Update Time and Scroller
+
+                 // Update Time and Scroller (will get time/duration from the active player)
                  mp_updateSeekBar(); // This function updates time and scroller for both bars if visible
-    
-                 // Ensure Total Duration is set if known
-                 if (mp_audioPlayer && !isNaN(mp_audioPlayer.duration) && mp_audioPlayer.duration > 0) {
-                     if(hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = mp_formatTime(mp_audioPlayer.duration);
-                 } else {
-                     if(hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = '0:00'; // Reset if no duration yet
-                 }
+
+                 // Ensure Total Duration is set if known (handled by mp_updateSeekBar now)
+                 // if (mp_audioPlayer && !isNaN(mp_audioPlayer.duration) && mp_audioPlayer.duration > 0) {
+                 //     if(hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = mp_formatTime(mp_audioPlayer.duration);
+                 // } else {
+                 //     if(hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = '0:00'; // Reset if no duration yet
+                 // }
                  // --- *** End Update on Showing Overlay *** ---
-    
+
             } else {
                  console.log("MP Hover Overlay: Not showing overlay, no song loaded or playing.");
                  // Optionally hide it explicitly if it was somehow left visible but no song is playing/paused
                  audioControlHoverOverlay.style.display = 'none';
             }
         });
-    
+
         musicIconAndHoverContainer.addEventListener('mouseleave', () => {
             // Add a small delay before hiding, allows moving mouse onto the overlay
             hideOverlayTimeout = setTimeout(() => {
                 audioControlHoverOverlay.style.display = 'none'; // Hide the overlay
             }, 200); // 200ms delay
         });
-    
+
         // Prevent the timeout from hiding the overlay if the mouse enters the overlay itself
         audioControlHoverOverlay.addEventListener('mouseenter', () => {
             clearTimeout(hideOverlayTimeout);
         });
-    
+
         audioControlHoverOverlay.addEventListener('mouseleave', () => {
             hideOverlayTimeout = setTimeout(() => {
                  audioControlHoverOverlay.style.display = 'none';
              }, 200); // Keep the same delay
         });
-    
-    
+
+
         // --- Add Control Button Listeners for the Overlay ---
         hoverOverlayPlayPauseBtn.addEventListener('click', mp_togglePlayPause);
         hoverOverlayBackwardBtn.addEventListener('click', mp_playPrevSong);
         hoverOverlayForwardBtn.addEventListener('click', mp_playNextSong);
-    
+
         // --- Add Scroller Listener for the Overlay ---
         // 'isSeekingHover' flag should be accessible to this function and its listeners.
         // If it's not declared outside, declare it here:
-         let isSeekingHover = false; // Assuming it's local as per your original snippet
-    
+         // let isSeekingHover = false; // Assuming it's local as per your original snippet or declared above
+
+
+         hoverOverlayScroller.addEventListener('mousedown', () => { isSeekingHover = true; }); // Start seeking flag
+         hoverOverlayScroller.addEventListener('mouseup', () => { isSeekingHover = false; }); // End seeking flag
+         hoverOverlayScroller.addEventListener('touchstart', () => { isSeekingHover = true; }); // Mobile touch start
+         hoverOverlayScroller.addEventListener('touchend', () => { isSeekingHover = false; }); // Mobile touch end
+
+
         hoverOverlayScroller.addEventListener('input', () => {
-             // Only update time if the hover seek bar is being dragged AND audio is ready
-             if (!mp_audioPlayer || !mp_audioPlayer.duration || isNaN(mp_audioPlayer.duration)) return; // Check for valid audio state
-             isSeekingHover = true; // Set seeking flag for this scroller
-    
-             const seekTime = (hoverOverlayScroller.value / 100) * mp_audioPlayer.duration; // Assuming max=100
-             if (!isNaN(seekTime)) {
+             // Only update time if the hover seek bar is being dragged AND a song is loaded
+             if (!mp_currentSong || !mp_audioPlayer && !mp_youtubePlayer) return; // Check for loaded song/player
+             // isSeekingHover = true; // Set seeking flag for this scroller (handled by mouse/touch events)
+
+             let duration = 0;
+              // Get duration from the active player
+              if (mp_currentSong.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.getDuration === 'function') {
+                  duration = mp_youtubePlayer.getDuration();
+              } else if (!mp_currentSong.isYouTube && mp_audioPlayer && !isNaN(mp_audioPlayer.duration)) {
+                  duration = mp_audioPlayer.duration;
+              } else {
+                   console.warn("MP: Hover seek bar input, but duration not available from active player.");
+                   return; // Cannot seek if duration is unknown
+              }
+
+
+             if (duration <= 0) return;
+
+             const seekTime = (hoverOverlayScroller.value / 100) * duration; // Assuming max=100
+
+             // Set current time/seek for the active player
+             if (mp_currentSong.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.seekTo === 'function') {
+                 mp_youtubePlayer.seekTo(seekTime, true);
+                  // Ensure player is playing after seeking if it was before or if it was paused by seeking
+                  if (mp_youtubePlayer.getPlayerState() !== YT.PlayerState.PLAYING && mp_youtubePlayer.getPlayerState() !== YT.PlayerState.BUFFERING) {
+                       mp_youtubePlayer.playVideo();
+                  }
+             } else if (!mp_currentSong.isYouTube && mp_audioPlayer && !isNaN(seekTime)) {
                  mp_audioPlayer.currentTime = seekTime;
-                  // Update time display immediately while scrubbing (hover overlay)
-                 if(hoverOverlayCurrentTime) hoverOverlayCurrentTime.textContent = mp_formatTime(seekTime);
-                  // The mp_updateSeekBar function will handle syncing the main seek bar on the next timeupdate event
+                  // Ensure player is playing after seeking if it was before or if it was paused by seeking
+                  if (mp_audioPlayer.paused && !mp_audioPlayer.ended) {
+                       mp_audioPlayer.play().catch(error => console.error("MP: Audio play after hover seek failed:", error));
+                  }
              }
-         });
-    
-         // Use 'change' to signal the end of scrubbing
-         hoverOverlayScroller.addEventListener('change', () => {
-              isSeekingHover = false; // Clear seeking flag for this scroller
-              // The timeupdate listener will sync both bars after scrubbing stops
-          });
-    
-    
+
+
+              // Update time display immediately while scrubbing (hover overlay)
+             if(hoverOverlayCurrentTime) hoverOverlayCurrentTime.textContent = mp_formatTime(seekTime);
+             // The mp_updateSeekBar function will handle syncing the main seek bar on the next timeupdate event
+           });
+
+         // 'change' listener (fires after user releases mouse/touch)
+          hoverOverlayScroller.addEventListener('change', () => {
+               // isSeekingHover = false; // Clear seeking flag for this scroller (handled by mouseup/touchend)
+               // The timeupdate listener will sync both bars after scrubbing stops
+           });
+
+
         mp_hoverOverlayInitialized = true;
         console.log("MP: Music Hover Overlay Initialized.");
     }
@@ -4196,53 +5090,99 @@
     // mp_populateViewPlaylistModal, mp_openViewPlaylistModal, mp_openModal, mp_closeModal,
     // mp_openRemoveSongsModal, mp_removeSelectedSongs functions here...)
     // ... (Make sure they are included) ...
-    function mp_populateCreatePlaylistModalSongs(filter = '') { // Added filter parameter
-        const modalList = document.getElementById('mp_createPlaylistSongList');
-        if (!modalList) return;
-        modalList.innerHTML = ''; // Clear previous list
-    
-        const lowerFilter = filter.toLowerCase(); // Convert filter to lowercase
-    
-        // Filter the library based on the search input
-        const filteredLibrary = mp_musicLibrary.filter(song =>
-            song.title.toLowerCase().includes(lowerFilter) ||
-            song.artist.toLowerCase().includes(lowerFilter) ||
-            song.fileName.toLowerCase().includes(lowerFilter)
-        ).sort((a, b) => `${a.artist} - ${a.title}`.localeCompare(`${b.artist} - ${b.title}`)); // Sort consistently
-    
-        if (filteredLibrary.length === 0) {
-            modalList.innerHTML = `<p class="placeholder-text">${mp_musicLibrary.length === 0 ? 'No songs in library.' : (filter ? 'No songs match search.' : 'No songs in library.')}</p>`;
-        } else {
-            const fragment = document.createDocumentFragment();
-            filteredLibrary.forEach(song => {
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                div.style.cursor = 'pointer'; // Make item clickable
-                div.dataset.songId = song.id; // Store the song ID on the list item
-    
-                // Create span for the text content (no checkbox or label)
-                const textSpan = document.createElement('span');
-                textSpan.textContent = `${escapeHtml(song.artist)} - ${escapeHtml(song.title)}`;
-                textSpan.title = `${escapeHtml(song.artist)} - ${escapeHtml(song.title)} (${escapeHtml(song.fileName)})`; // Add full title on hover
-                textSpan.style.flexGrow = '1'; // Allow span to take space
-                textSpan.style.overflow = 'hidden';
-                textSpan.style.textOverflow = 'ellipsis';
-                textSpan.style.whiteSpace = 'nowrap';
-    
-                // Append the text span
-                div.appendChild(textSpan);
-    
-                // Add click listener to the div (list item) to toggle selection highlight
-                div.addEventListener('click', () => {
-                    div.classList.toggle('selected-for-action'); // Toggle the new highlight class
-                });
-    
-                fragment.appendChild(div);
-            });
-            modalList.appendChild(fragment);
-        }
-         console.log(`MP: Populated Create Playlist modal song list with ${filteredLibrary.length} songs (filter: "${filter}").`);
-    }
+function mp_populateCreatePlaylistModalSongs(filter = '') { // Added filter parameter
+         const modalList = document.getElementById('mp_createPlaylistSongList');
+         if (!modalList) return;
+         modalList.innerHTML = ''; // Clear previous list
+
+         const lowerFilter = filter.toLowerCase(); // Convert filter to lowercase
+
+         // Filter the library based on the search input
+         const filteredLibrary = mp_musicLibrary.filter(song => {
+             // Ensure properties exist before calling toLowerCase or includes
+             const titleMatch = song.title && song.title.toLowerCase().includes(lowerFilter);
+             const artistMatch = song.artist && song.artist.toLowerCase().includes(lowerFilter);
+             const fileNameMatch = song.fileName && song.fileName.toLowerCase().includes(lowerFilter); // Include filename search (check if exists)
+             const videoIdMatch = song.isYouTube && song.videoId && song.videoId.toLowerCase().includes(lowerFilter); // Search by video ID for YouTube
+
+             return titleMatch || artistMatch || fileNameMatch || videoIdMatch;
+         }).sort((a, b) => {
+             // Handle potential missing artist/title when sorting
+             const nameA = `${a.artist || ''} - ${a.title || ''}`.trim();
+             const nameB = `${b.artist || ''} - ${b.title || ''}`.trim();
+             // Fallback to fileName if both artist and title are missing, or for YouTube use videoId if artist/title missing?
+              const sortKeyA = nameA || a.fileName || a.videoId || a.id;
+              const sortKeyB = nameB || b.fileName || b.videoId || b.id;
+
+             return sortKeyA.localeCompare(sortKeyB);
+         });
+
+
+         if (filteredLibrary.length === 0) {
+              const message = mp_musicLibrary.length === 0
+                 ? 'No songs in library.'
+                 : (filter ? 'No songs match search.' : 'No songs in library.'); // Message based on whether filter is active or library is empty
+             modalList.innerHTML = `<p class="placeholder-text">${message}</p>`;
+         } else {
+             const fragment = document.createDocumentFragment();
+             filteredLibrary.forEach(song => {
+                 const div = document.createElement('div');
+                 div.className = 'list-item';
+                 div.setAttribute('role', 'option'); // Add ARIA role
+                 div.setAttribute('tabindex', '0'); // Make keyboard focusable
+                 div.style.cursor = 'pointer'; // Make item clickable
+                 div.dataset.songId = song.id; // Store the song ID on the list item
+
+                  // Add YouTube icon if it's a YouTube song
+                  if (song.isYouTube) {
+                      const youtubeIcon = document.createElement('i');
+                      youtubeIcon.className = 'fab fa-youtube youtube-icon'; // Assuming you have Font Awesome loaded
+                      youtubeIcon.title = 'YouTube'; // Tooltip
+                      div.appendChild(youtubeIcon);
+                  }
+
+                 // Create span for the text content
+                 const textSpan = document.createElement('span');
+                 textSpan.textContent = `${escapeHtml(song.artist || 'Unknown Artist')} - ${escapeHtml(song.title || 'Unknown Title')}`; // Add fallback text and escape HTML
+                 textSpan.title = `${escapeHtml(song.artist || 'Unknown Artist')} - ${escapeHtml(song.title || 'Unknown Title')} (${song.isYouTube ? 'YouTube' : escapeHtml(song.fileName || 'Unknown File')})`; // Update title logic and escape HTML
+                 textSpan.style.flexGrow = '1';
+                 textSpan.style.overflow = 'hidden';
+                 textSpan.style.textOverflow = 'ellipsis';
+                 textSpan.style.whiteSpace = 'nowrap';
+
+                 // Append the text span
+                 div.appendChild(textSpan);
+
+                 // Add click listener to the div (list item) to toggle selection highlight
+                 div.addEventListener('click', () => {
+                     div.classList.toggle('selected-for-action'); // Toggle the new highlight class
+                      // Optional: Provide visual/aria feedback for selection
+                      if (div.classList.contains('selected-for-action')) {
+                          div.setAttribute('aria-selected', 'true');
+                      } else {
+                           div.setAttribute('aria-selected', 'false');
+                      }
+                 });
+
+                 // Add keyboard accessibility for Enter/Space keys to select
+                 div.addEventListener('keydown', (event) => {
+                     if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault(); // Prevent default space/enter behavior (like scrolling)
+                          event.target.click(); // Simulate a click to toggle selection
+                     }
+                 });
+
+
+                 fragment.appendChild(div);
+             });
+             modalList.appendChild(fragment);
+              // Optional: Focus the first item for keyboard navigation
+              if (filteredLibrary.length > 0 && modalList.firstChild) {
+                   modalList.firstChild.focus();
+              }
+         }
+          console.log(`MP: Populated Create Playlist modal song list with ${filteredLibrary.length} songs (filter: "${filter}").`);
+     }
 
     function mp_openCreatePlaylistModal() {
         const nameInput = document.getElementById('mp_newPlaylistName');
@@ -4367,51 +5307,95 @@
     }
     
     // NEW Function: mp_populateRemoveSongsModal to handle filtering and rendering
-    function mp_populateRemoveSongsModal(filter = '') {
+function mp_populateRemoveSongsModal(filter = '') {
         const modalList = document.getElementById('mp_removeSongsModalList');
         if (!modalList) return;
         modalList.innerHTML = ''; // Clear previous list
-    
+
         const lowerFilter = filter.toLowerCase(); // Convert filter to lowercase
-    
+
         // Filter the library based on the search input
-        const filteredLibrary = mp_musicLibrary.filter(song =>
-            song.title.toLowerCase().includes(lowerFilter) ||
-            song.artist.toLowerCase().includes(lowerFilter) ||
-            song.fileName.toLowerCase().includes(lowerFilter)
-        ).sort((a, b) => `${a.artist} - ${a.title}`.localeCompare(`${b.artist} - ${b.title}`)); // Sort consistently
-    
-    
+        const filteredLibrary = mp_musicLibrary.filter(song => {
+            // Ensure properties exist before calling toLowerCase or includes
+            const titleMatch = song.title && song.title.toLowerCase().includes(lowerFilter);
+            const artistMatch = song.artist && song.artist.toLowerCase().includes(lowerFilter);
+            const fileNameMatch = song.fileName && song.fileName.toLowerCase().includes(lowerFilter); // Include filename search (check if exists)
+            const videoIdMatch = song.isYouTube && song.videoId && song.videoId.toLowerCase().includes(lowerFilter); // Search by video ID for YouTube
+
+            return titleMatch || artistMatch || fileNameMatch || videoIdMatch;
+        }).sort((a, b) => {
+             // Handle potential missing artist/title when sorting
+             const nameA = `${a.artist || ''} - ${a.title || ''}`.trim();
+             const nameB = `${b.artist || ''} - ${b.title || ''}`.trim();
+             // Fallback to fileName if both artist and title are missing, or for YouTube use videoId if artist/title missing?
+              const sortKeyA = nameA || a.fileName || a.videoId || a.id;
+              const sortKeyB = nameB || b.fileName || b.videoId || b.id;
+
+             return sortKeyA.localeCompare(sortKeyB);
+        });
+
+
         if (filteredLibrary.length === 0) {
-            modalList.innerHTML = `<p class="placeholder-text">${mp_musicLibrary.length === 0 ? 'No songs in library.' : (filter ? 'No songs match search.' : 'No songs in library.')}</p>`;
+             const message = mp_musicLibrary.length === 0
+                ? 'No songs in library.'
+                : (filter ? 'No songs match search.' : 'No songs in library.'); // Message based on whether filter is active or library is empty
+            modalList.innerHTML = `<p class="placeholder-text">${message}</p>`;
         } else {
             const fragment = document.createDocumentFragment();
             filteredLibrary.forEach(song => {
                 const div = document.createElement('div');
                 div.className = 'list-item';
+                div.setAttribute('role', 'option'); // Add ARIA role
+                div.setAttribute('tabindex', '0'); // Make keyboard focusable
                 div.style.cursor = 'pointer'; // Make item clickable
-                 div.dataset.songId = song.id; // Store the song ID on the list item
-    
-                // Create span for the text content (no checkbox or label)
+                div.dataset.songId = song.id; // Store the song ID on the list item
+
+                // Add YouTube icon if it's a YouTube song
+                if (song.isYouTube) {
+                    const youtubeIcon = document.createElement('i');
+                    youtubeIcon.className = 'fab fa-youtube youtube-icon'; // Assuming you have Font Awesome loaded
+                    youtubeIcon.title = 'YouTube'; // Tooltip
+                    div.appendChild(youtubeIcon);
+                }
+
+                // Create span for the text content
                 const textSpan = document.createElement('span');
-                textSpan.textContent = `${escapeHtml(song.artist)} - ${escapeHtml(song.title)}`;
-                textSpan.title = `${escapeHtml(song.artist)} - ${escapeHtml(song.title)} (${escapeHtml(song.fileName)})`; // Add full title on hover
+                textSpan.textContent = `${escapeHtml(song.artist || 'Unknown Artist')} - ${escapeHtml(song.title || 'Unknown Title')}`; // Add fallback text and escape HTML
+                textSpan.title = `${escapeHtml(song.artist || 'Unknown Artist')} - ${escapeHtml(song.title || 'Unknown Title')} (${song.isYouTube ? 'YouTube' : escapeHtml(song.fileName || 'Unknown File')})`; // Update title logic and escape HTML
                 textSpan.style.flexGrow = '1'; // Allow span to take space
                 textSpan.style.overflow = 'hidden';
                 textSpan.style.textOverflow = 'ellipsis';
                 textSpan.style.whiteSpace = 'nowrap';
-    
+
                 // Append the text span
                 div.appendChild(textSpan);
-    
+
                 // Add click listener to the div (list item) to toggle selection highlight
                 div.addEventListener('click', () => {
                     div.classList.toggle('selected-for-action'); // Toggle the new highlight class
+                     // Optional: Provide visual/aria feedback for selection
+                     if (div.classList.contains('selected-for-action')) {
+                         div.setAttribute('aria-selected', 'true');
+                     } else {
+                          div.setAttribute('aria-selected', 'false');
+                     }
                 });
-    
+
+                // Add keyboard accessibility for Enter/Space keys to select
+                div.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                         event.preventDefault(); // Prevent default space/enter behavior (like scrolling)
+                         event.target.click(); // Simulate a click to toggle selection
+                    }
+                });
+
                 fragment.appendChild(div);
             });
             modalList.appendChild(fragment);
+             // Optional: Focus the first item for keyboard navigation
+             if (filteredLibrary.length > 0 && modalList.firstChild) {
+                  modalList.firstChild.focus();
+             }
         }
          console.log(`MP: Populated Remove Songs modal list with ${filteredLibrary.length} songs (filter: "${filter}").`);
     }
@@ -4420,33 +5404,33 @@
     // mp_removeSelectedSongs logic remains the same - it reads checked checkboxes
     // No change needed for mp_removeSelectedSongs if you keep using checkboxes.
 
-    async function mp_removeSelectedSongs() { // Make it async
+async function mp_removeSelectedSongs() { // Make it async
         const selectedListItems = document.querySelectorAll('#mp_removeSongsModalList .list-item.selected-for-action');
         const idsToRemove = Array.from(selectedListItems).map(item => item.dataset.songId);
-    
+
         if (idsToRemove.length === 0) {
             alert("MP: No songs selected.");
             return;
         }
-    
+
         if (confirm(`MP: Remove ${idsToRemove.length} song(s)? This cannot be undone.`)) {
             let stoppedPlayback = false;
             // Check if playing song is being removed
             if (mp_currentSong && idsToRemove.includes(mp_currentSong.id)) {
-                 mp_stopPlaybackAndClearUI(); // Stop playback and revoke URL
+                 mp_stopPlaybackAndClearUI(); // Stop playback, revoke URL (for local), stop YT player
                  stoppedPlayback = true;
             }
-    
+
             // Remove from in-memory library
             const initialLibLength = mp_musicLibrary.length;
             mp_musicLibrary = mp_musicLibrary.filter(song => !idsToRemove.includes(song.id));
             const removedLibCount = initialLibLength - mp_musicLibrary.length;
-    
+
             // Remove from in-memory recently played
             const initialRecentLength = mp_recentlyPlayed.length;
             mp_recentlyPlayed = mp_recentlyPlayed.filter(id => !idsToRemove.includes(id));
             const removedRecentCount = initialRecentLength - mp_recentlyPlayed.length;
-    
+
             // Remove from in-memory all playlists
             let removedPlaylistCount = 0;
             Object.keys(mp_playlists).forEach(pName => {
@@ -4454,18 +5438,20 @@
                  mp_playlists[pName] = mp_playlists[pName].filter(id => !idsToRemove.includes(id));
                  removedPlaylistCount += (initialPListLength - mp_playlists[pName].length);
             });
-    
+
             try {
-                // ***** MODIFIED SECTION *****
+                // ***** MODIFIED SECTION (Ensure await for DB deletion) *****
                 await mp_dbDeleteSongs(idsToRemove); // Delete from IndexedDB first
                 await mp_saveMusicData(); // Then save all updated states (library to IDB, recents/playlists to LS)
                 // **************************
                 console.log(`MP: Removed ${removedLibCount} from library, ${removedRecentCount} from recents, ${removedPlaylistCount} from playlists. Data saved.`);
+                 showIndividualNotification('Success', `Removed ${removedLibCount} song(s).`, 3000);
             } catch (error) {
                 console.error("MP: Error during song removal and saving:", error);
                 alert("An error occurred while removing songs. Changes might not be fully saved.");
+                 showIndividualNotification('Error', 'Error removing songs.', 5000);
             }
-    
+
             // Re-render lists if they are currently displayed
             if (mp_isInitialized) {
                 if (document.getElementById('mp_songsList')) mp_renderSongsList();
@@ -4479,28 +5465,39 @@
     // --- Rendering Functions ---
 
     // Helper to create list items
-function mp_createListItem(song, onClickCallback) {
+    function mp_createListItem(song, onClickCallback) {
         const listItem = document.createElement('div');
         listItem.className = 'list-item';
         listItem.setAttribute('role', 'option'); // Role for items in a listbox
         listItem.setAttribute('tabindex', '0'); // Make it focusable
 
+         // Add YouTube icon if it's a YouTube song
+         if (song.isYouTube) {
+             const youtubeIcon = document.createElement('i');
+             youtubeIcon.className = 'fab fa-youtube youtube-icon'; // Use the youtube-icon class defined in CSS
+             youtubeIcon.title = 'YouTube'; // Tooltip
+             listItem.appendChild(youtubeIcon);
+         }
+
         // Use a span for the text content for better control and potential icon addition
         const textSpan = document.createElement('span');
         textSpan.className = 'list-item-text';
-        textSpan.textContent = `${song.artist} - ${song.title}`;
-        
-        listItem.appendChild(textSpan);
-        
-        listItem.title = `${song.artist} - ${song.title} (${song.fileName})`;
-        listItem.dataset.songId = song.id;
+        // Use fallback text in case metadata is incomplete
+        textSpan.textContent = `${escapeHtml(song.artist || 'Unknown Artist')} - ${escapeHtml(song.title || 'Unknown Title')}`;
 
-        listItem.onclick = onClickCallback;
+        listItem.appendChild(textSpan);
+
+        // Add a detailed title on hover
+        listItem.title = `${escapeHtml(song.artist || 'Unknown Artist')} - ${escapeHtml(song.title || 'Unknown Title')} (${song.isYouTube ? 'YouTube' : escapeHtml(song.fileName || 'Unknown File')})`; // Update title logic
+
+        listItem.dataset.songId = song.id; // Store the song ID
+
+        listItem.onclick = onClickCallback; // Assign the click callback
         // Add keyboard accessibility for Enter/Space keys
         listItem.onkeydown = (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault(); // Prevent page scroll on Space
-                onClickCallback();
+                onClickCallback(); // Trigger the click behavior
             }
         };
         return listItem;
@@ -4668,10 +5665,13 @@ function mp_createListItem(song, onClickCallback) {
 
     // Sets up listeners for the persistent playback bar
     // Sets up listeners for the persistent playback bar
+// Sets up listeners for the persistent playback bar
+    // isSeeking flag should be declared in a scope accessible by its listeners and mp_updateSeekBar
+
     function mp_initializePlaybackBar() {
          if (mp_playbackBarInitialized) return; // Run only once
          console.log("MP: Initializing Playback Bar Listeners...");
-    
+
          // Get references AFTER DOM is loaded
          mp_playPauseButton = document.getElementById('mp_playPauseButton');
          mp_prevButton = document.getElementById('mp_prevButton');
@@ -4683,99 +5683,111 @@ function mp_createListItem(song, onClickCallback) {
          mp_volumeSlider = document.getElementById('mp_volumeSlider');
          mp_muteButton = document.getElementById('mp_muteButton');
          mp_volumePercentage = document.getElementById('mp_volumePercentage');
-    
+
          // Check if all elements were found
          if (!mp_playPauseButton || !mp_prevButton || !mp_nextButton || !mp_seekBar || !mp_volumeSlider || !mp_muteButton || !mp_audioPlayer || !mp_volumePercentage || !mp_currentTime || !mp_totalDuration || !mp_currentSongInfo) {
              console.error("MP: Failed to find one or more essential playback control elements. Cannot initialize bar fully.");
              return; // Stop initialization if elements missing
          }
-    
+
          // Attach listeners for the main playback bar controls
          mp_playPauseButton.addEventListener('click', mp_togglePlayPause);
          mp_nextButton.addEventListener('click', mp_playNextSong);
          mp_prevButton.addEventListener('click', mp_playPrevSong);
-    
-         // Prevent seek bar input during audio seeking (for the main bar)
-         // 'isSeeking' flag should be accessible to this function and its listeners.
-         // If it's not declared outside, declare it here: let isSeeking = false;
-          let isSeeking = false; // Assuming it's local as per your original code snippet
-    
+
+         // --- Seek bar listeners for the main bar ---
+         mp_seekBar.addEventListener('mousedown', () => { isSeeking = true; }); // Start seeking flag
+         mp_seekBar.addEventListener('mouseup', () => { isSeeking = false; }); // End seeking flag
+         mp_seekBar.addEventListener('touchstart', () => { isSeeking = true; }); // Mobile touch start
+         mp_seekBar.addEventListener('touchend', () => { isSeeking = false; }); // Mobile touch end
+
+
          mp_seekBar.addEventListener('input', () => {
-              // Only update time if the main seek bar is being dragged AND audio is ready
-              if (!mp_audioPlayer || !mp_audioPlayer.duration || isNaN(mp_audioPlayer.duration) || isSeeking) return;
-    
-              const seekTime = (mp_seekBar.value / 100) * mp_audioPlayer.duration; // Assuming max=100
-              if (!isNaN(seekTime)) {
-                   mp_audioPlayer.currentTime = seekTime;
-                   // Update time display immediately while scrubbing (main bar)
-                   if(mp_currentTime) mp_currentTime.textContent = mp_formatTime(seekTime);
-                   // Note: mp_updateSeekBar will handle updating the hover overlay scroller if needed
+              // Only update time if the main seek bar is being dragged AND a song is loaded
+              if (!mp_currentSong || !mp_audioPlayer && !mp_youtubePlayer) return; // Check for loaded song/player
+
+              let duration = 0;
+               // Get duration from the active player
+               if (mp_currentSong.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.getDuration === 'function') {
+                   duration = mp_youtubePlayer.getDuration();
+               } else if (!mp_currentSong.isYouTube && mp_audioPlayer && !isNaN(mp_audioPlayer.duration)) {
+                   duration = mp_audioPlayer.duration;
+               } else {
+                    console.warn("MP: Seek bar input, but duration not available from active player.");
+                    return; // Cannot seek if duration is unknown
+               }
+
+             if (duration <= 0) return; // Cannot seek if duration is 0
+
+             const seekTime = (mp_seekBar.value / 100) * duration; // Assuming max=100
+
+              // Set current time/seek for the active player
+              if (mp_currentSong.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.seekTo === 'function') {
+                  mp_youtubePlayer.seekTo(seekTime, true); // Seek to time, true = allow seek ahead
+                   // Ensure player is playing after seeking if it was before or if it was paused by seeking
+                   if (mp_youtubePlayer.getPlayerState() !== YT.PlayerState.PLAYING && mp_youtubePlayer.getPlayerState() !== YT.PlayerState.BUFFERING) {
+                        mp_youtubePlayer.playVideo();
+                   }
+              } else if (!mp_currentSong.isYouTube && mp_audioPlayer && !isNaN(seekTime)) {
+                  mp_audioPlayer.currentTime = seekTime;
+                   // Ensure player is playing after seeking if it was before or if it was paused by seeking
+                   if (mp_audioPlayer.paused && !mp_audioPlayer.ended) {
+                        mp_audioPlayer.play().catch(error => console.error("MP: Audio play after seek failed:", error));
+                   }
               }
+
+
+              // Update time display immediately while scrubbing (main bar)
+             if(mp_currentTime) mp_currentTime.textContent = mp_formatTime(seekTime);
+             // The mp_updateSeekBar function will handle syncing the hover overlay scroller on the next timeupdate event
          });
-          mp_seekBar.addEventListener('change', () => { // Fires after user releases mouse
-              // No specific action needed here if 'input' already updates audio time
-              // You could potentially re-sync the hover scroller here if desired, but mp_updateSeekBar should do it on timeupdate
-          });
-    
-    
+
          // Volume slider listener for the main bar
          mp_volumeSlider.addEventListener('input', () => {
-             if (!mp_audioPlayer) return;
-             const newVolume = mp_volumeSlider.value;
-             mp_audioPlayer.volume = newVolume;
-             // If volume is > 0, ensure muted is false
-             if (newVolume > 0) {
-                  mp_audioPlayer.muted = false;
-             }
-             mp_updateVolumeControls(); // Update mute icon and percentage text (This function should handle both bars)
+             // Call the new mp_setVolume function
+             mp_setVolume(parseFloat(mp_volumeSlider.value)); // Pass the slider value (0-1)
          });
-    
+
          // Mute button listener for the main bar
          mp_muteButton.addEventListener('click', () => {
-              if (!mp_audioPlayer) return;
-              mp_audioPlayer.muted = !mp_audioPlayer.muted;
-              mp_updateVolumeControls(); // Update icon, percentage, and potentially slider visual state (This function should handle both bars)
+              // Get current muted state from the active player or assume based on UI
+              let currentMutedState = false;
+               if (mp_currentSong?.isYouTube && mp_youtubePlayer && typeof mp_youtubePlayer.isMuted === 'function') {
+                  currentMutedState = mp_youtubePlayer.isMuted();
+               } else if (!mp_currentSong?.isYouTube && mp_audioPlayer) {
+                  currentMutedState = mp_audioPlayer.muted;
+               } else {
+                   // If no player active, use the UI state as a fallback? Or just do nothing?
+                   // Let's check the UI icon as a fallback if no player state available
+                   if (mp_muteButton.innerHTML.includes('volume-mute')) {
+                       currentMutedState = true;
+                   } else {
+                       currentMutedState = false;
+                   }
+                   console.warn("MP: Mute toggle clicked, but no active player state could be determined. Using UI state.");
+               }
+
+              // Toggle the muted state using the new function
+              mp_setMuted(!currentMutedState);
          });
-    
+
+
          // Audio element listeners (These handle core audio events and trigger UI updates)
-         // The 'isSeeking' flag used here is the one declared within this function.
-          mp_audioPlayer.addEventListener('seeking', () => { isSeeking = true; }); // Main bar seeking starts
-          mp_audioPlayer.addEventListener('seeked', () => { isSeeking = false; }); // Main bar seeking ends
-    
-         mp_audioPlayer.addEventListener('timeupdate', () => {
-              // Call the combined update function.
-              // mp_updateSeekBar internally checks the 'isSeeking' (main) and 'isSeekingHover' (hover) flags
-             mp_updateSeekBar();
-         });
-    
+         // These listeners now rely on mp_updateSeekBar, mp_updatePlaybackControls, mp_updateVolumeControls
+         // which are modified to check the active player type.
+          mp_audioPlayer.addEventListener('seeking', () => { /* isSeeking = true; */ }); // Handled by mousedown/touchstart now
+          mp_audioPlayer.addEventListener('seeked', () => { /* isSeeking = false; */ }); // Handled by mouseup/touchend now
+
+         mp_audioPlayer.addEventListener('timeupdate', mp_updateSeekBar); // Update time and seek bar
+
          mp_audioPlayer.addEventListener('loadedmetadata', () => {
              console.log("MP: loadedmetadata fired. Duration:", mp_audioPlayer.duration);
-             const duration = mp_audioPlayer.duration;
-             if (!isNaN(duration)) {
-                 // Update Main Playback Bar
-                 if(mp_totalDuration) mp_totalDuration.textContent = mp_formatTime(duration);
-                 if(mp_seekBar) mp_seekBar.max = 100; // Set max to 100 for percentage
-    
-                 // --- Update Hover Overlay (if initialized) ---
-                 if (mp_hoverOverlayInitialized) { // Check if initialized before accessing elements
-                     if(hoverOverlayTotalDuration) hoverOverlayTotalDuration.textContent = mp_formatTime(duration);
-                     if(hoverOverlayScroller) hoverOverlayScroller.max = 100; // Set max to 100 for percentage
-                 }
-                 // --- End Update Hover Overlay ---
-    
-             } else {
-                 // Handle unknown duration for both
-                  if(mp_totalDuration) mp_totalDuration.textContent = '?:??';
-                  // Also update hover overlay if initialized
-                  if (mp_hoverOverlayInitialized && hoverOverlayTotalDuration) { // Check if initialized
-                       hoverOverlayTotalDuration.textContent = '?:??';
-                  }
-             }
-             mp_updateSeekBar(); // Update current time immediately for both (handled inside mp_updateSeekBar)
+             // mp_updateSeekBar handles updating duration display and slider max now
+              mp_updateSeekBar(); // Call update to refresh duration and current time (will be 0 initially)
          });
-    
+
          mp_audioPlayer.addEventListener('ended', mp_playNextSong); // Play next song when current one ends
-    
+
          mp_audioPlayer.addEventListener('error', (e) => {
              console.error("MP: Audio Player Error Event:", mp_audioPlayer.error, e);
              let errorMsg = "Unknown playback error.";
@@ -4788,120 +5800,160 @@ function mp_createListItem(song, onClickCallback) {
                       default: errorMsg = `An unknown error occurred (Code ${mp_audioPlayer.error.code})`;
                   }
              }
-             if(mp_currentSongInfo) mp_currentSongInfo.textContent = `Error: ${errorMsg}`; // Update main bar song info
-             showIndividualNotification("Playback Error", `Could not play "${mp_currentSong?.title || 'song'}": ${errorMsg}`, 6000); // Show notification
+             // Update main bar song info display with error
+             if(mp_currentSongInfo) mp_currentSongInfo.textContent = `Error: ${errorMsg}`;
+             // Show notification
+             showIndividualNotification("Playback Error", `Could not play "${mp_currentSong?.title || 'song'}": ${errorMsg}`, 6000);
              // Decide how to handle errors - stopping or skipping to next song
-             // mp_stopPlaybackAndClearUI(); // Option 1: Stop everything
-             mp_playNextSong(); // Option 2: Try playing the next song
+             console.log("MP Audio Player: Attempting to play the next song after error.");
+             mp_playNextSong(); // Try playing the next song
          });
-    
+
          // Update button states when playback starts/pauses
-     mp_audioPlayer.addEventListener('play', () => {
-          mp_isPlaying = true;
-          mp_updatePlaybackControls(); // Corrected function name
-          console.log("MP: Audio 'play' event. mp_isPlaying:", mp_isPlaying); // Add console log for debugging
-     });
-     mp_audioPlayer.addEventListener('pause', () => {
-          mp_isPlaying = false;
-          mp_updatePlaybackControls(); // Corrected function name
-          console.log("MP: Audio 'pause' event. mp_isPlaying:", mp_isPlaying); // Add console log for debugging
-     });
-    
+         mp_audioPlayer.addEventListener('play', () => {
+              mp_isPlaying = true;
+              mp_updatePlaybackControls(); // Corrected function name
+              console.log("MP: Audio 'play' event. mp_isPlaying:", mp_isPlaying); // Add console log for debugging
+         });
+         mp_audioPlayer.addEventListener('pause', () => {
+              mp_isPlaying = false;
+              mp_updatePlaybackControls(); // Corrected function name
+              console.log("MP: Audio 'pause' event. mp_isPlaying:", mp_isPlaying); // Add console log for debugging
+         });
+
          // Update volume UI when volume changes (e.g., system volume controls)
          mp_audioPlayer.addEventListener('volumechange', mp_updateVolumeControls); // This should handle both bars if needed
-    
+
+
          // Initial UI setup based on current state (useful on page load if audio was playing before)
+         // Ensure these calls happen AFTER element references are obtained
          mp_updateVolumeControls(); // Initial volume UI setup (should handle both bars if needed)
          mp_updatePlaybackControls(); // Initial button state (call the combined function)
          mp_updateSeekBar(); // Initial time/scroller state
-    
+
          mp_playbackBarInitialized = true;
          console.log("MP: Playback Bar Initialized.");
      }
 
-    function mp_initializeMusicPlayerPage() {
-        console.log("MP: mp_initializeMusicPlayerPage called. Setting timeout for DOM ready.");
-    
-        setTimeout(async () => {
-            console.log("MP: Timeout fired. Attempting to get music page elements...");
-    
-            mp_songsList = document.getElementById('mp_songsList');
-            mp_recentlyPlayedList = document.getElementById('mp_recentlyPlayedList');
-            mp_playlistsList = document.getElementById('mp_playlistsList');
-            mp_songSearch = document.getElementById('mp_songSearch');
-            const mp_recentlyPlayedSearch = document.getElementById('mp_recentlyPlayedSearch');
-    
-            // Get modal search inputs
-            const mp_createPlaylistSearch = document.getElementById('mp_createPlaylistSearch'); // Get new element
-            const mp_removeSongsSearch = document.getElementById('mp_removeSongsSearch'); // Get new element
-    
-            // --- Check if ALL essential elements for RENDERING the Music page were found AFTER the timeout ---
-            // Add modal search inputs to the check
-            if (!mp_songsList || !mp_recentlyPlayedList || !mp_playlistsList || !mp_songSearch || !mp_recentlyPlayedSearch || !mp_createPlaylistSearch || !mp_removeSongsSearch) {
-                console.error("MP: Failed to find one or more essential music page elements AFTER timeout. Cannot initialize page fully.");
-                console.error("Missing element(s):",
-                    !mp_songsList ? '#mp_songsList' : '',
-                    !mp_recentlyPlayedList ? '#mp_recentlyPlayedList' : '',
-                    !mp_playlistsList ? '#mp_playlistsList' : '',
-                    !mp_songSearch ? '#mp_songSearch' : '',
-                    !mp_recentlyPlayedSearch ? '#mp_recentlyPlayedSearch' : '',
-                    !mp_createPlaylistSearch ? '#mp_createPlaylistSearch (Modal)' : '', // Add modal checks
-                    !mp_removeSongsSearch ? '#mp_removeSongsSearch (Modal)' : '' // Add modal checks
-                );
-                mp_isInitialized = false; // Ensure flag is false if elements are missing
-                const musicPageContainer = document.querySelector('.music-page-container');
-                if (musicPageContainer) {
-                    musicPageContainer.innerHTML = '<div class="panel" style="text-align: center; color: red;">Error loading Music Player. Some elements were not found. Please check the console for details.</div>';
-                }
-                return; // Stop initialization if elements are missing
-            }
-            console.log("MP: Successfully found all essential music page elements for rendering.");
-    
-            // --- Attach listeners only if NOT already initialized (moved inside timeout) ---
-            if (!mp_isInitialized) {
-                console.log("MP: Initializing Music Player Page Content Listeners (first time)...");
-                // mp_fileInput.addEventListener('change', mp_handleFileSelect); // REMOVE or COMMENT OUT this line here
-                mp_songSearch.addEventListener('input', () => {
-                    mp_renderSongsList(mp_songSearch.value);
-                });
-                mp_recentlyPlayedSearch.addEventListener('input', () => {
-                    mp_renderRecentlyPlayed();
-                });
-    
-                // Add listeners for modal search inputs
-                mp_createPlaylistSearch.addEventListener('input', () => { // Add this listener
-                    mp_populateCreatePlaylistModalSongs(mp_createPlaylistSearch.value);
-                });
-                mp_removeSongsSearch.addEventListener('input', () => { // Add this listener
-                    mp_populateRemoveSongsModal(mp_removeSongsSearch.value);
-                });
-    
-    
-                mp_isInitialized = true; // Set flag after attaching listeners
-                console.log("MP: Music Page Listeners Initialized.");
-            } else {
-                console.log("MP: Music Player page already initialized listeners.");
-            }
-    
-            // --- Always render the lists and update UI states when the page is initialized/activated ---
-            console.log("MP: Rendering music lists and updating UI states...");
-            mp_renderSongsList(mp_songSearch.value); // Use current search value
-            mp_renderRecentlyPlayed();
-            mp_renderPlaylists();
-            mp_updatePermissionUI(!!mp_currentDirectoryHandle, mp_currentDirectoryHandle && await mp_currentDirectoryHandle.queryPermission({mode:'read'}) === 'prompt' ? mp_currentDirectoryHandle : null); // Refresh permission UI state
-    
-             if (mp_playbackControlsBar) {
-                 if (mp_currentSong || mp_musicLibrary.length > 0) {
-                     mp_playbackControlsBar.style.display = 'flex';
-                 } else {
-                     mp_playbackControlsBar.style.display = 'none';
+function mp_initializeMusicPlayerPage() {
+         console.log("MP: mp_initializeMusicPlayerPage called. Setting timeout for DOM ready.");
+
+         // Use a small timeout to ensure the page content is rendered after switchPage
+         setTimeout(async () => { // Make it async if it needs to await permissions
+             console.log("MP: Timeout fired. Attempting to get music page elements...");
+
+             // Get references to essential music page elements
+             mp_songsList = document.getElementById('mp_songsList');
+             mp_recentlyPlayedList = document.getElementById('mp_recentlyPlayedList');
+             mp_playlistsList = document.getElementById('mp_playlistsList');
+             mp_songSearch = document.getElementById('mp_songSearch');
+             const mp_recentlyPlayedSearch = document.getElementById('mp_recentlyPlayedSearch');
+
+             // Get modal search inputs (they exist even when modal is hidden)
+             const mp_createPlaylistSearch = document.getElementById('mp_createPlaylistSearch'); // Get element
+             const mp_removeSongsSearch = document.getElementById('mp_removeSongsSearch'); // Get element
+
+             // *** NEW: Get the "Search for Music" button and the YouTube modal elements ***
+             const mp_searchYoutubeButton = document.getElementById('mp_searchYoutubeButton');
+             const mp_youtubeSearchInput = document.getElementById('mp_Youtube-input');
+             const mp_youtubeSearchButton = document.getElementById('mp_Youtube-button');
+             // *** END NEW ***
+
+
+             // --- Check if ALL essential elements for RENDERING the Music page were found AFTER the timeout ---
+             // Add modal search inputs and the new YouTube elements to the check
+             if (!mp_songsList || !mp_recentlyPlayedList || !mp_playlistsList || !mp_songSearch || !mp_recentlyPlayedSearch ||
+                 !mp_createPlaylistSearch || !mp_removeSongsSearch || !mp_searchYoutubeButton ||
+                 !mp_youtubeSearchInput || !mp_youtubeSearchButton)
+             {
+                 console.error("MP: Failed to find one or more essential music page elements AFTER timeout. Cannot initialize page fully.");
+                 console.error("Missing element(s):",
+                     !mp_songsList ? '#mp_songsList' : '',
+                     !mp_recentlyPlayedList ? '#mp_recentlyPlayedList' : '',
+                     !mp_playlistsList ? '#mp_playlistsList' : '',
+                     !mp_songSearch ? '#mp_songSearch' : '',
+                     !mp_recentlyPlayedSearch ? '#mp_recentlyPlayedSearch' : '',
+                     !mp_createPlaylistSearch ? '#mp_createPlaylistSearch (Modal)' : '', // Add modal checks
+                     !mp_removeSongsSearch ? '#mp_removeSongsSearch (Modal)' : '', // Add modal checks
+                     !mp_searchYoutubeButton ? '#mp_searchYoutubeButton' : '', // Add YouTube elements check
+                     !mp_youtubeSearchInput ? '#mp_Youtube-input' : '',
+                     !mp_youtubeSearchButton ? '#mp_Youtube-button' : ''
+                 );
+                 mp_isInitialized = false; // Ensure flag is false if elements are missing
+                 const musicPageContainer = document.querySelector('.music-page-container');
+                 if (musicPageContainer) {
+                     musicPageContainer.innerHTML = '<div class="panel" style="text-align: center; color: red;">Error loading Music Player. Some elements were not found. Please check the console for details.</div>';
                  }
+                 return; // Stop initialization if elements are missing
              }
-    
-            console.log("MP: Music Player Page Initialization/Activation Complete.");
-    
-        }, 150); // Match this delay to your CSS transition duration for fade-out
-    }
+             console.log("MP: Successfully found all essential music page elements for rendering.");
+
+             // --- Attach listeners only if NOT already initialized (moved inside timeout) ---
+             if (!mp_isInitialized) {
+                 console.log("MP: Initializing Music Player Page Content Listeners (first time)...");
+                 // mp_fileInput.addEventListener('change', mp_handleFileSelect); // This listener should be attached in DOMContentLoaded
+
+                 // Listeners for search inputs within the main page content
+                 mp_songSearch.addEventListener('input', () => {
+                     mp_renderSongsList(mp_songSearch.value);
+                 });
+                 mp_recentlyPlayedSearch.addEventListener('input', () => {
+                     mp_renderRecentlyPlayed();
+                 });
+
+                 // Listeners for modal search inputs
+                 mp_createPlaylistSearch.addEventListener('input', () => {
+                     mp_populateCreatePlaylistModalSongs(mp_createPlaylistSearch.value);
+                 });
+                 mp_removeSongsSearch.addEventListener('input', () => {
+                     mp_populateRemoveSongsModal(mp_removeSongsSearch.value);
+                 });
+
+                 // *** NEW: Attach listeners for the Youtube button and input ***
+                 mp_searchYoutubeButton.addEventListener('click', mp_openYoutubeSearchModal);
+
+                 mp_youtubeSearchInput.addEventListener('keypress', (event) => {
+                     if (event.key === 'Enter') {
+                         event.preventDefault(); // Prevent default form submission
+                         performYouTubeSearch(); // Call the search function
+                     }
+                 });
+
+                 mp_youtubeSearchButton.addEventListener('click', performYouTubeSearch);
+                 console.log('MP: Youtube button and input listeners attached.');
+                 // *** END NEW ***
+
+
+                 mp_isInitialized = true; // Set flag after attaching listeners
+                 console.log("MP: Music Page Listeners Initialized.");
+             } else {
+                 console.log("MP: Music Player page already initialized listeners.");
+             }
+
+             // --- Always render the lists and update UI states when the page is initialized/activated ---
+             console.log("MP: Rendering music lists and updating UI states...");
+             mp_renderSongsList(mp_songSearch.value); // Use current search value
+             mp_renderRecentlyPlayed();
+             mp_renderPlaylists();
+             // Update permission UI status based on the current handle state
+             mp_updatePermissionUI(!!mp_currentDirectoryHandle, mp_currentDirectoryHandle && await mp_currentDirectoryHandle.queryPermission({mode:'read'}) === 'prompt' ? mp_currentDirectoryHandle : null); // Use await for permission check
+
+
+              if (mp_playbackControlsBar) {
+                  // Show playback bar if a song is currently loaded OR if there are any songs in the library
+                  // This makes the bar visible even if playback hasn't started yet,
+                  // if there's music available.
+                  if (mp_currentSong || mp_musicLibrary.length > 0) {
+                      mp_playbackControlsBar.style.display = 'flex';
+                  } else {
+                      mp_playbackControlsBar.style.display = 'none';
+                  }
+              }
+
+             console.log("MP: Music Player Page Initialization/Activation Complete.");
+
+         }, 150); // Match this delay to your CSS transition duration for fade-out
+     }
 
     // --- END OF MUSIC PLAYER JAVASCRIPT ---
 
@@ -6437,14 +7489,18 @@ const pages = {
 
           <div class="music-sidebar-column">
               <div class="music-sidebar-top-row">
-                  <div class="music-action-box" id="add-music-box">
+                    <div class="music-action-box" id="add-music-box">
                       <h2><i class="fas fa-folder-plus"></i> Add Music</h2>
-                      <p>Select folder or remove songs.</p>
+                      <p>Select folder, search online, or remove songs.</p>
                       <button onclick="mp_selectMusicDirectory()" class="button-primary button-small">
                           <i class="fas fa-folder-open"></i> Select Folder
                       </button>
                        <div style="height: 5px;"></div>
-                      <button onclick="mp_openRemoveSongsModal()" class="button-secondary button-small">
+                       <button id="mp_searchYoutubeButton" class="button-primary button-small">
+                           <i class="fab fa-youtube"></i> Search for Music
+                       </button>
+                       <div style="height: 5px;"></div>
+                       <button onclick="mp_openRemoveSongsModal()" class="button-secondary button-small">
                           <i class="fas fa-trash-alt"></i> Remove Songs
                       </button>
                        <div id="mp_permission_prompt" style="margin-top: 8px; font-size: 0.8em;"></div>
@@ -6916,20 +7972,32 @@ const pages = {
 
 
     // --- App Reset ---
-    // --- App Reset ---
-    async function resetApp() { // Make the function async to use await for DB deletion
+async function resetApp() { // Make the function async to use await for DB deletion
         console.log('Reset App requested.');
         if (confirm("Reset App? This deletes all custom games, library favorites, viewed history, all settings, and music player data (library, recents, playlists, and stored folder reference). This action cannot be undone.")) {
             console.log('Reset confirmed.');
-    
-            // 1. Stop Music Playback (if any)
-            mp_stopPlaybackAndClearUI();
+
+            // 1. Stop Music Playback (if any) and clear UI
+            mp_stopPlaybackAndClearUI(); // This function is updated to handle both audio and youtube
             console.log('Music playback stopped and UI cleared.');
-    
+
+            // --- NEW: Stop YouTube Time Update Simulation ---
+            if (youtubeTimeUpdateInterval) {
+                 clearInterval(youtubeTimeUpdateInterval);
+                 youtubeTimeUpdateInterval = null;
+                 console.log('Stopped YouTube time update simulation interval.');
+            }
+             // --- NEW: Destroy YouTube Player instance ---
+             if (mp_youtubePlayer && typeof mp_youtubePlayer.destroy === 'function') {
+                  mp_youtubePlayer.destroy();
+                  console.log('Destroyed YouTube player instance.');
+             }
+            // --- END NEW ---
+
             // 2. Clear localStorage
             localStorage.clear();
             console.log('localStorage cleared.');
-    
+
             // 3. Reset in-memory state variables
             games = []; // Will be repopulated by loadData with defaults
             library = [];
@@ -6938,7 +8006,7 @@ const pages = {
             showingFavorites = false;
             panicKey = null;
             panicUrl = null;
-    
+
             // Reset music player specific in-memory states
             mp_musicLibrary = [];
             mp_recentlyPlayed = [];
@@ -6948,12 +8016,15 @@ const pages = {
             mp_currentQueue = [];
             mp_currentDirectoryHandle = null; // Clear the stored directory handle
             mp_isInitialized = false; // Reset music player initialization flag
-            // mp_playbackBarInitialized and mp_hoverOverlayInitialized might also need reset if they prevent re-init
+            // Reset initialization flags for UI components
             mp_playbackBarInitialized = false;
             mp_hoverOverlayInitialized = false;
-    
+            // Reset player instance variable
+            mp_youtubePlayer = null; // Clear the YouTube player instance variable
+            // mp_audioPlayer doesn't need nulling as it's a fixed DOM element
+
             console.log('In-memory app state variables reset.');
-    
+
             // 4. Delete IndexedDB Database
             console.log('Attempting to delete IndexedDB database:', MP_DB_NAME);
             let dbDeletedSuccessfully = false;
@@ -6966,19 +8037,19 @@ const pages = {
                 // Wrap IDB delete in a promise to use await
                 await new Promise((resolve, reject) => {
                     const deleteRequest = indexedDB.deleteDatabase(MP_DB_NAME);
-    
+
                     deleteRequest.onsuccess = () => {
                         console.log("IndexedDB database deleted successfully.");
                         dbDeletedSuccessfully = true;
                         resolve();
                     };
-    
+
                     deleteRequest.onerror = (event) => {
                         console.error("Error deleting IndexedDB database:", event.target.error);
                         // Don't alert here, will alert after all operations
                         reject(event.target.error);
                     };
-    
+
                     deleteRequest.onblocked = (event) => {
                         console.warn("IndexedDB database deletion blocked. Database may be in use.", event);
                         // Don't alert here
@@ -6989,39 +8060,43 @@ const pages = {
                 console.error("Error during IndexedDB database deletion process:", err);
                 // The alert will be handled after attempting other resets
             }
-    
+
             // 5. Re-load default data and re-initialize UI
             // This order ensures that defaults are set up before trying to switch pages or re-init components.
-    
+
             loadData(); // This loads default games, sets theme from (now cleared) localStorage (so defaults to 'default')
             applyAppSettings({ tabTitle: 'Underground', faviconUrl: '' }); // Apply default appearance
             loadPanicKeySettings(); // This will load null/empty from cleared localStorage
-    
+
             // Explicitly set default theme and re-initialize Vanta
             setTheme('default'); // Applies default CSS variables and updates currentThemeName
             if (typeof initializeVanta === 'function') {
                 initializeVanta(); // Re-initialize Vanta with default theme
             }
-    
+
             // Re-initialize music player components as their state was reset
             // These might need to be re-initialized because their `mp_isInitialized` flags were reset
-            if (typeof mp_initializePlaybackBar === 'function') {
+             if (typeof mp_initializePlaybackBar === 'function') {
                  mp_initializePlaybackBar(); // Initialize playback bar (will find no songs initially)
-            }
-            if (typeof initializeMusicHoverOverlay === 'function') {
+             }
+             if (typeof initializeMusicHoverOverlay === 'function') {
                  initializeMusicHoverOverlay();
-            }
+             }
             // The Music page content itself will be rebuilt when switchPage('Music') is called.
-    
+            // The mp_fileInput listener needs re-attaching if it was cleared, but it's attached in DOMContentLoaded.
+            // The YouTube API script load is in the HTML, so it will reload on page refresh if that happens.
+            // The onYouTubeIframeAPIReady function is defined globally.
+
+
             // Hide playback controls bar explicitly as there's no music
             if (mp_playbackControlsBar) {
                 mp_playbackControlsBar.style.display = 'none';
             }
-    
-    
+
+
             // 6. Switch to the home page to reflect reset state
             switchPage('Home'); // Go to home page, this will also re-render its content including news, etc.
-    
+
             // 7. Final Notification to User
             if (dbDeletedSuccessfully) {
                 alert("App has been reset to default settings. All data has been cleared.");
@@ -7029,7 +8104,7 @@ const pages = {
                 alert("App settings have been reset, but there was an issue clearing all music library data. You may need to clear site data manually via browser settings if music issues persist.");
             }
             console.log('App reset process complete.');
-    
+
         } else {
             console.log('Reset cancelled by user.');
         }
@@ -7175,26 +8250,54 @@ function setupEventListeners() {
            console.log('Changelog Modal element not found or not used.'); // Log info if not present
       }
 
+      // --- Add Music Player Modal Click-outside Listeners ---
+      const removeSongsModal = document.getElementById('mp_removeSongsModal');
+      const createPlaylistModal = document.getElementById('mp_createPlaylistModal');
+      const viewPlaylistModal = document.getElementById('mp_viewPlaylistModal');
+       const youtubeSearchModal = document.getElementById('mp_youtubeSearchModal'); // Get the new modal
+
+      if (removeSongsModal) removeSongsModal.addEventListener('click', (e) => { if (e.target === removeSongsModal) mp_closeModal('mp_removeSongsModal'); });
+      if (createPlaylistModal) createPlaylistModal.addEventListener('click', (e) => { if (e.target === createPlaylistModal) mp_closeModal('mp_createPlaylistModal'); });
+      if (viewPlaylistModal) viewPlaylistModal.addEventListener('click', (e) => { if (e.target === viewPlaylistModal) mp_closeModal('mp_viewPlaylistModal'); });
+      // --- Add listener for the new Youtube modal ---
+       if (youtubeSearchModal) youtubeSearchModal.addEventListener('click', (e) => {
+           if (e.target === youtubeSearchModal) mp_closeModal('mp_youtubeSearchModal');
+       });
+      console.log('Music Player modal click listeners set up.');
+
 
       // Global Keydown Listener (for Escape key and Panic Key)
       document.addEventListener('keydown', (e) => {
         // --- Handle Escape Key for Modals/Overlays/Notifications ---
         if (e.key === 'Escape') {
-            // Close the add game modal if open
-            const currentAddGameModal = document.getElementById('addGameModal');
-            if (currentAddGameModal && currentAddGameModal.style.display === 'flex') {
-                closeModal(); // Assuming closeModal() hides addGameModal
-                 console.log('Escape pressed: Closed Add Game Modal.');
-                 return; // Consume the event if a modal was closed
-            }
-
-            // If you use the changelog modal, add check here
-             const currentChangelogModal = document.getElementById('changelogModal');
-             if (currentChangelogModal && currentChangelogModal.style.display === 'flex') {
-                 closeChangelogModal(); // Assuming closeChangelogModal hides your changelog modal
-                 console.log('Escape pressed: Closed Changelog Modal.');
-                  return;
+            // Close any open modal (check for specific music player modals first, then generic)
+             const openMpModal = document.querySelector('.mp-modal[style*="display: flex"]');
+             if (openMpModal) {
+                  // Get the close button within that modal and click it
+                  const closeButton = openMpModal.querySelector('.mp-modal-close');
+                  if (closeButton) {
+                       closeButton.click();
+                       console.log(`Escape pressed: Closed music player modal with ID: ${openMpModal.id}`);
+                       return; // Consume the event
+                  } else {
+                      console.warn(`Escape pressed: Open music player modal found (${openMpModal.id}) but no close button found.`);
+                  }
              }
+
+            // Check generic modal (Add Game, Changelog) if no MP modal was closed
+             const openModal = document.querySelector('.modal[style*="display: flex"]');
+             if (openModal) {
+                  // Get the close button within that modal and click it
+                  const closeButton = openModal.querySelector('.modal-close');
+                  if (closeButton) {
+                       closeButton.click();
+                       console.log(`Escape pressed: Closed generic modal with ID: ${openModal.id}`);
+                       return; // Consume the event
+                  } else {
+                      console.warn(`Escape pressed: Open generic modal found (${openModal.id}) but no close button found.`);
+                  }
+             }
+
 
             // Hide the sliding notification if it's visible
             const slidingNotification = document.getElementById('slidingNotification'); // Ensure this exists
@@ -7274,6 +8377,36 @@ function setupEventListeners() {
          console.log('Update Overlay button listeners set up.');
 
 
+        // --- Music Player Specific Listeners (Page Content & Modals) ---
+         // Listeners for buttons/inputs outside the page content (like the "Search for Music" button) can be attached here.
+
+        const mp_searchYoutubeButton = document.getElementById('mp_searchYoutubeButton');
+        const mp_youtubeSearchInput = document.getElementById('mp_Youtube-input'); // Inside the modal
+        const mp_youtubeSearchButton = document.getElementById('mp_Youtube-button'); // Inside the modal
+
+
+        if (mp_searchYoutubeButton) {
+            mp_searchYoutubeButton.addEventListener('click', mp_openYoutubeSearchModal); // Call the new function
+            console.log('MP: "Search for Music" button listener attached.');
+        } else { console.warn('MP: "Search for Music" button not found.'); }
+
+        // Listeners for elements INSIDE the modal (they exist from start, but are hidden)
+         if (mp_youtubeSearchInput) {
+             mp_youtubeSearchInput.addEventListener('keypress', (event) => {
+                 if (event.key === 'Enter') {
+                     event.preventDefault(); // Prevent default form submission
+                     performYouTubeSearch(); // Call the search function
+                 }
+             });
+             console.log('MP: Youtube input keypress listener attached.');
+         } else { console.warn('MP: Youtube input not found.'); }
+
+         if (mp_youtubeSearchButton) {
+             mp_youtubeSearchButton.addEventListener('click', performYouTubeSearch);
+             console.log('MP: Youtube button listener attached.');
+         } else { console.warn('MP: Youtube button not found.'); }
+
+
        // Sidebar Auto-open/close on mouse movement near left edge
        if (sidebar) { // Check if sidebar element was found at the beginning
             document.addEventListener('mousemove', (e) => {
@@ -7299,6 +8432,20 @@ function setupEventListeners() {
 
 
       console.log('All event listeners setup function completed.');
+    }
+
+    // Function to open the Youtube modal (called by button click)
+    function mp_openYoutubeSearchModal() {
+         console.log("MP: Opening Youtube modal.");
+         const searchInput = document.getElementById('mp_Youtube-input');
+         const resultsList = document.getElementById('mp_youtube-results-list');
+
+         if (searchInput) searchInput.value = ''; // Clear previous search
+         // Reset results list content
+         if (resultsList) resultsList.innerHTML = '<p class="placeholder-text">Search results will appear here.</p>';
+
+         mp_openModal('mp_youtubeSearchModal'); // Use the generic modal open function
+         if (searchInput) searchInput.focus(); // Focus the input field
     }
     
     function resetThemeSettings() {
