@@ -2511,7 +2511,11 @@
              { name: "n-gon", url: "https://landgreen.github.io/n-gon/", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIiXBQof9-UTot6CA0A-X9Ntyp0pNALernmg&s", proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-lcnfgpegn%2Cgktju%60.ko-n%2Fgmn-", proxied: false },
              { name: "FreeRiderHD", url: "https://freeriderhd.com", icon: "https://cdn.freeriderhd.com/free_rider_hd/sprites/youtube_poster_art.png", proxiedUrl: "https://skibidi.global.fastly.net/uv/service/hvtrs8%2F-wuw%2Cfpegrkdgrjd%2Ccmm-", proxied: false },
              { name: "Shell Shockers", url: "https://shellshock.io/", icon: "https://rocketgames.imgix.net/uploads/games/s/shell-shockers/shell-shockers.jpg", proxiedUrl: "none", proxied: false },
-             { name: "Happy Wheels", url: "https://totaljerkface.com/happy_wheels.tjf", icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8ZZNe14xfg_CvlBFQRnl2Boj4GIEuiyVqYw&s", proxiedUrl: "https://nyx-2b7o.onrender.com/active/go/hvtrs8%2F-tmtclhepkdaae%2Ccmm-hcpry%5Dwjeglq.vjd", proxied: false }
+             { name: "Happy Wheels", // This name will be used to build the path
+       url: "games/happy_wheels/index.html", // Can be the path or a placeholder if always local
+       icon: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8ZZNe14xfg_CvlBFQRnl2Boj4GIEuiyVqYw&s", 
+       proxiedUrl: "none", // Or actual if you have one
+       proxied: false  }
         ];
 
     // --- START OF MUSIC PLAYER JAVASCRIPT ---
@@ -5531,71 +5535,71 @@ function mp_createListItem(song, onClickCallback) {
     function loadViewerUrl(url = '', customTitle = 'Viewer', displayUrl = url, updateRecents = true) {
         console.log(`loadViewerUrl called. URL to load: "${url}", Custom Title: "${customTitle}", Display URL: "${displayUrl}"`);
     
+        // Get the iframe element from the Viewer page structure
         const iframe = document.getElementById('mainViewerIframe');
-        const urlInput = document.getElementById('viewerUrlSearch'); // Get the input from the Viewer page structure
+        const urlInput = document.getElementById('viewerUrlSearch');
     
         if (!iframe) {
-            console.error("CRITICAL: Viewer iframe (#mainViewerIframe) not found when loadViewerUrl was executed. Cannot load URL. This indicates the page structure might not be ready.");
-            // You could alert the user or try to recover, but the callback in switchPage should prevent this.
-            // alert("Error: The viewer component is not ready. Please try clicking the game again.");
+            console.error("CRITICAL: Viewer iframe (#mainViewerIframe) not found when loadViewerUrl was executed.");
             return;
         }
-        console.log("Successfully found iframe #mainViewerIframe.");
     
-        // Basic URL validation and prepend https if missing
         let finalUrl = url;
-        if (finalUrl && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('about:')) {
+    
+        // Check if it's a relative path (doesn't start with http, https, about, or data)
+        const isRelativePath = finalUrl && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('about:') && !finalUrl.startsWith('data:') && !finalUrl.startsWith('/');
+    
+        if (isRelativePath) {
+            console.log('URL is a relative path, not prepending protocol:', finalUrl);
+            // It's a relative path (like "games/happy_wheels/index.html"), use it as is.
+            // Note: While technically relative paths *could* be loaded here for web viewing,
+            // your loadGame function now handles local games separately in new windows.
+            // This path handling is primarily for general web content relative to your launcher.
+        } else if (finalUrl && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://') && !finalUrl.startsWith('about:') && !finalUrl.startsWith('data:')) {
+            // It's not relative but missing a protocol (e.g. "google.com")
             finalUrl = 'https://' + finalUrl;
-            displayUrl = finalUrl; // Update display URL as well if we modified it
+            displayUrl = finalUrl; // Update displayUrl to reflect the added protocol
             console.log('Prepended "https://" to URL. New finalUrl:', finalUrl);
         }
     
-        // If no URL provided after potential modifications, load about:blank and clear the input
         if (!finalUrl) {
             finalUrl = 'about:blank';
-            displayUrl = ''; // Clear input if starting blank
-            updateRecents = false; // Don't add about:blank to recents
-            customTitle = 'Viewer'; // Reset title
+            displayUrl = ''; // Clear display URL if loading blank
+            updateRecents = false; // Don't add blank to recents
+            customTitle = 'Viewer'; // Reset title for blank page
             console.log('No valid URL provided, defaulting iframe to "about:blank".');
-        } else {
-            // Attempt to validate if it's not about:blank and not a data URI
+        } else if (finalUrl !== 'about:blank' && !isRelativePath && !finalUrl.startsWith('data:')) { // Added !isRelativePath here
+            // Validate external URLs (skip validation for relative and data URLs)
             try {
-                if (!finalUrl.startsWith('about:') && !finalUrl.startsWith('data:')) {
-                    new URL(finalUrl); // Validate if it's a proper URL now
-                    console.log(`URL "${finalUrl}" passed validation.`);
-                }
+                new URL(finalUrl);
+                console.log(`URL "${finalUrl}" passed validation.`);
             } catch (e) {
-                // If still invalid, try searching it
                 console.warn(`Invalid URL "${finalUrl}", attempting Google search. Error:`, e.message);
-                const originalQueryForSearch = url; // Use the original 'url' param for the search query
+                const originalQueryForSearch = url; // Use the original input for the search query
                 finalUrl = `https://www.google.com/search?q=${encodeURIComponent(originalQueryForSearch)}`;
-                displayUrl = originalQueryForSearch; // Show the user's initial input in the box
-                customTitle = `Search Results for "${escapeHtml(customTitle)}"`; // Escape customTitle if it's from user input
-                updateRecents = false; // Don't add search results to recents typically
+                displayUrl = originalQueryForSearch; // Display the original query in the input box
+                customTitle = `Search Results for "${escapeHtml(customTitle || originalQueryForSearch)}"`; // Use original title or query for search title
+                updateRecents = false; // Don't add search results to recents
                 console.log(`Performing search. New finalUrl: "${finalUrl}", Display URL: "${displayUrl}"`);
             }
         }
     
-        // Set the iframe source
         console.log(`Setting iframe source to: "${finalUrl}"`);
-        iframe.src = escapeHtml(finalUrl); // Still escape, as it's generally safer for src attributes
+        // For relative paths, ensure they are correctly resolved by the browser relative to launcher.html
+        iframe.src = escapeHtml(finalUrl);
     
         // Update the URL input box on the Viewer page
         if (urlInput) {
             urlInput.value = escapeHtml(displayUrl);
             console.log('Updated Viewer URL search input value to:', displayUrl);
-        } else {
-            console.warn("Viewer URL input (#viewerUrlSearch) not found. Cannot update its value.");
         }
     
-        // Update recently viewed if applicable
-        if (updateRecents && finalUrl && finalUrl !== 'about:blank') {
-            updateRecentlyViewed(finalUrl); // Assuming updateRecentlyViewed is defined elsewhere
+        // Update recently viewed list (only for valid, non-local, non-blank URLs that were loaded)
+        // isRelativePath check prevents adding local game paths if loadViewerUrl was somehow called with one
+        if (updateRecents && finalUrl && finalUrl !== 'about:blank' && !isRelativePath) {
+            updateRecentlyViewed(finalUrl);
             console.log('Updated recently viewed with URL:', finalUrl);
         }
-    
-        // Optionally update the main document title if you want the viewer title to reflect the site
-        // document.title = customTitle + " - Underground"; // Example
         console.log(`loadViewerUrl finished. Iframe src should be set to "${iframe.src}".`);
     }
     
@@ -6104,36 +6108,83 @@ function mp_createListItem(song, onClickCallback) {
        }
      }
     
-    function loadGame(name, url) {
-        console.log('loadGame() called for:', name, url);
-        const game = games.find(g => g.name === name);
+    function loadGame(gameName, gameUrl) { // Keep gameUrl for potential external games, but prioritize local structure
+        console.log('loadGame() called for:', gameName);
+        const game = games.find(g => g.name === gameName);
     
         if (!game) {
-            console.error("Game not found in 'games' array:", name);
-            // Optionally show a user-facing error or switch to a default page
-            // showIndividualNotification('Error', `Game "${escapeHtml(name)}" not found.`, 'error');
-            // switchPage('Games'); // Or 'Home'
+            console.error("Game not found in 'games' array:", gameName);
             return;
         }
     
+        // Construct the path to the local game's index.html
+        // Assuming gameName corresponds to the folder name in 'games'
+        const localGamePath = `games/${gameName}/index.html`;
+    
         const useProxy = game.proxied && game.proxiedUrl && game.proxiedUrl !== 'none';
-        const targetUrl = useProxy ? game.proxiedUrl : url;
-        const displayUrl = useProxy ? "Proxy Active" : (game.name || url); // Display game name or URL
     
-        console.log(`Preparing to load game: "${name}". Target URL: "${targetUrl}". Using proxy: ${useProxy}`);
+        let targetUrl;
+        let displayUrl; // This variable is not strictly needed for window.open but is useful for logging
     
-        // Switch to the Viewer page and pass a callback function
-        // This callback will execute AFTER the Viewer page's HTML (including the iframe) is in the DOM
-        switchPage('Viewer', () => {
-            console.log('switchPage callback executed: Attempting to load game into viewer iframe.');
-            if (useProxy) {
-                console.log(`Proxy mode active for "${name}". Loading proxied URL: ${targetUrl}`);
-                loadViewerUrl(targetUrl, name, displayUrl, true);
-            } else {
-                console.log(`Direct load for "${name}". Loading URL: ${targetUrl}`);
-                loadViewerUrl(targetUrl, name, displayUrl, true);
-            }
-        });
+        // --- Logic to determine the URL to load ---
+        // Prioritize local game path if the game is meant to be local
+        // For this example, we'll assume if a game from your defaultGames has a name that matches
+        // a folder structure or has a specific flag, it should load locally.
+        // Let's use the presence of the "games/" prefix in the original game.url as an indicator for local games.
+        // Or, you could add a 'isLocal: true/false' flag to your game objects.
+    
+        const isLocalGame = game.url && game.url.startsWith('games/'); // Check if the original URL indicates a local path
+    
+        if (isLocalGame) {
+            targetUrl = game.url; // Use the relative path as defined in your games array
+            displayUrl = gameName; // Display name for logging/potential future use
+            console.log(`Identified "${gameName}" as a local game. Path: "${targetUrl}"`);
+        } else {
+            // Fallback to existing logic for potentially external games or proxied games
+            targetUrl = useProxy ? game.proxiedUrl : game.url;
+            displayUrl = useProxy ? "Proxy Active" : (game.name || game.url);
+            console.log(`Identified "${gameName}" as an external or proxied game. Target URL: "${targetUrl}"`);
+    
+            // Ensure targetUrl has a protocol if it's external and doesn't have one
+            if (targetUrl && !targetUrl.startsWith('http://') && !targetUrl.startsWith('https://') && !targetUrl.startsWith('about:') && !targetUrl.startsWith('data:')) {
+                 targetUrl = 'https://' + targetUrl;
+                 console.log('Prepended "https://" to external game URL:', targetUrl);
+             }
+        }
+    
+        // --- *** MODIFICATION STARTS HERE *** ---
+    
+        console.log(`Attempting to open game "${gameName}" in a new window. Final Target URL: "${targetUrl}". Using proxy: ${useProxy && !isLocalGame}`);
+    
+        if (targetUrl) {
+            // Use window.open to launch the game in a new tab/window
+            // The second parameter is the window name (using gameName). Using '_blank' opens in a new tab each time.
+            // The third parameter is a string of window features (optional). Adjust as needed.
+            // Common features: width, height, resizable, scrollbars
+            window.open(targetUrl, gameName, 'width=800,height=600,resizable=yes,scrollbars=yes');
+            console.log(`Opened window for game "${gameName}".`);
+    
+            // Since the game opens in a new window, you likely do NOT want to automatically
+            // switch to the 'Viewer' page or load it into the existing Viewer iframe.
+            // REMOVE or COMMENT OUT the call to switchPage and loadViewerUrl here:
+            // switchPage('Viewer', () => {
+            //   console.log('switchPage callback executed: Attempting to load game into viewer iframe.');
+            //   loadViewerUrl(targetUrl, gameName, displayUrl, !isLocalGame); // Only update recents for non-local games
+            // });
+    
+            // Optional: You might want to add the game's URL to recents here if it's an external game
+             if (!isLocalGame) {
+                 updateRecentlyViewed(game.url); // Add the original game URL to recents
+                 console.log('Added external game URL to recently viewed.');
+             }
+    
+    
+        } else {
+            console.error(`Cannot open game "${gameName}": No valid target URL determined.`);
+            alert(`Could not launch game "${gameName}". Please check the URL.`);
+        }
+    
+        // --- *** MODIFICATION ENDS HERE *** ---
     }
 
 
@@ -6613,14 +6664,22 @@ const pages = {
                 showingFavorites = false;
                 console.log('Came from favorites view, resetting showingFavorites state.');
             }
-        } else if (pageKey === 'Viewer') {
+        }
+        // --- *** MODIFICATION STARTS HERE *** ---
+        // If the user clicks the 'Viewer' icon, we still want to go to the Viewer page,
+        // but it will act as a general web browser now.
+        else if (pageKey === 'Viewer') {
             pageTitle.style.display = 'none'; // Hide title on Viewer page
             console.log('Switched to Viewer page. Hiding page title.');
             if (showingFavorites) {
                 showingFavorites = false;
                 console.log('Came from favorites view on Viewer page, resetting showingFavorites state.');
             }
+             // When switching to Viewer, ensure the general web viewer state is set up
+             // You might want to load 'about:blank' or a default page if no URL is in the input
+             // The content setup below will handle this.
         }
+        // --- *** MODIFICATION ENDS HERE *** ---
         else { // For all other pages (Library, Music, Settings, About, etc.)
             pageTitle.textContent = pageKey; // Use the key as the title
             pageTitle.style.display = 'block'; // Show title
@@ -6639,17 +6698,30 @@ const pages = {
         setTimeout(() => {
             console.log('Timeout before content switch complete.');
             // Set new page content from the 'pages' object
+            // The Viewer page structure is still needed if you keep it as a general web viewer
             pageContent.innerHTML = pages[pageKey] || `<div class="panel"><p>Content for ${pageKey} not found.</p></div>`;
             console.log(`Content set for page: ${pageKey}. Content found: ${!!pages[pageKey]}`);
     
             // --- Page-Specific Initialization ---
             if (pageKey === 'Music') {
                 console.log("MP: Initializing Music page content via switchPage.");
-                mp_initializeMusicPlayerPage();
-                if (mp_playbackControlsBar && (mp_currentSong || mp_musicLibrary.length > 0)) {
-                    mp_playbackControlsBar.style.display = 'flex';
+                // Ensure all music page elements are present before initializing
+                // This ensures mp_initializeMusicPlayerPage has the DOM elements to work with
+                const musicPageContainer = pageContent.querySelector('.music-page-container');
+                if (musicPageContainer) {
+                    mp_initializeMusicPlayerPage();
+                     if (mp_playbackControlsBar && (mp_currentSong || mp_musicLibrary.length > 0)) {
+                         mp_playbackControlsBar.style.display = 'flex';
+                     }
+                } else {
+                     console.error("MP: Music page container not found after switching page.");
+                      if (mp_playbackControlsBar) {
+                         mp_playbackControlsBar.style.display = 'none';
+                     }
                 }
+    
             } else {
+                // Hide music playback bar if not on the Music page
                 if (mp_playbackControlsBar) {
                     mp_playbackControlsBar.style.display = 'none';
                 }
@@ -6665,25 +6737,47 @@ const pages = {
                 console.log('Home page specific actions (checkVersion, fetchNews) triggered.');
             } else if (pageKey === 'Settings') {
                 loadTabCloakSettings();
-                setTheme(currentThemeName);
+                setTheme(currentThemeName); // Re-apply theme variables
                 const keyInput = document.getElementById('panicKeyInput');
                 const urlInput = document.getElementById('panicUrlInput');
                 if (keyInput && panicKey) keyInput.value = panicKey;
                 if (urlInput && panicUrl) urlInput.value = panicUrl;
-                const appTitleInput = document.getElementById('appTabTitleInput');
-                const appIconInput = document.getElementById('appFaviconUrlInput');
-                const currentAppSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
-                if (appTitleInput) appTitleInput.value = currentAppSettings.tabTitle || 'Underground';
-                if (appIconInput) appIconInput.value = currentAppSettings.faviconUrl || '';
-                const aboutBlankToggle = document.getElementById('aboutBlankToggle');
-                const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
-                if (aboutBlankToggle) aboutBlankToggle.checked = aboutBlankPref !== 'false';
+                 const appTitleInput = document.getElementById('appTabTitleInput');
+                 const appIconInput = document.getElementById('appFaviconUrlInput');
+                 const currentAppSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+                 if (appTitleInput) appTitleInput.value = currentAppSettings.tabTitle || 'Underground';
+                 if (appIconInput) appIconInput.value = currentAppSettings.faviconUrl || '';
+                 const aboutBlankToggle = document.getElementById('aboutBlankToggle');
+                 const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
+                 if (aboutBlankToggle) aboutBlankToggle.checked = aboutBlankPref !== 'false';
                 console.log('Settings page specific UI states loaded.');
             } else if (pageKey === 'About') {
                 const aboutVersionEl = document.getElementById('about-version');
-                if (aboutVersionEl) aboutVersionEl.textContent = "v1.0.0"; // Replace with your actual version
+                 // Ensure aboutVersionEl exists before setting textContent
+                 if (aboutVersionEl) {
+                    aboutVersionEl.textContent = "v1.0.0"; // Replace with your actual version
+                    console.log('About page version set.');
+                 } else {
+                    console.warn('About page version element not found.');
+                 }
                 console.log('About page loaded.');
             }
+             // --- NEW: If switching TO the Viewer page, initialize its state ---
+             else if (pageKey === 'Viewer') {
+                 // The Viewer page content (iframe and controls) has been set by pageContent.innerHTML
+                 // Now ensure the iframe's src is set to about:blank initially, unless a URL is already in the input
+                 const viewerIframe = document.getElementById('mainViewerIframe');
+                 const viewerUrlInput = document.getElementById('viewerUrlSearch');
+                 if (viewerIframe) {
+                     // If there's a URL in the input, load it. Otherwise, ensure it's about:blank.
+                     const initialUrl = viewerUrlInput ? viewerUrlInput.value.trim() : '';
+                     // loadViewerUrl handles setting the iframe src and input value
+                     loadViewerUrl(initialUrl, initialUrl, initialUrl, false); // Don't update recents on initial load to viewer
+                 } else {
+                     console.error("Viewer iframe not found after switching to Viewer page.");
+                 }
+             }
+    
     
             // Fade in new content
             pageContent.classList.remove('fade-out');
@@ -6692,13 +6786,15 @@ const pages = {
             // Update active icon in the sidebar
             icons.forEach(i => {
                 i.classList.remove('active');
-                if (i.getAttribute('data-page') === pageKey && pageKey !== 'Viewer') {
+                 // The Viewer icon should now become active when the 'Viewer' page is selected
+                if (i.getAttribute('data-page') === pageKey) { // Check if data-page matches the target pageKey
                     i.classList.add('active');
                 }
             });
             console.log('Active sidebar icon updated.');
     
             localStorage.setItem('lastActivePage', pageKey);
+            // You might need to adjust how lastActivePageTitle is saved if you want the Viewer title to persist
             localStorage.setItem('lastActivePageTitle', pageTitle.textContent);
     
             // *** CALL THE CALLBACK FUNCTION if it exists ***
