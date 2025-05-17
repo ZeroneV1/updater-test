@@ -6108,7 +6108,7 @@ function mp_createListItem(song, onClickCallback) {
        }
      }
     
-    function loadGame(gameName, gameUrl) { // Keep gameUrl for potential external games, but prioritize local structure
+    function loadGame(gameName, gameUrl) {
         console.log('loadGame() called for:', gameName);
         const game = games.find(g => g.name === gameName);
     
@@ -6117,74 +6117,53 @@ function mp_createListItem(song, onClickCallback) {
             return;
         }
     
-        // Construct the path to the local game's index.html
-        // Assuming gameName corresponds to the folder name in 'games'
-        const localGamePath = `games/${gameName}/index.html`;
-    
         const useProxy = game.proxied && game.proxiedUrl && game.proxiedUrl !== 'none';
-    
         let targetUrl;
-        let displayUrl; // This variable is not strictly needed for window.open but is useful for logging
+        let displayUrl;
     
-        // --- Logic to determine the URL to load ---
-        // Prioritize local game path if the game is meant to be local
-        // For this example, we'll assume if a game from your defaultGames has a name that matches
-        // a folder structure or has a specific flag, it should load locally.
-        // Let's use the presence of the "games/" prefix in the original game.url as an indicator for local games.
-        // Or, you could add a 'isLocal: true/false' flag to your game objects.
-    
-        const isLocalGame = game.url && game.url.startsWith('games/'); // Check if the original URL indicates a local path
+        const isLocalGame = game.url && game.url.startsWith('games/');
     
         if (isLocalGame) {
-            targetUrl = game.url; // Use the relative path as defined in your games array
-            displayUrl = gameName; // Display name for logging/potential future use
-            console.log(`Identified "${gameName}" as a local game. Path: "${targetUrl}"`);
+            targetUrl = game.url; // Use the relative path for local games
+            displayUrl = gameName;
+            console.log(`Identified "${gameName}" as a local game. Path: "${targetUrl}". Attempting to embed in viewer.`);
+    
+            // --- MODIFICATION START ---
+            // Instead of opening a new window, switch to the Viewer page
+            // and load the local game URL into the iframe.
+            switchPage('Viewer', () => {
+                console.log('switchPage callback executed: Attempting to load local game into viewer iframe.');
+                // loadViewerUrl handles setting the iframe src and the viewer URL input
+                // Pass the local game path, game name as title, and game name as display URL
+                // Do NOT update recents for local games
+                loadViewerUrl(targetUrl, gameName, gameName, false);
+            });
+            // --- MODIFICATION END ---
+    
         } else {
-            // Fallback to existing logic for potentially external games or proxied games
+            // Existing logic for external/proxied games (still opens in a new window)
             targetUrl = useProxy ? game.proxiedUrl : game.url;
             displayUrl = useProxy ? "Proxy Active" : (game.name || game.url);
-            console.log(`Identified "${gameName}" as an external or proxied game. Target URL: "${targetUrl}"`);
+            console.log(`Identified "${gameName}" as an external or proxied game. Target URL: "${targetUrl}". Opening in new window.`);
     
-            // Ensure targetUrl has a protocol if it's external and doesn't have one
             if (targetUrl && !targetUrl.startsWith('http://') && !targetUrl.startsWith('https://') && !targetUrl.startsWith('about:') && !targetUrl.startsWith('data:')) {
                  targetUrl = 'https://' + targetUrl;
                  console.log('Prepended "https://" to external game URL:', targetUrl);
              }
-        }
     
-        // --- *** MODIFICATION STARTS HERE *** ---
+            if (targetUrl) {
+                 window.open(targetUrl, gameName, 'width=800,height=600,resizable=yes,scrollbars=yes');
+                 console.log(`Opened window for game "${gameName}".`);
     
-        console.log(`Attempting to open game "${gameName}" in a new window. Final Target URL: "${targetUrl}". Using proxy: ${useProxy && !isLocalGame}`);
-    
-        if (targetUrl) {
-            // Use window.open to launch the game in a new tab/window
-            // The second parameter is the window name (using gameName). Using '_blank' opens in a new tab each time.
-            // The third parameter is a string of window features (optional). Adjust as needed.
-            // Common features: width, height, resizable, scrollbars
-            window.open(targetUrl, gameName, 'width=800,height=600,resizable=yes,scrollbars=yes');
-            console.log(`Opened window for game "${gameName}".`);
-    
-            // Since the game opens in a new window, you likely do NOT want to automatically
-            // switch to the 'Viewer' page or load it into the existing Viewer iframe.
-            // REMOVE or COMMENT OUT the call to switchPage and loadViewerUrl here:
-            // switchPage('Viewer', () => {
-            //   console.log('switchPage callback executed: Attempting to load game into viewer iframe.');
-            //   loadViewerUrl(targetUrl, gameName, displayUrl, !isLocalGame); // Only update recents for non-local games
-            // });
-    
-            // Optional: You might want to add the game's URL to recents here if it's an external game
-             if (!isLocalGame) {
-                 updateRecentlyViewed(game.url); // Add the original game URL to recents
+                 // Optional: Add the game's URL to recents here if it's an external game
+                 updateRecentlyViewed(game.url);
                  console.log('Added external game URL to recently viewed.');
+    
+             } else {
+                 console.error(`Cannot open game "${gameName}": No valid target URL determined.`);
+                 alert(`Could not launch game "${gameName}". Please check the URL.`);
              }
-    
-    
-        } else {
-            console.error(`Cannot open game "${gameName}": No valid target URL determined.`);
-            alert(`Could not launch game "${gameName}". Please check the URL.`);
         }
-    
-        // --- *** MODIFICATION ENDS HERE *** ---
     }
 
 
