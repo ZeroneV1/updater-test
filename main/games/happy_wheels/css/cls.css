@@ -1,0 +1,39 @@
+body {
+	--fsAddBuffer: 22px;
+}
+[id='totaljerkface_leaderboard_atf'],
+[id='totaljerkface_leaderboard_btf'],
+[id='totaljerkface_medrec_atf'] {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	min-height: calc(var(--height) + var(--fsAddBuffer));
+	height: calc(var(--height) + var(--fsAddBuffer));
+	width: 100%;
+}
+[id='totaljerkface_leaderboard_atf'] {
+		--height: 100px;
+}
+[id='totaljerkface_leaderboard_btf'] {
+		--height: 90px;
+}
+[id='totaljerkface_medrec_atf'] {
+		--height: 250px;
+}
+@media only screen and (min-width: 768px) {
+	[id='totaljerkface_leaderboard_atf'] {
+		--height: 100px;
+	}
+	[id='totaljerkface_leaderboard_btf'] {
+		--height: 90px;
+	}
+	[id='totaljerkface_medrec_atf'] {
+		--height: 250px;
+	}
+}
+@media only screen and (min-width: 970px) {
+	[id='totaljerkface_leaderboard_atf'] {
+		--height: 100px;
+	}
+}
