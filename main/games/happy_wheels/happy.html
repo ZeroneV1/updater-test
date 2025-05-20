@@ -74,55 +74,53 @@
                 "resolutionZoomIncreaseRatio": 0.5,
                 "tesselation": "tess2",
 
-                
             };
 
+            // Original check for totaljerkface.com host and parent window commented out
+            // if(!(window.location != window.parent.location && window.location.host.endsWith("totaljerkface.com") && window.parent.location.host.endsWith("totaljerkface.com"))) {
+            //     report_loading_issue();
+            // } else {
 
-            if(!(window.location != window.parent.location && window.location.host.endsWith("totaljerkface.com") && window.parent.location.host.endsWith("totaljerkface.com"))) {
-                report_loading_issue();
-            } else {
-                const urlParams = new URLSearchParams(window.parent.location.search);
-                const replayId = urlParams.get("replay_id");
-                const levelId = urlParams.get("level_id");
-                if(!isNaN(replayId)) {
-                    window["HW_SETTINGS"]["replay_id"] = replayId;
-                }
-                if(!isNaN(levelId)) {
-                    window["HW_SETTINGS"]["level_id"] = levelId;
-                }
-
-                // Object.freeze(window["HW_SETTINGS"]);
-
-                const loadDependency = (name, hash, safemode) => {
-                    var d_el = document.createElement("script");
-                    let d_src = "./js/" + name + "." + hash + ".js";
-                    if (safemode)
-                    {
-                        d_src += "?x=" + Math.random();
-                    }
-                    d_el.src = d_src;
-                    d_el.defer = "defer";
-                    d_el.onerror = () => retryOnError(true);
-                    document.body.appendChild(d_el);
-                }
-
-                const safemodeEnabled = false;//new URLSearchParams(window.location.search).get("s") === "on";
-                try {
-                    get_latest_hw_version().then(function(latest) {
-                        loadDependency("dependencies", latest["dependencies"], safemodeEnabled);
-                        loadDependency("index", latest["index"], safemodeEnabled);
-                    })
-                    .catch(function(error) {
-                        retryOnError();
-                    });
-                } catch(e) {
-                    retryOnError();
-                }
+            // The code from the original 'else' block is now executed directly:
+            const urlParams = new URLSearchParams(window.parent.location.search);
+            const replayId = urlParams.get("replay_id");
+            const levelId = urlParams.get("level_id");
+            if(!isNaN(replayId)) {
+                window["HW_SETTINGS"]["replay_id"] = replayId;
             }
+            if(!isNaN(levelId)) {
+                window["HW_SETTINGS"]["level_id"] = levelId;
+            }
+
+            const loadDependency = (name, hash, safemode) => {
+                var d_el = document.createElement("script");
+                let d_src = "./js/" + name + "." + hash + ".js";
+                if (safemode)
+                {
+                    d_src += "?x=" + Math.random();
+                }
+                d_el.src = d_src;
+                d_el.defer = "defer";
+                d_el.onerror = () => retryOnError(true);
+                document.body.appendChild(d_el);
+            }
+
+            const safemodeEnabled = false;//new URLSearchParams(window.location.search).get("s") === "on";
+            try {
+                get_latest_hw_version().then(function(latest) {
+                    loadDependency("dependencies", latest["dependencies"], safemodeEnabled);
+                    loadDependency("index", latest["index"], safemodeEnabled);
+                })
+                .catch(function(error) {
+                    retryOnError();
+                });
+            } catch(e) {
+                retryOnError();
+            }
+            // } // End of original 'else' block (now removed)
         })();
     </script>
 
     <div id="og-game-holder"></div>
-
 
 </body></html>
