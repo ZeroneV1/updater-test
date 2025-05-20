@@ -42,7 +42,7 @@
             }
 
             function get_latest_hw_version() {
-                return fetch("/happy-wheels-js/version.json")
+                return fetch("./happy-wheels-js/version.json")
                 .then(function(response) { return response.json(); })
                 .catch(function(error) {
                     throw error;
