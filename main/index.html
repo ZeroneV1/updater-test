@@ -6114,26 +6114,35 @@ function mp_createListItem(song, onClickCallback) {
         let shouldUpdateRecents;
 
         if (isLocalGame) {
-            // Logic for local games
             targetUrl = game.url;
-            displayUrl = gameName; // Display the game's name in the viewer input
-            shouldUpdateRecents = false; // Do not add local file paths to the "Recents" list
+            displayUrl = gameName; 
+            shouldUpdateRecents = false;
             console.log(`Identified "${gameName}" as a local game. Path: "${targetUrl}".`);
         } else {
-            // Logic for external/proxied games
             targetUrl = useProxy ? game.proxiedUrl : game.url;
-            displayUrl = useProxy ? `Proxy Active for: ${game.name}` : game.url; // Show the actual URL or a proxy message
-            shouldUpdateRecents = true; // Add external game URLs to the "Recents" list
+            displayUrl = useProxy ? `Proxy Active for: ${game.name}` : game.url;
+            shouldUpdateRecents = true;
             console.log(`Identified "${gameName}" as an external or proxied game. Target URL: "${targetUrl}".`);
         }
 
-        // Unified action: switch to the Viewer page and load the game into the <object> tag
-        console.log(`Switching to Viewer to load: ${targetUrl}`);
-        switchPage('Viewer', () => {
-            console.log('switchPage callback executed: Loading game into viewer object.');
-            // This function now handles setting the object's data attribute and updating the viewer's URL bar.
-            loadViewerUrl(targetUrl, gameName, displayUrl, shouldUpdateRecents);
-        });
+        // Dynamically create the HTML for the viewer with the game URL already in the object tag
+        const viewerHTML = `
+            <object id="mainViewerObject" type="text/html" data="${escapeHtml(targetUrl)}"></object>
+            <div class="bottom-controls" id="viewer-bottom-controls">
+                <input type="text" id="viewerUrlSearch" placeholder="Enter URL or Search" value="${escapeHtml(displayUrl)}" onkeydown="if(event.key==='Enter') goToViewerUrl()">
+                <button class="go-button" onclick="goToViewerUrl()" title="Go"><i class="fas fa-check"></i></button>
+                <button class="fullscreen-button" onclick="openViewerFullscreen()" title="Open Fullscreen"><i class="fas fa-expand"></i></button>
+                <button onclick="addToLibraryFromViewerPage()" title="Add to Library"><i class="fas fa-bookmark"></i></button>
+            </div>
+        `;
+
+        // Update recently viewed list if necessary
+        if (shouldUpdateRecents) {
+            updateRecentlyViewed(targetUrl);
+        }
+        
+        // Call the modified switchPage function, providing the dynamically created HTML
+        switchPage('Viewer', null, viewerHTML);
     }
 
 
@@ -6596,163 +6605,100 @@ const pages = {
 
 
     // --- Replace your existing switchPage function with this ---
-    function switchPage(pageKey, callback) { // <--- Added callback parameter
+    function switchPage(pageKey, callback, dynamicContent = null) { // Added dynamicContent parameter
         console.log('Switching to page:', pageKey);
     
-        // Update page title visibility and content based on the target page
         if (pageKey === 'Games') {
-            showingFavorites = false; // Reset view to 'All Games' when entering Games page
-            pageTitle.textContent = 'Games'; // Set title
-            pageTitle.style.display = 'block'; // Show title
-            console.log('Switched to Games page. Resetting favorites view state.');
-        } else if (pageKey === 'Home') {
-            pageTitle.style.display = 'none'; // Hide title on Home page
-            console.log('Switched to Home page. Hiding page title.');
-            // Reset favorite view state if coming from Games page
+            showingFavorites = false;
+            pageTitle.textContent = 'Games';
+            pageTitle.style.display = 'block';
+        } else if (pageKey === 'Home' || pageKey === 'Viewer') {
+            pageTitle.style.display = 'none';
             if (showingFavorites) {
                 showingFavorites = false;
-                console.log('Came from favorites view, resetting showingFavorites state.');
             }
-        }
-        // --- *** MODIFICATION STARTS HERE *** ---
-        // If the user clicks the 'Viewer' icon, we still want to go to the Viewer page,
-        // but it will act as a general web browser now.
-        else if (pageKey === 'Viewer') {
-            pageTitle.style.display = 'none'; // Hide title on Viewer page
-            console.log('Switched to Viewer page. Hiding page title.');
+        } else {
+            pageTitle.textContent = pageKey;
+            pageTitle.style.display = 'block';
             if (showingFavorites) {
                 showingFavorites = false;
-                console.log('Came from favorites view on Viewer page, resetting showingFavorites state.');
-            }
-             // When switching to Viewer, ensure the general web viewer state is set up
-             // You might want to load 'about:blank' or a default page if no URL is in the input
-             // The content setup below will handle this.
-        }
-        // --- *** MODIFICATION ENDS HERE *** ---
-        else { // For all other pages (Library, Music, Settings, About, etc.)
-            pageTitle.textContent = pageKey; // Use the key as the title
-            pageTitle.style.display = 'block'; // Show title
-            console.log('Switched to page:', pageKey, 'Showing page title.');
-            if (showingFavorites) {
-                showingFavorites = false;
-                console.log('Came from favorites view on another page, resetting showingFavorites state.');
             }
         }
     
-        // Fade out current content
         pageContent.classList.add('fade-out');
-        console.log('Adding fade-out class to content.');
     
-        // Wait for fade-out transition, then update content and fade in
         setTimeout(() => {
-            console.log('Timeout before content switch complete.');
-            // Set new page content from the 'pages' object
-            // The Viewer page structure is still needed if you keep it as a general web viewer
-            pageContent.innerHTML = pages[pageKey] || `<div class="panel"><p>Content for ${pageKey} not found.</p></div>`;
-            console.log(`Content set for page: ${pageKey}. Content found: ${!!pages[pageKey]}`);
-    
+            // Use the dynamically provided content if it exists, otherwise use the pages object
+            pageContent.innerHTML = dynamicContent || pages[pageKey] || `<div class="panel"><p>Content for ${pageKey} not found.</p></div>`;
+            
             // --- Page-Specific Initialization ---
             if (pageKey === 'Music') {
-                console.log("MP: Initializing Music page content via switchPage.");
-                // Ensure all music page elements are present before initializing
-                // This ensures mp_initializeMusicPlayerPage has the DOM elements to work with
                 const musicPageContainer = pageContent.querySelector('.music-page-container');
                 if (musicPageContainer) {
                     mp_initializeMusicPlayerPage();
-                     if (mp_playbackControlsBar && (mp_currentSong || mp_musicLibrary.length > 0)) {
-                         mp_playbackControlsBar.style.display = 'flex';
-                     }
+                    if (mp_playbackControlsBar && (mp_currentSong || mp_musicLibrary.length > 0)) {
+                        mp_playbackControlsBar.style.display = 'flex';
+                    }
                 } else {
-                     console.error("MP: Music page container not found after switching page.");
-                      if (mp_playbackControlsBar) {
-                         mp_playbackControlsBar.style.display = 'none';
-                     }
+                    if (mp_playbackControlsBar) {
+                        mp_playbackControlsBar.style.display = 'none';
+                    }
                 }
-    
-            } else {
-                // Hide music playback bar if not on the Music page
-                if (mp_playbackControlsBar) {
+            } else if (dynamicContent === null) { // Don't hide for dynamically loaded content (like the game viewer)
+                 if (mp_playbackControlsBar) {
                     mp_playbackControlsBar.style.display = 'none';
                 }
             }
     
-            if (pageKey === 'Games') {
+            if (pageKey === 'Games' && !dynamicContent) {
                 updateGamesPage();
             } else if (pageKey === 'Library') {
                 updateLibraryPage();
             } else if (pageKey === 'Home') {
                 checkVersion();
                 fetchNews();
-                console.log('Home page specific actions (checkVersion, fetchNews) triggered.');
             } else if (pageKey === 'Settings') {
                 loadTabCloakSettings();
-                setTheme(currentThemeName); // Re-apply theme variables
+                setTheme(currentThemeName);
                 const keyInput = document.getElementById('panicKeyInput');
                 const urlInput = document.getElementById('panicUrlInput');
                 if (keyInput && panicKey) keyInput.value = panicKey;
                 if (urlInput && panicUrl) urlInput.value = panicUrl;
-                 const appTitleInput = document.getElementById('appTabTitleInput');
-                 const appIconInput = document.getElementById('appFaviconUrlInput');
-                 const currentAppSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
-                 if (appTitleInput) appTitleInput.value = currentAppSettings.tabTitle || 'Underground';
-                 if (appIconInput) appIconInput.value = currentAppSettings.faviconUrl || '';
-                 const aboutBlankToggle = document.getElementById('aboutBlankToggle');
-                 const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
-                 if (aboutBlankToggle) aboutBlankToggle.checked = aboutBlankPref !== 'false';
-                console.log('Settings page specific UI states loaded.');
+                const appTitleInput = document.getElementById('appTabTitleInput');
+                const appIconInput = document.getElementById('appFaviconUrlInput');
+                const currentAppSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+                if (appTitleInput) appTitleInput.value = currentAppSettings.tabTitle || 'Underground';
+                if (appIconInput) appIconInput.value = currentAppSettings.faviconUrl || '';
+                const aboutBlankToggle = document.getElementById('aboutBlankToggle');
+                const aboutBlankPref = localStorage.getItem('aboutBlankOnStartup');
+                if (aboutBlankToggle) aboutBlankToggle.checked = aboutBlankPref !== 'false';
             } else if (pageKey === 'About') {
                 const aboutVersionEl = document.getElementById('about-version');
-                 // Ensure aboutVersionEl exists before setting textContent
-                 if (aboutVersionEl) {
-                    aboutVersionEl.textContent = "v1.0.0"; // Replace with your actual version
-                    console.log('About page version set.');
-                 } else {
-                    console.warn('About page version element not found.');
-                 }
-                console.log('About page loaded.');
+                if (aboutVersionEl) {
+                    aboutVersionEl.textContent = "v1.0.0";
+                }
+            } else if (pageKey === 'Viewer' && !dynamicContent) {
+                const viewerUrlInput = document.getElementById('viewerUrlSearch');
+                const initialUrl = viewerUrlInput ? viewerUrlInput.value.trim() : '';
+                loadViewerUrl(initialUrl, initialUrl, initialUrl, false);
             }
-             // --- NEW: If switching TO the Viewer page, initialize its state ---
-             else if (pageKey === 'Viewer') {
-                 // The Viewer page content (iframe and controls) has been set by pageContent.innerHTML
-                 // Now ensure the iframe's src is set to about:blank initially, unless a URL is already in the input
-                 const viewerIframe = document.getElementById('mainViewerIframe');
-                 const viewerUrlInput = document.getElementById('viewerUrlSearch');
-                 if (viewerIframe) {
-                     // If there's a URL in the input, load it. Otherwise, ensure it's about:blank.
-                     const initialUrl = viewerUrlInput ? viewerUrlInput.value.trim() : '';
-                     // loadViewerUrl handles setting the iframe src and input value
-                     loadViewerUrl(initialUrl, initialUrl, initialUrl, false); // Don't update recents on initial load to viewer
-                 } else {
-                     console.error("Viewer iframe not found after switching to Viewer page.");
-                 }
-             }
     
-    
-            // Fade in new content
             pageContent.classList.remove('fade-out');
-            console.log('Removing fade-out class, content should fade in.');
     
-            // Update active icon in the sidebar
             icons.forEach(i => {
                 i.classList.remove('active');
-                 // The Viewer icon should now become active when the 'Viewer' page is selected
-                if (i.getAttribute('data-page') === pageKey) { // Check if data-page matches the target pageKey
+                if (i.getAttribute('data-page') === pageKey) {
                     i.classList.add('active');
                 }
             });
-            console.log('Active sidebar icon updated.');
     
             localStorage.setItem('lastActivePage', pageKey);
-            // You might need to adjust how lastActivePageTitle is saved if you want the Viewer title to persist
             localStorage.setItem('lastActivePageTitle', pageTitle.textContent);
     
-            // *** CALL THE CALLBACK FUNCTION if it exists ***
             if (typeof callback === 'function') {
-                console.log('Executing callback function after page switch and content update.');
-                callback(); // Call the provided callback
+                callback();
             }
-    
-        }, 150); // Match this delay to your CSS transition duration for fade-out
+        }, 150);
     }
     
     function handleIconClick() {
